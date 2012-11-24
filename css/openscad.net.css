@@ -1,0 +1,162 @@
+html, body {
+	background:	#fff;
+	width:		100%;
+	height:		100%;					
+	padding:	0;
+	margin:		0;
+	overflow:	auto; /* when page gets too small */
+}
+
+
+#container {
+	height:		94.5%;					
+	width:		100%;
+	margin-top: -21px;
+}
+
+#editor {
+	position: absolute;
+	padding: 0;
+	margin: 0;
+	width: 95%;
+	height: 94.5%;
+	font-family: Courier, "Courier New", monospace;
+	font-size: 0.86em;
+}
+
+#log-container {
+	padding: 0;
+	margin: 0;
+	overflow: hidden;
+}
+
+#log {
+	padding: 0;
+	margin: 0;
+	width: 100%;
+	height: 100%;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 0.9em;
+	white-space: pre;
+	background-color: white;
+
+}
+
+#center-container {
+	padding: 0;
+	margin: 0;
+}
+
+#viewer-container {
+	padding: 0;
+	margin: 0;
+	width: 100%;
+	height: 99%;
+	overflow: hidden;
+}
+
+.viewer {
+	padding: 0;
+	margin: 0;
+	width: 100%;
+	height: 100%;
+}
+
+canvas { 
+	cursor: move; 
+}
+
+#openscadtranslation {
+	display: none;
+}
+
+.menu_option {
+	margin-top: 0 !important; 
+}
+
+.hidden {
+	display: none;
+}
+
+/* Bootstrap overrides */
+#editor-tabs > li > a {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+#editor-tabs {
+  margin-bottom: 5px;
+}
+
+#preferencesEditor {
+	height: 210px;
+}
+
+#preferencesFontSize {
+	width: 60px;
+}
+
+#fontSelect {
+	float: left;
+	position: relative;
+	padding: 3px;
+	height: 22px;
+	line-height: 22px;
+	margin: 0 3px;
+
+	width: 200px;
+
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	border: 1px solid #ccc;
+}
+
+#fontSelect span {
+	overflow: hidden;
+	margin-left: 5px;
+}
+
+#fontSelect .arrow-down {
+	position: absolute;
+	right: 10px;
+	top: 14px;
+	border-left: 6px solid transparent;
+	border-right: 6px solid transparent;
+
+	border-top: 6px solid #AAA;
+}
+
+#fontSelect ul {
+	list-style: none;
+	width: 200px;
+	position: absolute;
+	margin: 5px 0 0 0;
+	height: 150px;
+	overflow: auto;
+}
+
+#fontSelect li {
+	height: 24px;
+	line-height: 24px;
+	overflow: hidden;
+	cursor: pointer;
+	padding: 0 10px;
+
+	font-size: 14px;
+
+	border-left: 1px solid #f0f0f0;
+	border-right: 1px solid #f0f0f0;
+}
+
+#fontSelect ul li:last-child {
+	-webkit-border-radius: 0 0 4px 4px;
+	-moz-border-radius: 0 0 4px 4px;
+	border-radius: 0 0 4px 4px;
+
+	border-bottom: 1px solid #EEEEEE;
+}
+
+#fontSelect li:hover {
+	background: #DDD;
+}

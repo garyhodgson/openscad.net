@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<head>
+  <title>OpenSCAD.net</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <link rel="stylesheet" href="css/layout-default-latest.css">
+  <link rel="stylesheet" href="css/bootstrap/bootstrap.css">
+  <link rel="stylesheet" href="css/bootstrap/bootstrap-responsive.css">
+  <link rel="stylesheet" href="css/openscad.net.css">
+
+  <script type="text/javascript" src="js/modernizr.min.js"></script>
+  <script type="text/javascript" src="js/jquery-latest.js"></script>
+  <script type="text/javascript" src="js/jquery-ui-latest.js"></script>
+  <script type="text/javascript" src="js/jquery.layout-latest.js"></script>
+  <script type="text/javascript" src="js/jquery.fontselector.js"></script>
+
+  <script src="//cdnjs.cloudflare.com/ajax/libs/dropbox.js/0.6.1/dropbox.min.js"></script>
+  <script type="text/javascript" src="js/jquery.jstree.js"></script>
+
+  <script type="text/javascript" src="js/bootstrap/bootstrap.min.js"></script>
+
+  <script type="text/javascript" src="js/jquery.textarea.js"></script>
+  <script type="text/javascript" src="js/jquery.mousewheel.js"></script>
+  <script type="text/javascript" src="js/underscore-min.js"></script>
+  <script type="text/javascript" src="js/sisyphus.min.js"></script>
+  <script type="text/javascript" src="js/shortcut.js"></script>
+
+  <script type="text/javascript" src="js/openscad2openjscad_support.js"></script>
+
+  <script type="text/javascript" src="js/lightgl.js"></script>
+  <script type="text/javascript" src="js/csg.js"></script>
+  <script type="text/javascript" src="js/openjscad.js"></script>
+
+  <script type="text/javascript" src="openscad-parser.js"></script>
+
+  <script type="text/javascript">
+
+    var myLayout;
+    var gProcessor=null;
+    var defaultEditorContent = "function main()\n{\n\n  return CSG.roundedCube({center: [0,0,0], radius: [10,10,10], roundradius: 2, resolution: 24});\n\n}";
+    var auto_reload;
+    var editorIsDirty = false;
+    var modelIsShown = false;
+    var currentFilename = '';
+    var client;
+    var uiLayout, logLayout;
+    var colorSchemes = {
+      "cornfield": { backgroundColor: [255/255, 255/255, 229/255], faceColor: [249/255, 215/255, 44/255] },
+      "metallic": { backgroundColor: [170/255, 170/255, 255/255], faceColor: [221/255, 221/255, 225/255] },
+      "sunset": { backgroundColor: [170/255, 68/255, 68/255], faceColor: [255/255, 170/255, 170/255] },
+      "sunrise": { backgroundColor: [196/255, 207/255, 210/255], faceColor: [255/255, 245/255, 184/255] }
+    };
+  
+    $(function() { 
+      if (!Modernizr.webgl){
+        notify("This app needs webGL - Google Chrome would be a good choice of browser.")
+        return 
+      }
+
+      openscadParser.yy.logMessage = logMessage;
+
+      client = new Dropbox.Client({
+          key: "HXhDdRlFUUA=|ExW13h6tJ+jTCm96w87G1F3wvtvRRKnOdXuYBn3BIg==", sandbox: true
+      });
+      client.authDriver(new Dropbox.Drivers.Redirect({rememberUser: true}));
+
+      uiLayout = $('#container').layout({
+          minSize:      100
+        , center__paneSelector: ".outer-center"
+        , stateManagement: {
+            enabled:      true
+        ,    cookie: {
+                name:     "uiLayout"
+            }
+        }
+        , enableCursorHotkey: false
+        , center__childOptions: {
+            minSize:        10
+          , center__onresize_end: resizeViewer
+          , south__size:      50
+          , stateManagement: {
+              enabled:      true
+          ,    cookie: {
+                  name:     "logLayout"
+              }
+          }
+          }
+      });
+
+      logLayout = $("#center-container").layout({
+          center__paneSelector: ".outer-center"
+          
+      })
+
+      $('#settingsForm').sisyphus({excludeFields: $('.sisyphusignore')});
+      show_axis = $('input[name=menu_view_show_axis]').attr("checked")=="checked";
+      show_grid = $('input[name=menu_view_show_grid]').attr("checked")=="checked";
+      auto_reload = $('input[name=menu_design_auto_reload]').attr("checked")=="checked";
+      hideEditor();
+      hideConsole();
+      if (!$('#sourcetype_openscad').attr('checked') && !$('#sourcetype_openjscad').attr('checked')){
+        $('#sourcetype_openscad').attr('checked','checked');
+      }
+
+      $('#editor').tabby();
+      
+      if (localStorage.getItem("lastEdit") != undefined){
+        $('#editor').val(localStorage.getItem("lastEdit"));
+      } else {
+        $('#editor').val(defaultEditorContent);
+      }
+
+      var font = (localStorage.getItem("preferencesFontFamily") != undefined)? localStorage.getItem("preferencesFontFamily") : "Courier New,Courier New,Courier,monospace";
+      setEditorFontFamily(font);
+
+      var fontSize = (localStorage.getItem("preferencesFontSize") != undefined)? Number(localStorage.getItem("preferencesFontSize")) : 12;
+      setEditorFontSize(fontSize);
+
+      var colorScheme = (localStorage.getItem("preferencesColorScheme") != undefined)? colorSchemes[localStorage.getItem("preferencesColorScheme")] : colorSchemes['cornfield'];
+
+      $('#editor').live('keyup blur', function(){
+        localStorage.setItem("lastEdit", $(this).val());
+      });
+
+      $("#editor").keypress(function(e) {
+        editorIsDirty = true;
+        if (e.keyCode == 10 && e.ctrlKey == true){
+            updateSolid();
+        }
+      });
+
+      shortcut.add("Ctrl+s",saveEditor);
+      shortcut.add("F4",updateSolid);
+
+      var viewerWidth = $('#viewer-container').width();
+      var viewerHeight = $('#viewer-container').height();
+
+      gProcessor = new OpenJsCad.Processor(viewerWidth, viewerHeight, document.getElementById("viewer-container"), null, logMessage,  colorScheme);
+  
+      var resizeTimeout;
+      window.onresize = function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(resizeViewer, 250); // set for 1/4 second.  May need to be adjusted.
+      };
+
+      $('.menu_option').on('click', function(e){
+        e.stopPropagation();
+      });
+
+      $('#menu_file_new').click(newEditor);
+
+      $('#menu_file_save').click(saveEditor);
+
+      $('#menu_file_dropbox_connect').click(connect);
+
+      $('#menu_file_dropbox_signout').click(disconnect);
+
+
+      if (getUrlParam("oauth_token") != "" || (client && client.oauth.token)){
+        connect();
+      } else {
+        for (var key in localStorage){
+          if (key.match(/^dropbox-auth.*/)) {
+            connect();
+            break;
+          }
+        }
+      }
+
+      if (auto_reload){
+        updateSolid();
+      }
+
+      $('.loadExample').click(function (argument) {
+          loadExample($(this).text());
+      })
+
+      $('#fontSelect').fontSelector({
+          'hide_fallbacks' : true,
+          'initial' : font,
+          'selected' : function(font) {
+            setEditorFontFamily(font);      
+            localStorage.setItem("preferencesFontFamily", font);    
+          }
+      });
+
+      $('#preferencesFontSize').change(function(){
+        var fontSize = Number($("#preferencesFontSize option:selected").val());
+        
+        setEditorFontSize(fontSize);
+        localStorage.setItem("preferencesFontSize", fontSize);
+      });
+
+      $('#colorScheme').change(function () {
+        var scheme = $("#colorScheme option:selected").val();
+        setColorScheme(scheme);
+
+        if (modelIsShown){
+          updateSolid();
+        }
+
+      });
+
+    });
+
+    function setColorScheme (schemeName) {
+      var scheme = colorSchemes[schemeName];
+      if (scheme === undefined){
+        logMessage("Unknown color scheme.");
+        return;
+      }
+      localStorage.setItem("preferencesColorScheme", schemeName);
+      viewer.setColorScheme(scheme);
+      if (modelIsShown){
+        updateSolid();
+      }
+    }
+
+    function setEditorFontFamily(font){
+      $('#editor').css('font-family', font);
+    }
+
+    function setEditorFontSize(fontSize){
+      $('#editor').css('font-size', fontSize);
+      $('#preferencesFontSize option').attr('selected','');
+      $('#preferencesFontSize option[value='+fontSize+']').attr('selected','selected');
+    }
+
+    function loadExample (filename) {
+      var exampleElement = $('#'+filename.replace(/\./g, "_"))
+
+      if (!exampleElement.length){
+        logMessage("Unable to find example: " + filename);
+        return;
+      }
+
+      if (editorIsDirty || currentFilename == ''){
+        if (!confirm("Editor has unsaved changes. Continue?")){
+          return;
+        }
+      }
+      currentFilename = filename;
+      $('#editor').val(exampleElement.text());
+      $('#editor').blur();
+      
+    }
+
+    function getUrlParam( param ){
+      param = param.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+      var exp = "[\\?&]"+param+"=([^&#]*)";
+      var regexp = new RegExp( exp ); 
+      var results = regexp.exec( window.location.href );
+      if( results == null ){
+        return "";
+      } else {
+        return results[1];
+      }
+    }
+
+    function newEditor () {
+        if (editorIsDirty || currentFilename == ''){
+          if (!confirm("Editor has unsaved changes. Continue?")){
+            return;
+          }
+        }
+
+        $('#editor').val('');
+        currentFilename = '';
+        gProcessor.clearViewer();
+        modelIsShown = false;
+
+    };
+
+    function saveEditor() {
+      if (currentFilename == undefined || currentFilename == ''){
+        currentFilename = prompt("Filename:", "newfile.scad");         
+      }
+      if (currentFilename != null) {
+        //TODO path....
+        writeFile("/", currentFilename, $('#editor').val());    
+      }
+    }
+
+    function resizeViewer(x,ui){
+      viewerWidth = $(ui).width();
+      viewerHeight = $(ui).height();
+
+      if (viewerWidth<=0&&viewerHeight<=0){
+        return;
+      }
+
+      gProcessor.canvasResize(viewerWidth, viewerHeight);
+      $('.viewer').width(viewerWidth);
+      $('.viewer').height(viewerHeight);
+    }
+
+    function notify(msg){
+        console.log(msg);  
+    }
+
+    function extractLibraryNames (text) {
+      var lines = text.split("\n");
+        for (var i in lines){
+          var line = lines[i];
+
+          var includedLibrary = line.match(/include <([^>]*)>;/);
+          if (includedLibrary != null){
+            globalLibs[includedLibrary[1]] = undefined;
+          }
+
+          var usedLibrary = line.match(/use <([^>]*)>;/);
+          if (usedLibrary != null){
+            globalLibs[usedLibrary[1]] = undefined;
+          }
+
+        }
+    }
+
+    var globalLibs = {}
+
+    function collateLibraries(text, cb){
+
+      extractLibraryNames(text);
+
+      _.each(globalLibs, function (value, key, list) {
+        if (value == undefined){
+
+          client.readFile(key, null, function(error, content, stat) {
+            if (error) {
+              return showError(error);
+            }
+
+            globalLibs[key] = content;
+
+            collateLibraries(content, cb);
+
+          });
+        }
+      })
+
+      if (cb){
+        var currentGlobalLibContents = _.values(globalLibs);
+
+        if (_.indexOf(currentGlobalLibContents, undefined) == -1){
+          cb();
+        }
+      }
+    }
+
+
+    function updateSolid() {
+      if ($('#sourcetype_openscad').attr("checked")== "checked"){
+
+        var openSCADText = $('#editor').val()
+
+        collateLibraries(openSCADText, function(libs){
+
+          var lines = openSCADText.split("\n");
+          var libraries = [];
+
+          for (var i in lines){
+            var line = lines[i];
+
+            var includedLibrary = line.match(/include <([^>]*)>;/);
+            if (includedLibrary != null){
+              libraries.push(['include',includedLibrary[1]]);
+            }
+
+            var usedLibrary = line.match(/use <([^>]*)>;/);
+            if (usedLibrary != null){
+              libraries.push(['use',usedLibrary[1]]);
+            }
+
+          }
+          newParse(lines, libraries, display);
+        });
+      } else {
+        gProcessor.setJsCad($('#editor').val());
+        modelIsShown = true;
+      }
+    }
+
+    function newParse(lines, libraries, cb) {
+
+      if (libraries.length>0){
+
+        var library = libraries[0];
+        var isUse = library[0] == 'use';
+        var filename = library[1];
+
+        var libContent = globalLibs[filename];
+
+        if (isUse){
+          var usedModuleResult = openscadParser.parse(libContent);
+          openscadParser.yy.context = usedModuleResult.context;
+        } else {
+          var fileTextLines = libContent.split("\n");
+          lines = _.union(fileTextLines, lines);
+        }
+
+        newParse(lines, libraries.slice(1), cb);
+
+      } else {
+        var result = openscadParser.parse(lines.join('\n'));
+        cb(result);
+      }
+      
+    }
+
+    function display(result) {
+      var resultText = result.lines.join('\n');
+
+      console.log(resultText);
+      
+      gProcessor.setJsCad(resultText);
+      modelIsShown = true;
+    }
+
+
+    function onError(e) {
+      console.log('Error' + e.name);
+    }
+
+    function logMessage(msg) {
+      if (msg == ""){
+        return;
+      }
+      var val = $('#log').val();
+      if (val == ""){
+        $('#log').val(msg);
+      } else {
+        $('#log').val($('#log').val()+"\n"+msg)
+      }
+      $('#log').scrollTop($('#log')[0].scrollHeight);
+    }
+
+    var showError = function(error) {
+      if (window.console) {  // Skip the "if" in node.js code.
+        console.error(error);
+      }
+
+      switch (error.status) {
+      case 401:
+        // If you're using dropbox.js, the only cause behind this error is that
+        // the user token expired.
+        // Get the user through the authentication flow again.
+        break;
+
+      case 404:
+        // The file or folder you tried to access is not in the user's Dropbox.
+        // Handling this error is specific to your application.
+        break;
+
+      case 507:
+        // The user is over their Dropbox quota.
+        // Tell them their Dropbox is full. Refreshing the page won't help.
+        break;
+
+      case 503:
+        // Too many API requests. Tell the user to try again later.
+        // Long-term, optimize your code to use fewer API calls.
+        break;
+
+      case 400:  // Bad input parameter
+      case 403:  // Bad OAuth request.
+      case 405:  // Request method not expected
+      default:
+        // Caused by a bug in dropbox.js, in your application, or in Dropbox.
+        // Tell the user an error occurred, ask them to refresh the page.
+      }
+
+      return false;
+    };
+
+    var filetree;
+
+      $(document).on('dblclick','.dbFile', function (e) {
+        var stat = $(this).data("stat");
+      if (!stat){
+        return;
+      }
+      if (stat.isFile){
+        readFile(stat.path);
+      }
+      });
+
+    function readDir(path, root) {
+
+      client.readdir(path, function(error, entries, stat, stats) {
+        if (error) {
+          return showError(error);
+        }
+
+        _.each(stats, function (stat) {
+
+          var id = stat.path.replace(/\//g, '_').replace(/\./g, '_')
+
+          if (stat.isFile){
+          filetree.create_node(
+                root, 'inside', 
+                { attr: {id:id, class:"dbFile"}, metadata: {stat: stat}, data: {title:stat.name, icon: "img/led-icons/page_white_text.png"} }
+            );
+          } else {
+            filetree.create_node(
+                root, 'inside', 
+                { attr: {id:id},  state: "closed", metadata: {stat: stat}, data: stat.name }
+            );
+          }
+
+        });
+
+        filetree.open_node(root);
+        root.data("isloaded", true);
+
+      });
+    };
+
+    function readFile(path) {
+      client.readFile(path, null, function(error, content, stat) {
+        if (error) {
+          return showError(error);
+        }
+
+        if (editorIsDirty){
+          alert("Current editor is not saved.");
+          return;
+        }
+
+        $('#editor').val(content);
+        $('#editor-tabs a[href="#editorTab"]').tab('show');
+
+      });
+    };
+
+    function writeFile(path, filename, content) {
+      client.writeFile(path + filename, content, function(error, stat) {
+        if (error) {
+          return showError(error);
+        }
+
+        console.log("File saved.");
+        editorIsDirty = false;
+      });
+    };
+
+    function connect(){
+      client.authenticate(function(error, client) {
+        if (error) {
+          return showError(error);
+        }
+        $('#notificationbar').attr("title", "Connected to Dropbox");
+        $('#notificationbar').html("<img src='img/led-icons/connect.png'>&nbsp;Dropbox</li>")
+        initFilelist();
+      });
+    };
+
+    function disconnect(){
+      if (confirm("Signout from Dropbox completely?")){
+        client.signOut(function(error) {
+          if (error) {
+            return showError(error);
+          }
+
+          $('#notificationbar').attr("title", "Not Connected to Dropbox");
+          $('#notificationbar').html("<img src='img/led-icons/disconnect.png'>&nbsp;Dropbox</li>")
+          $('#jstree_container').html("<button class='btn btn-success' type='button' onclick='connect();'>Connect to Dropbox</button>");
+          
+        });
+      }
+    };
+
+    function initFilelist(){
+      $("#jstree_container").bind("loaded.jstree", function (event, data) {
+          filetree = $.jstree._reference('#jstree_container');
+          readDir("/", $('#root'));
+        }).bind("open_node.jstree", function (e, data) {
+        var id = data.args[0].attr("id");
+        var isloaded = data.args[0].data("isloaded")
+        if (isloaded === undefined){
+          isloaded = false;
+        }
+
+        if (isloaded){
+          return;
+        }
+
+        var stat = data.args[0].data("stat");
+
+        if (stat !== undefined){
+          readDir(stat.path, $('#'+id));
+        }
+      }).jstree({        
+        core : { animation:200 },
+            plugins : [ "themes", "json_data", "ui" ],
+            json_data: {
+              data: [
+                {
+                  data: "/",
+                  attr: {id:"root"},
+                  metadata: {path:"/"}
+                }
+              ]
+          }
+        });
+      }
+
+      function showGrid(show){
+        show_grid = show;
+        updateSolid();
+      }
+
+      function showAxis(show){
+        show_axis = show;
+        updateSolid();
+      }
+
+      function hideEditor() {
+        if ($('input[name=menu_view_hide_editor]').attr('checked')=='checked'){
+          uiLayout.close("west");  
+        } else {
+          uiLayout.open("west");  
+        }
+      }
+    
+      function hideConsole() {
+        if ($('input[name=menu_view_hide_console]').attr('checked')=='checked'){
+          logLayout.close("south");
+        } else {
+          logLayout.open("south");
+        }
+      }
+
+      function clearConsole() {
+        $('#log').val("");
+      }
+    
+
+  </script>
+
+
+</head>
+<body>
+
+
+<div id="navbar" class="navbar">
+  <form id="settingsForm">
+    <div class="navbar-inner">
+      <div class="nav-container container">
+        <a class="brand" href="/">OpenSCAD.net</a>
+          <ul class="nav pull-right">
+            <li id="notificationbar" title="Not Connected to Dropbox"><img src="img/led-icons/disconnect.png"/>&nbsp;Dropbox</li>
+          </ul>
+          <ul class="nav">
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">File <b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                <li><a href="#" id="menu_file_new">New</a></li>
+                <li class="disabled"><a href="#" id="menu_file_open">Open&hellip;</a></li>
+                <li class="disabled"><a href="#" id="menu_file_import">Import</a></li>
+                <li class="dropdown-submenu">
+                  <a class="menu_option" href="#">Examples</a>
+                  <ul class="dropdown-menu">
+                    <li><a href="#" class="loadExample" title="Modules and functions">example001.scad</a></li>
+                    <li><a href="#" class="loadExample" title="CSG operations">example002.scad</a></li>
+                    <li><a href="#" class="loadExample" title="CSG difference">example003.scad</a></li>
+                    <li><a href="#" class="loadExample" title="CSG intersection">example004.scad</a></li>
+                    <li><a href="#" class="loadExample" title="For loop (pavillion)">example005.scad</a></li>
+                    <li><a href="#" class="loadExample" title="For loop over array (dice)">example006.scad</a></li>
+                    <li><a href="#" class="loadExample" title="Rotate_extrude with DXF import"><strike>example007.scad</strike></a></li>
+                    <li><a href="#" class="loadExample" title="DXF import"><strike>example008.scad</strike></a></li>
+                    <li><a href="#" class="loadExample" title="DXF dimensions"><strike>example009.scad</strike></a></li>
+                    <li><a href="#" class="loadExample" title="Surface function with data file"><strike>example010.scad</strike></a></li>
+                    <li><a href="#" class="loadExample" title="Polyhedron">example011.scad</a></li>
+                    <li><a href="#" class="loadExample" title="STL import"><strike>example012.scad</strike></a></li>
+                    <li><a href="#" class="loadExample" title="DXF import with linear extrude"><strike>example013.scad</strike></a></li>
+                    <li><a href="#" class="loadExample" title="intersection_for"><strike>example014.scad</strike></a></li>
+                    <li><a href="#" class="loadExample" title="DXF import"><strike>example015.scad</strike></a></li>
+                    <li><a href="#" class="loadExample" title="STL import"><strike>example016.scad</strike></a></li>
+                    <li><a href="#" class="loadExample" title=""><strike>example017.scad</strike></a></li>
+                    <li><a href="#" class="loadExample" title=""><strike>example018.scad</strike></a></li>
+                    <li><a href="#" class="loadExample" title=""><strike>example019.scad</strike></a></li>
+                    <li><a href="#" class="loadExample" title=""><strike>example020.scad</strike></a></li>
+                    <li><a href="#" class="loadExample" title=""><strike>example021.scad</strike></a></li>
+                    <li><a href="#" class="loadExample" title=""><strike>example022.scad</strike></a></li>
+                    <li><a href="#" class="loadExample" title="Example combining MCAD/fonts.scad with search() function."><strike>example023.scad</strike></a></li>
+                  </ul>
+                </li>
+                <li class="divider"></li>
+                <li><a href="#" id="menu_file_save">Save</a></li>
+                <li class="divider"></li>
+                <li class="nav-header">Dropbox</li>
+                <li><a href="#" id="menu_file_dropbox_connect">Connect</a></li>
+                <li><a href="#" id="menu_file_dropbox_signout">Signout</a></li>
+              </ul>
+            </li>
+
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Edit <b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                <li class="disabled"><a href="#" id="menu_edit_copy">Copy</a></li>
+                <li class="disabled"><a href="#" id="menu_edit_paste">Paste</a></li>
+                <li class="divider"></li>
+                <li class="nav-header">Input Syntax</li>
+                
+                <li>&nbsp;<input type="radio" class="menu_option" name="sourcetype" id="sourcetype_openscad" value="openscad">&nbsp;OpenSCAD</li>
+                <li>&nbsp;<input type="radio" class="menu_option" name="sourcetype" id="sourcetype_openjscad" value="openjscad">&nbsp;OpenJsCad</li>
+              
+                <li class="divider"></li>
+                <li><a href="#" data-toggle="modal" data-target="#preferencesModal" id="menu_edit_preferences">Preferences</a></li>
+              </ul>
+            </li>
+
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Design <b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                <li>&nbsp;<input type="checkbox" class="menu_option" name="menu_design_auto_reload" value="auto_reload" onchange="auto_reload = $(this).attr('checked')=='checked';">&nbsp;Automatic Reload</li>
+                <li><a href="#" id="menu_design_reload_compile" onclick="updateSolid();">Reload and Compile [F4]</a></li>
+                <li><a href="#" id="menu_design_export_stl" onclick="gProcessor.generateOutputFile();">Export as STL / DXF</a></li>
+              </ul>
+            </li>
+
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">View <b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                <li>&nbsp;<input type="checkbox" class="menu_option" name="menu_view_show_axis" value="show_axis" onchange="showAxis($(this).attr('checked')=='checked');">&nbsp;Show Axis</li>
+                <li>&nbsp;<input type="checkbox" class="menu_option" name="menu_view_show_grid" value="show_grid" onchange="showGrid($(this).attr('checked')=='checked');">&nbsp;Show Grid</li>
+                <li class="divider"></li>
+                <li><a href="#" id="menu_view_top" onclick="viewer.cameraAngle(0,0,0);">Top</a></li>
+                <li><a href="#" id="menu_view_bottom" onclick="viewer.cameraAngle(180,0,0);">Bottom</a></li>
+                <li><a href="#" id="menu_view_left" onclick="viewer.cameraAngle(270,0,90);">Left</a></li>
+                <li><a href="#" id="menu_view_right" onclick="viewer.cameraAngle(270,0,270);">Right</a></li>
+                <li><a href="#" id="menu_view_front" onclick="viewer.cameraAngle(270,0,0);">Front</a></li>
+                <li><a href="#" id="menu_view_back" onclick="viewer.cameraAngle(270,0,180);">Back</a></li>
+                <li><a href="#" id="menu_view_back" onclick="viewer.cameraAngle(325,0,325);">Diagonal</a></li>
+                <li><a href="#" id="menu_view_back" onclick="viewer.cameraPosition(0,0);">Center</a></li>
+                <li class="divider"></li>
+                <li>&nbsp;<input type="checkbox" class="menu_option" name="menu_view_hide_editor" value="hide_editor" onchange="hideEditor();">&nbsp;Hide Editor</li>
+                <li>&nbsp;<input type="checkbox" class="menu_option" name="menu_view_hide_console" value="hide_console" onchange="hideConsole();">&nbsp;Hide Console</li>
+                <li class="divider"></li>
+                <li><a href="#" id="menu_view_clear_console" onclick="clearConsole();">Clear Console</a></li>
+              </ul>
+            </li>
+
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Help <b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                <li><a href="#" data-toggle="modal" data-target="#helpModal">Help</a></li>
+                <li class="divider"></li>
+                <li><a href="http://www.openscad.org/" target="_blank">OpenSCAD Homepage</a></li>
+                <li><a href="http://en.wikibooks.org/wiki/OpenSCAD_User_Manual" target="_blank">OpenSCAD Manual</a></li>
+                <li><a href="http://joostn.github.com/OpenJsCad/" target="_blank">OpenJsCad Homepage</a></li>
+                <li class="divider"></li>
+                <li><a href="#" data-toggle="modal" data-target="#aboutModal">About</a></li>
+              </ul>
+            </li>
+          </ul>
+      </div>
+    </div>
+    <input type="hidden" id="currentFilename" name="currentFilename" />
+    </form>
+  </div>
+
+
+<div id="container">
+
+  <div class="outer-center" id="center-container">
+
+
+    <div class="pane ui-layout-center" id="viewer-container" oncontextmenu="return false;">
+    </div>
+
+    <div class="pane ui-layout-south" id="log-container">
+      <textarea id="log" class="sisyphusignore" name="log" readonly rows="40" cols="50"></textarea>
+    </div>
+  </div>
+
+
+  <div class="pane ui-layout-west">
+
+    <div class="tabbable">
+      <ul class="nav nav-tabs" id="editor-tabs">
+        <li class="active"><a href="#editorTab" data-toggle="tab">Editor</a></li>
+        <li><a href="#filesTab" data-toggle="tab">Files</a></li>
+      </ul>
+      <div class="tab-content">
+        <div class="tab-pane active" id="editorTab">
+          <textarea id="editor" class="sisyphusignore" name="editor" rows="40" cols="50"></textarea>
+        </div>
+        <div class="tab-pane" id="filesTab">
+          <div id="jstree_container">
+            <button class="btn btn-success" type="button" onclick="connect();">Connect to Dropbox</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+</div>
+
+<pre id="example001_scad" class="hidden">
+
+module example001()
+{
+  function r_from_dia(d) = d / 2;
+
+  module rotcy(rot, r, h) {
+    rotate(90, rot)
+      cylinder(r = r, h = h, center = true);
+  }
+
+  difference() {
+    sphere(r = r_from_dia(size));
+    rotcy([0, 0, 0], cy_r, cy_h);
+    rotcy([1, 0, 0], cy_r, cy_h);
+    rotcy([0, 1, 0], cy_r, cy_h);
+  }
+
+  size = 50;
+  hole = 25;
+
+  cy_r = r_from_dia(hole);
+  cy_h = r_from_dia(size * 2.5);
+}
+
+example001();
+</pre>
+
+<pre id="example002_scad" class="hidden">
+
+module example002()
+{
+  intersection() {
+    difference() {
+      union() {
+        cube([30, 30, 30], center = true);
+        translate([0, 0, -25])
+          cube([15, 15, 50], center = true);
+      }
+      union() {
+        cube([50, 10, 10], center = true);
+        cube([10, 50, 10], center = true);
+        cube([10, 10, 50], center = true);
+      }
+    }
+    translate([0, 0, 5])
+      cylinder(h = 50, r1 = 20, r2 = 5, center = true);
+  }
+}
+
+example002();
+</pre>
+
+<pre id="example003_scad" class="hidden">
+
+module example003()
+{
+  difference() {
+    union() {
+      cube([30, 30, 30], center = true);
+      cube([40, 15, 15], center = true);
+      cube([15, 40, 15], center = true);
+      cube([15, 15, 40], center = true);
+    }
+    union() {
+      cube([50, 10, 10], center = true);
+      cube([10, 50, 10], center = true);
+      cube([10, 10, 50], center = true);
+    }
+  }
+}
+
+example003();
+</pre>
+
+<pre id="example004_scad" class="hidden">
+
+module example004()
+{
+  difference() {
+    cube(30, center = true);
+    sphere(20, $fn=20);
+  }
+}
+
+example004();
+</pre>
+  
+<pre id="example005_scad" class="hidden">
+
+module example005()
+{
+  translate([0, 0, -120]) {
+    difference() {
+      cylinder(h = 50, r = 100);
+      translate([0, 0, 10]) cylinder(h = 50, r = 80);
+      translate([100, 0, 35]) cube(50, center = true);
+    }
+    for (i = [0:5]) {
+      echo(360*i/6, sin(360*i/6)*80, cos(360*i/6)*80);
+      translate([sin(360*i/6)*80, cos(360*i/6)*80, 0 ])
+        cylinder(h = 200, r=10);
+    }
+    translate([0, 0, 200])
+      cylinder(h = 80, r1 = 120, r2 = 0);
+  }
+}
+
+example005();
+</pre>
+  
+<pre id="example006_scad" class="hidden">
+
+module example006()
+{
+  module edgeprofile()
+  {
+    render(convexity = 2) difference() {
+      cube([20, 20, 150], center = true);
+      translate([-10, -10, 0])
+        cylinder(h = 80, r = 10, center = true);
+      translate([-10, -10, +40])
+        sphere(r = 10);
+      translate([-10, -10, -40])
+        sphere(r = 10);
+    }
+  }
+
+  difference()
+  {
+    cube(100, center = true);
+    for (rot = [ [0, 0, 0], [1, 0, 0], [0, 1, 0] ]) {
+      rotate(90, rot)
+        for (p = [[+1, +1, 0], [-1, +1, 90], [-1, -1, 180], [+1, -1, 270]]) {
+          translate([ p[0]*50, p[1]*50, 0 ])
+            rotate(p[2], [0, 0, 1])
+              edgeprofile();
+        }
+    }
+    for (i = [
+      [ 0, 0, [ [0, 0] ] ],
+      [ 90, 0, [ [-20, -20], [+20, +20] ] ],
+      [ 180, 0, [ [-20, -25], [-20, 0], [-20, +25], [+20, -25], [+20, 0], [+20, +25] ] ],
+      [ 270, 0, [ [0, 0], [-25, -25], [+25, -25], [-25, +25], [+25, +25] ] ],
+      [ 0, 90, [ [-25, -25], [0, 0], [+25, +25] ] ],
+      [ 0, -90, [ [-25, -25], [+25, -25], [-25, +25], [+25, +25] ] ]
+    ]) {
+      rotate(i[0], [0, 0, 1]) rotate(i[1], [1, 0, 0]) translate([0, -50, 0])
+        for (j = i[2])
+          translate([j[0], 0, j[1]]) sphere(10);
+    }
+  }
+}
+
+example006();
+</pre>
+  
+<pre id="example007_scad" class="hidden">
+
+module cutout()
+{
+    intersection()
+    {
+      rotate(90, [1, 0, 0])
+      translate([0, 0, -50])
+        linear_extrude(height = 100, convexity = 1)
+          import(file = "example007.dxf", layer = "cutout1");
+      
+      rotate(90, [0, 0, 1])
+      rotate(90, [1, 0, 0])
+      translate([0, 0, -50])
+        linear_extrude(height = 100, convexity = 2)
+          import(file = "example007.dxf", layer = "cutout2");
+    }
+}
+
+module clip()
+{
+  difference() {
+    // NB! We have to use the deprecated module here since the "dorn"
+                // layer contains an open polyline, which is not yet supported
+                // by the import() module.
+    rotate_extrude(
+      file = "example007.dxf",
+      layer="dorn",
+      convexity = 3);
+    for (r = [0, 90])
+      rotate(r, [0, 0, 1])
+        cutout();
+  }
+}
+
+module cutview()
+{
+  difference()
+  {
+    difference()
+    {
+      translate([0, 0, -10])
+        clip();
+
+      rotate(20, [0, 0, 1])
+        rotate(-20, [0, 1, 0])
+        translate([18, 0, 0])
+        cube(30, center = true);
+    }
+
+    # render(convexity = 5) intersection()
+    {
+      translate([0, 0, -10])
+        clip();
+    
+      rotate(20, [0, 0, 1])
+        rotate(-20, [0, 1, 0])
+        translate([18, 0, 0])
+        cube(30, center = true);
+    }
+  }
+}
+
+translate([0, 0, -10])
+  clip();
+
+// cutview();
+</pre>
+  
+<pre id="example008_scad" class="hidden">
+
+difference()
+{
+  intersection()
+  {
+    translate([ -25, -25, -25])
+    linear_extrude(height = 50, convexity = 3)
+      import(file = "example008.dxf", layer = "G");
+    
+    rotate(90, [1, 0, 0])
+    translate([ -25, -125, -25])
+    linear_extrude(height = 50, convexity = 3)
+      import(file = "example008.dxf", layer = "E");
+    
+    rotate(90, [0, 1, 0])
+    translate([ -125, -125, -25])
+    linear_extrude(height = 50, convexity = 3)
+      import(file = "example008.dxf", layer = "B");
+  }
+
+  intersection()
+  {
+    translate([ -125, -25, -26])
+    linear_extrude(height = 52, convexity = 1)
+      import(file = "example008.dxf", layer = "X");
+
+    rotate(90, [0, 1, 0])
+    translate([ -125, -25, -26])
+    linear_extrude(height = 52, convexity = 1)
+      import(file = "example008.dxf", layer = "X");
+  }
+}
+</pre>
+  
+<pre id="example009_scad" class="hidden">
+
+bodywidth = dxf_dim(file = "example009.dxf", name = "bodywidth");
+fanwidth = dxf_dim(file = "example009.dxf", name = "fanwidth");
+platewidth = dxf_dim(file = "example009.dxf", name = "platewidth");
+fan_side_center = dxf_cross(file = "example009.dxf", layer = "fan_side_center");
+fanrot = dxf_dim(file = "example009.dxf", name = "fanrot");
+
+% linear_extrude(height = bodywidth, center = true, convexity = 10)
+  import(file = "example009.dxf", layer = "body");
+
+% for (z = [+(bodywidth/2 + platewidth/2),
+    -(bodywidth/2 + platewidth/2)])
+{
+  translate([0, 0, z])
+  linear_extrude(height = platewidth, center = true, convexity = 10)
+    import(file = "example009.dxf", layer = "plate");
+}
+
+intersection()
+{
+  linear_extrude(height = fanwidth, center = true, convexity = 10, twist = -fanrot)
+    import(file = "example009.dxf", layer = "fan_top");
+    
+  // NB! We have to use the deprecated module here since the "fan_side"
+  // layer contains an open polyline, which is not yet supported
+  // by the import() module.
+  rotate_extrude(file = "example009.dxf", layer = "fan_side",
+    origin = fan_side_center, convexity = 10);
+}
+
+
+</pre>
+  
+<pre id="example010_scad" class="hidden">
+
+// example010.dat generated using octave:
+//   d = (sin(1:0.2:10)' * cos(1:0.2:10)) * 10;
+//   save("example010.dat", "d");
+
+intersection()
+{
+  surface(file = "example010.dat",
+    center = true, convexity = 5);
+  
+  rotate(45, [0, 0, 1])
+  surface(file = "example010.dat",
+    center = true, convexity = 5);
+}
+
+</pre>
+
+<pre id="example011_scad" class="hidden">
+  polyhedron(
+  points = [
+    [10, 0, 0],
+    [0, 10, 0],
+    [-10, 0, 0],
+    [0, -10, 0],
+    [0, 0, 10]
+  ],
+  triangles = [
+    [0, 1, 2, 3],
+    [4, 1, 0],
+    [4, 2, 1],
+    [4, 3, 2],
+    [4, 0, 3]
+  ]
+);
+
+</pre>
+
+<pre id="example012_scad" class="hidden">
+
+// example012.stl is Mblock.stl, (c) 2009 Will Langford
+// licensed under the Creative Commons - GNU GPL license.
+// http://www.thingiverse.com/thing:753
+
+difference()
+{
+  sphere(20);
+  
+  translate([ -2.92, 0.5, +20 ]) rotate([180, 0, 180])
+      import("example012.stl", convexity = 5);
+}
+
+</pre>
+
+<pre id="example013_scad" class="hidden">
+intersection()
+{
+  linear_extrude(height = 100, center = true, convexity= 3)
+    import(file = "example013.dxf");
+  rotate([0, 90, 0])
+  linear_extrude(height = 100, center = true, convexity= 3)
+    import(file = "example013.dxf");
+  rotate([90, 0, 0])
+  linear_extrude(height = 100, center = true, convexity= 3)
+    import(file = "example013.dxf");
+}
+</pre>
+
+<pre id="example014_scad" class="hidden">
+
+intersection_for(i = [
+      [0, 0, 0],
+      [10, 20, 300],
+      [200, 40, 57],
+      [20, 88, 57]
+    ])
+  rotate(i) cube([100, 20, 20], center = true);
+
+</pre>
+
+<pre id="example015_scad" class="hidden">
+
+module shape()
+{
+  difference()
+  {
+    translate([ -35, -35 ]) intersection()
+    {
+      union() {
+        difference() {
+          square(100, true);
+          square(50, true);
+        }
+        translate([ 50, 50 ])
+          square(15, true);
+      }
+      rotate(45) translate([ 0, -15 ]) square([ 100, 30 ]);
+    }
+  
+    rotate(-45) scale([ 0.7, 1.3 ]) circle(5);
+  }
+  
+  import(file = "example009.dxf", layer = "body",
+      convexity = 6, scale=2);
+}
+
+// linear_extrude(convexity = 10, center = true)
+shape();
+
+
+</pre>
+
+<pre id="example016_scad" class="hidden">
+
+// example016.stl is derived from Mblock.stl
+// (c) 2009 Will Langford licensed under
+// the Creative Commons - GNU GPL license.
+// http://www.thingiverse.com/thing:753
+//
+// Jonas Pfeil converted the file to binary
+// STL and duplicated its content.
+
+module blk1() {
+  cube([ 65, 28, 28 ], center = true);
+}
+
+module blk2() {
+  difference() {
+    translate([ 0, 0, 7.5 ])
+      cube([ 60, 28, 14 ], center = true);
+    cube([ 8, 32, 32 ], center = true);
+  }
+}
+
+module chop() {
+  translate([ -14, 0, 0 ])
+    import(file = "example016.stl", convexity = 12);
+}
+
+difference() {
+  blk1();
+  for (alpha = [0, 90, 180, 270]) {
+    rotate(alpha, [ 1, 0, 0]) render(convexity = 12)
+      difference() {
+        blk2();
+        chop();
+      }
+  }
+}
+
+</pre>
+
+<pre id="example017_scad" class="hidden">
+
+// To render the DXF file from the command line:
+// openscad -x example017.dxf -D'mode="parts"' example017.scad
+
+// mode = "parts";
+// mode = "exploded";
+mode = "assembled";
+
+thickness = 6;
+locklen1 = 15;
+locklen2 = 10;
+boltlen = 15;
+midhole = 10;
+inner1_to_inner2 = 50;
+total_height = 80;
+
+module shape_tripod()
+{
+  x1 = 0;
+  x2 = x1 + thickness;
+  x3 = x2 + locklen1;
+  x4 = x3 + thickness;
+  x5 = x4 + inner1_to_inner2;
+  x6 = x5 - thickness;
+  x7 = x6 - locklen2;
+  x8 = x7 - thickness;
+  x9 = x8 - thickness;
+  x10 = x9 - thickness;
+  
+  y1 = 0;
+  y2 = y1 + thickness;
+  y3 = y2 + thickness;
+  y4 = y3 + thickness;
+  y5 = y3 + total_height - 3*thickness;
+  y6 = y5 + thickness;
+  
+  union()
+  {
+    difference() {
+      polygon([
+        [ x1, y2 ], [ x2, y2 ],
+        [ x2, y1 ], [ x3, y1 ], [ x3, y2 ],
+        [ x4, y2 ], [ x4, y1 ], [ x5, y1 ],
+        [ x5 + thickness, y3 ], [ x5, y4 ],
+        [ x5, y5 ],
+        [ x6, y5 ], [ x6, y6 ], [ x7, y6 ], [ x7, y5 ], [ x8, y5 ],
+        [ x8, y6 ], [ x9, y5 ],
+        [ x9, y4 ], [ x10, y3 ],
+        [ x2, y3 ]
+      ]);
+      translate([ x10, y4 ]) circle(thickness);
+      translate([ x5 + thickness, y4 ]) circle(thickness);
+    }
+  
+    translate([ x5, y1 ])
+    square([ boltlen - thickness, thickness*2 ]);
+  
+    translate([ x5 + boltlen - thickness, y2 ]) circle(thickness);
+  
+    translate([ x2, y2 ]) intersection() {
+      circle(thickness);
+      translate([ -thickness*2, 0 ]) square(thickness*2);
+    }
+  
+    translate([ x8, y5 ]) intersection() {
+      circle(thickness);
+      translate([ -thickness*2, 0 ]) square(thickness*2);
+    }
+  }
+}
+
+module shape_inner_disc()
+{
+  difference() {
+    circle(midhole + boltlen + 2*thickness + locklen2);
+    for (alpha = [ 0, 120, 240 ])
+      rotate(alpha) translate([ 0, midhole + boltlen + thickness + locklen2/2 ]) square([ thickness, locklen2 ], true);
+    circle(midhole + boltlen);
+  }
+}
+
+module shape_outer_disc()
+{
+  difference() {
+    circle(midhole + boltlen + inner1_to_inner2 + 2*thickness + locklen1);
+    for (alpha = [ 0, 120, 240 ])
+      rotate(alpha) translate([ 0, midhole + boltlen + inner1_to_inner2 + thickness + locklen1/2 ]) square([ thickness, locklen1 ], true);
+    circle(midhole + boltlen + inner1_to_inner2);
+  }
+}
+
+module parts()
+{
+  tripod_x_off = locklen1 - locklen2 + inner1_to_inner2;
+  tripod_y_off = max(midhole + boltlen + inner1_to_inner2 + 4*thickness + locklen1, total_height);
+
+  shape_inner_disc();
+  shape_outer_disc();
+
+  for (s = [ [1,1], [-1,1], [1,-1] ])
+    scale(s) translate([ tripod_x_off, -tripod_y_off ]) shape_tripod();
+}
+
+module exploded()
+{
+  translate([ 0, 0, total_height + 2*thickness ]) linear_extrude(height = thickness, convexity = 4) shape_inner_disc();
+  linear_extrude(height = thickness, convexity = 4) shape_outer_disc();
+
+  color([ 0.7, 0.7, 1 ]) for (alpha = [ 0, 120, 240 ])
+    rotate(alpha) translate([ 0, thickness*2 + locklen1 + inner1_to_inner2 + boltlen + midhole, 1.5*thickness ])
+      rotate([ 90, 0, -90 ]) linear_extrude(height = thickness, convexity = 10, center = true) shape_tripod();
+}
+
+module bottle()
+{
+  r = boltlen + midhole;
+  h = total_height - thickness*2;
+
+  rotate_extrude(convexity = 2)
+  {
+    square([ r, h ]);
+
+    translate([ 0, h ])
+    intersection() {
+      square([ r, r ]);
+      scale([ 1, 0.7 ]) circle(r);
+    }
+
+    translate([ 0, h+r ])
+    intersection() {
+      translate([ 0, -r/2 ]) square([ r/2, r ]);
+      circle(r/2);
+    }
+  }
+}
+
+module assembled()
+{
+  translate([ 0, 0, total_height - thickness ]) linear_extrude(height = thickness, convexity = 4) shape_inner_disc();
+  linear_extrude(height = thickness, convexity = 4) shape_outer_disc();
+
+  color([ 0.7, 0.7, 1 ]) for (alpha = [ 0, 120, 240 ])
+    rotate(alpha) translate([ 0, thickness*2 + locklen1 + inner1_to_inner2 + boltlen + midhole, 0 ])
+      rotate([ 90, 0, -90 ]) linear_extrude(height = thickness, convexity = 10, center = true) shape_tripod();
+
+  % translate([ 0, 0, thickness*2]) bottle();
+}
+
+if (mode == "parts")
+  parts();
+
+if (mode == "exploded")
+  exploded();
+
+if (mode == "assembled")
+  assembled();
+</pre>
+
+
+<pre id="example018_scad" class="hidden">
+
+module step(len, mod)
+{
+  for (i = [0:$children-1])
+    translate([ len*(i - ($children-1)/2), 0, 0 ]) child((i+mod) % $children);
+}
+
+for (i = [1:4])
+{
+  translate([0, -250+i*100, 0]) step(100, i)
+  {
+    sphere(30);
+    cube(60, true);
+    cylinder(r = 30, h = 50, center = true);
+  
+    union() {
+      cube(45, true);
+      rotate([45, 0, 0]) cube(50, true);
+      rotate([0, 45, 0]) cube(50, true);
+      rotate([0, 0, 45]) cube(50, true);
+    }
+  }
+}
+
+</pre>
+
+
+<pre id="example019_scad" class="hidden">
+
+function get_cylinder_h(p) = lookup(p, [
+    [ -200, 5 ],
+    [ -50, 20 ],
+    [ -20, 18 ],
+    [ +80, 25 ],
+    [ +150, 2 ]
+  ]);
+
+for (i = [-100:5:+100]) {
+  // echo(i, get_cylinder_h(i));
+  translate([ i, 0, -30 ]) cylinder(r1 = 6, r2 = 2, h = get_cylinder_h(i)*3);
+}
+
+
+</pre>
+
+
+<pre id="example020_scad" class="hidden">
+
+module screw(type = 2, r1 = 15, r2 = 20, n = 7, h = 100, t = 8)
+{
+  linear_extrude(height = h, twist = 360*t/n, convexity = t)
+  difference() {
+    circle(r2);
+    for (i = [0:n-1]) {
+        if (type == 1) rotate(i*360/n) polygon([
+            [ 2*r2, 0 ],
+            [ r2, 0 ],
+            [ r1*cos(180/n), r1*sin(180/n) ],
+            [ r2*cos(360/n), r2*sin(360/n) ],
+            [ 2*r2*cos(360/n), 2*r2*sin(360/n) ],
+        ]);
+        if (type == 2) rotate(i*360/n) polygon([
+            [ 2*r2, 0 ],
+            [ r2, 0 ],
+            [ r1*cos(90/n), r1*sin(90/n) ],
+            [ r1*cos(180/n), r1*sin(180/n) ],
+            [ r2*cos(270/n), r2*sin(270/n) ],
+            [ 2*r2*cos(270/n), 2*r2*sin(270/n) ],
+        ]);
+    }
+  }
+}
+
+module nut(type = 2, r1 = 16, r2 = 21, r3 = 30, s = 6, n = 7, h = 100/5, t = 8/5)
+{
+  difference() {
+    cylinder($fn = s, r = r3, h = h);
+    translate([ 0, 0, -h/2 ]) screw(type, r1, r2, n, h*2, t*2);
+  }
+}
+
+module spring(r1 = 100, r2 = 10, h = 100, hr = 12)
+{
+  stepsize = 1/16;
+  module segment(i1, i2) {
+    alpha1 = i1 * 360*r2/hr;
+    alpha2 = i2 * 360*r2/hr;
+    len1 = sin(acos(i1*2-1))*r2;
+    len2 = sin(acos(i2*2-1))*r2;
+    if (len1 &lt; 0.01)
+      polygon([
+        [ cos(alpha1)*r1, sin(alpha1)*r1 ],
+        [ cos(alpha2)*(r1-len2), sin(alpha2)*(r1-len2) ],
+        [ cos(alpha2)*(r1+len2), sin(alpha2)*(r1+len2) ]
+      ]);
+    if (len2 &lt; 0.01)
+      polygon([
+        [ cos(alpha1)*(r1+len1), sin(alpha1)*(r1+len1) ],
+        [ cos(alpha1)*(r1-len1), sin(alpha1)*(r1-len1) ],
+        [ cos(alpha2)*r1, sin(alpha2)*r1 ],
+      ]);
+    if (len1 >= 0.01 &amp;&amp; len2 >= 0.01)
+      polygon([
+        [ cos(alpha1)*(r1+len1), sin(alpha1)*(r1+len1) ],
+        [ cos(alpha1)*(r1-len1), sin(alpha1)*(r1-len1) ],
+        [ cos(alpha2)*(r1-len2), sin(alpha2)*(r1-len2) ],
+        [ cos(alpha2)*(r1+len2), sin(alpha2)*(r1+len2) ]
+      ]);
+  }
+  linear_extrude(height = 100, twist = 180*h/hr,
+      $fn = (hr/r2)/stepsize, convexity = 5) {
+    for (i = [ stepsize : stepsize : 1+stepsize/2 ])
+      segment(i-stepsize, min(i, 1));
+  }
+}
+
+translate([ -30, 0, 0 ])
+screw();
+
+translate([ 30, 0, 0 ])
+nut();
+
+spring();
+
+</pre>
+
+
+<pre id="example021_scad" class="hidden">
+
+module thing()
+{
+  $fa = 30;
+  difference() {
+    sphere(r = 25);
+    cylinder(h = 62.5, r1 = 12.5, r2 = 6.25, center = true);
+    rotate(90, [ 1, 0, 0 ]) cylinder(h = 62.5,
+        r1 = 12.5, r2 = 6.25, center = true);
+    rotate(90, [ 0, 1, 0 ]) cylinder(h = 62.5,
+        r1 = 12.5, r2 = 6.25, center = true);
+  }
+}
+
+module demo_proj()
+{
+  linear_extrude(center = true, height = 0.5) projection(cut = false) thing();
+  % thing();
+}
+
+module demo_cut()
+{
+  for (i=[-20:5:+20]) {
+     rotate(-30, [ 1, 1, 0 ]) translate([ 0, 0, -i ])
+      linear_extrude(center = true, height = 0.5) projection(cut = true)
+        translate([ 0, 0, i ]) rotate(+30, [ 1, 1, 0 ]) thing();
+  }
+  % thing();
+}
+
+translate([ -30, 0, 0 ]) demo_proj();
+translate([ +30, 0, 0 ]) demo_cut();
+
+</pre>
+
+
+<pre id="example022_scad" class="hidden">
+  // size is a vector [w, h, d]
+module roundedBox(size, radius, sidesonly)
+{
+  rot = [ [0,0,0], [90,0,90], [90,90,0] ];
+  if (sidesonly) {
+    cube(size - [2*radius,0,0], true);
+    cube(size - [0,2*radius,0], true);
+    for (x = [radius-size[0]/2, -radius+size[0]/2],
+         y = [radius-size[1]/2, -radius+size[1]/2]) {
+      translate([x,y,0]) cylinder(r=radius, h=size[2], center=true);
+    }
+  }
+  else {
+    cube([size[0], size[1]-radius*2, size[2]-radius*2], center=true);
+    cube([size[0]-radius*2, size[1], size[2]-radius*2], center=true);
+    cube([size[0]-radius*2, size[1]-radius*2, size[2]], center=true);
+
+    for (axis = [0:2]) {
+      for (x = [radius-size[axis]/2, -radius+size[axis]/2],
+          y = [radius-size[(axis+1)%3]/2, -radius+size[(axis+1)%3]/2]) {
+        rotate(rot[axis]) 
+          translate([x,y,0]) 
+          cylinder(h=size[(axis+2)%3]-2*radius, r=radius, center=true);
+      }
+    }
+    for (x = [radius-size[0]/2, -radius+size[0]/2],
+        y = [radius-size[1]/2, -radius+size[1]/2],
+        z = [radius-size[2]/2, -radius+size[2]/2]) {
+      translate([x,y,z]) sphere(radius);
+    }
+  }
+}
+
+translate([-15,0,0])roundedBox([20,30,40], 5, true);
+translate([15,0,0]) roundedBox([20,30,40], 5, false);
+
+
+</pre>
+
+
+<pre id="example023_scad" class="hidden">
+// Example combining MCAD/fonts.scad with search() function.
+
+use &lt;MCAD/fonts.scad&gt;
+
+thisFont=8bit_polyfont();
+x_shift=thisFont[0][0];
+y_shift=thisFont[0][1];
+
+hours=["one","two","three","four","five","six","seven","eight","nine","ten","eleven","twelve"];
+
+module clock_hour_words(word_offset=20.0,word_height=2.0) {
+  for(i=[0:(len(hours)-1)]) assign( hourHandAngle=(i+1)*360/len(hours), theseIndicies=search(hours[i],thisFont[2],1,1) ) {
+    rotate(90-hourHandAngle) translate([word_offset,0])
+      for( j=[0:(len(theseIndicies)-1)] ) translate([j*x_shift,-y_shift/2]) {
+        linear_extrude(height=word_height) polygon(points=thisFont[2][theseIndicies[j]][6][0],paths=thisFont[2][theseIndicies[j]][6][1]);
+      }
+  }
+}
+
+clock_hour_words(word_offset=16.0,word_height=5.0);
+
+</pre>
+
+
+
+<div id="aboutModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="aboutModalLabel" aria-hidden="true">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h3 id="aboutModalLabel">About</h3>
+  </div>
+  <div class="modal-body">
+    <h4>Overview</h4>
+    <p>OpenSCAD.net is a partial port of OpenSCAD for the web.  Powered by OpenJsCad, it uses the familiar OpenSCAD syntax to allow many OpenSCAD models to be rendered, and saved as STL, via the browser.</p>
+    <hr>
+    <h4>Credits &amp; Libraries Used</h4>
+    <p>
+        <ul>
+          <li><a href="http://www.openscad.org/" target="_blank">OpenSCAD</a></li>
+          <li><a href="http://joostn.github.com/OpenJsCad/" target="_blank">OpenJsCad</a></li>
+          <li><a href="http://zaach.github.com/jison/" target="_blank">Jison</a></li>
+          <li><a href="https://github.com/dropbox/dropbox-js" target="_blank">Dropbox.js</a></li>
+          <li><a href="http://twitter.github.com/bootstrap" target="_blank">Bootstrap</a></li>
+          <li><a href="http://jquery.com/" target="_blank">jQuery</a></li>
+          <li><a href="http://layout.jquery-dev.net/" target="_blank">jQuery UI Layout Plug-in</a></li>
+          <li><a href="http://underscorejs.org/" target="_blank">underscore.js</a></li>
+          <li><a href="http://simsalabim.github.com/sisyphus/" target="_blank">sisyphus.js</a></li>
+          <li><a href="http://www.jstree.com/" target="_blank">jstree</a></li>
+          <li><a href="https://github.com/CD1212/jQuery-Font-Chooser" target="_blank">jQuery-Font-Chooser</a></li>
+          <li><a href="http://led24.de/iconset/" target="_blank">LED Icon Set</a></li>
+        </ul>
+    </p>
+  </div>
+  <div class="modal-footer">
+    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+  </div>
+</div>
+  
+<div id="helpModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="helpModalLabel" aria-hidden="true">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h3 id="helpModalLabel">Help</h3>
+  </div>
+  <div class="modal-body">
+    <p>The layout and menu options have been made as similar to the desktop version of OpenSCAD to aid quick adoption.</p>
+    <hr>
+    <h4>Basics</h4>
+    <p>Paste or type an OpenSCAD script into the editor and hit F4 (or select "Reload and Compile" from the Design menu).  The model should render in the panel to the right.  Any error messages should appear in the log panel at the bottom, or in the browser console.</p>
+    <hr>
+    <h4>Imported Libraries via Dropbox</h4>
+    <p>So that scripts can utilise the "use" and "include" directives, the application can connect to a Dropbox account in order to import library files stored there.  Authorising access for the app will create a dedicated, sandboxed, folder in your Dropbox space.  Folders and files stored here can be referenced via "use" and "include" statements.  Scripts can also be saved to the Dropbox space, via the Save option.</p>
+    <hr>
+    <h4>Missing Features</h4>
+    <p>Several features are either not yet implemented or can/will not be implemented.  For this reason many of the original OpenSCAD examples, which are available through the File/Examples menu, will not work. These are marked as such with a strikethrough.
+        <ul>
+          <li>DXF import and manipulation (e.g. import_dxf, dxf-cross, dxf_dim functions).</li>
+          <li>STL import.</li>
+          <li>rotate_extrude.</li>
+          <li>minkowski and hull transformations.</li>
+          <li>$fa, $fs global variables.</li>
+          <li>intersection_for and assign statements.</li>
+          <li>Modifier characters: #, !, %).</li>
+        </ul>
+    </p>
+  </div>
+  <div class="modal-footer">
+    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+  </div>
+</div>
+  
+<div id="preferencesModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="preferencesModalLabel" aria-hidden="true">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h3 id="preferencesModalLabel">Preferences</h3>
+  </div>
+  <div class="modal-body">
+
+    <ul class="nav nav-tabs">
+      <li><a href="#preferences3dView" data-toggle="tab">3D View</a></li>
+      <li><a href="#preferencesEditor" data-toggle="tab">Editor</a></li>
+    </ul>
+
+    <div class="tab-content">
+      <div class="tab-pane active" id="preferences3dView">
+        <label>Color Schemes</label>
+        <select id="colorScheme">
+          <option value="cornfield">Cornfield</option>
+          <option value="metallic">Metallic</option>
+          <option value="sunset">Sunset</option>
+          <option value="sunrise">Sunrise</option>
+        </select>
+      </div>
+      <div class="tab-pane" id="preferencesEditor">
+        <label>Font</label>
+        <div id="fontSelect">
+          <span>Arial</span>
+          <div class="arrow-down"></div>
+          <ul>
+              <li>Arial,Arial,Helvetica,sans-serif</li>
+              <li>Arial Black,Arial Black,Gadget,sans-serif</li>
+              <li>Comic Sans MS,Comic Sans MS,cursive</li>
+              <li>Courier New,Courier New,Courier,monospace</li>
+              <li>Georgia,Georgia,serif</li>
+              <li>Impact,Charcoal,sans-serif</li>
+              <li>Lucida Console,Monaco,monospace</li>
+              <li>Lucida Sans Unicode,Lucida Grande,sans-serif</li>
+              <li>Palatino Linotype,Book Antiqua,Palatino,serif</li>
+              <li>Tahoma,Geneva,sans-serif</li>
+              <li>Times New Roman,Times,serif</li>
+              <li>Trebuchet MS,Helvetica,sans-serif</li>
+              <li>Verdana,Geneva,sans-serif</li>
+              <li>Gill Sans,Geneva,sans-serif</li>
+          </ul>
+        </div>
+        <select id="preferencesFontSize">
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+          <option value="10">10</option>
+          <option value="11">11</option>
+          <option value="12">12</option>
+          <option value="14">14</option>
+          <option value="16">16</option>
+          <option value="18">18</option>
+          <option value="20">20</option>
+          <option value="22">22</option>
+          <option value="24">24</option>
+          <option value="26">26</option>
+          <option value="28">28</option>
+          <option value="36">36</option>
+          <option value="48">48</option>
+          <option value="72">72</option>
+        </select>
+      </div>
+    </div>
+
+  </div>
+  <div class="modal-footer">
+    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+  </div>
+</div>
+  
+
+</body>
+</html>
