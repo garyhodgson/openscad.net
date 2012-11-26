@@ -313,3 +313,17 @@ Math['atan2deg'] = function(degree) {
 Math['tandeg'] = function(degree) {
   return Math.tan(degree*(Math.PI/180));
 };
+
+
+    function logMessage(msg) {
+      if (msg == ""){
+        return;
+      }
+      var val = $('#log').val();
+      if (val == ""){
+        $('#log').val(msg);
+      } else {
+        $('#log').val($('#log').val()+"\n"+msg)
+      }
+      $('#log').scrollTop($('#log')[0].scrollHeight);
+    }

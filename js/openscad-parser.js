@@ -46,30 +46,28 @@ case 1:
 break;
 case 8:
 
-            var submodule = new Module($$[$0-4]);
+            var p_currmodule = currmodule;
+            module_stack.push(currmodule);
             
-            submodule.argnames = $$[$0-2].argnames;
-            submodule.argexpr = $$[$0-2].argexpr;
-            
-            currmodule.modules.push(submodule);
-            currmodule.currentSubmodule++;
+            currmodule = new Module($$[$0-4]);
 
-            delete $$[$0-2];
+            p_currmodule.modules.push(currmodule);
+
+            currmodule.argnames = $$[$0-2].argnames;
+            currmodule.argexpr = $$[$0-2].argexpr;
             
+            delete $$[$0-2];
+           
         
 break;
 case 10:
-            if (currmodule.currentSubmodule > 0){
-                currmodule.currentSubmodule--
+            if (module_stack.length > 0){
+                currmodule = module_stack.pop();
             }
         
 break;
 case 11:
-            if (currmodule.currentSubmodule > 0){
-                currmodule.modules[currmodule.currentSubmodule -1].children.push($$[$0]);
-            } else {
-                currmodule.children.push($$[$0]);    
-            }            
+            currmodule.children.push($$[$0]);    
         
 break;
 case 12:  
@@ -133,7 +131,7 @@ case 21:
             this.$ = $$[$0-1];
             if (this.$) {
                 this.$.children = $$[$0].children;
-            }else {
+            } else {
                 for (var i = 0; i < $$[$0].children.length; i++)
                 delete $$[$0].children[i];
             }   
@@ -151,7 +149,9 @@ break;
 case 24:
             this.$ = $$[$0-1];
             if (this.$) {
-                if ($$[$0]) this.$.children.push($$[$0]);
+                if ($$[$0]) {
+                    this.$.children.push($$[$0]);
+                }
             } else {
                 delete $$[$0];
             }
@@ -566,9 +566,9 @@ parse: function parse(input) {
 
 
 /*
-var _ = require("underscore");
-require("./js/csg");
-require("./js/openscad2openjscad_support");
+var _ = require("underscore-min");
+require("csg");
+require("openscad2openjscad_support");
 */
 
 function Expression(value) {
@@ -735,11 +735,9 @@ Module.prototype.evaluate = function(parentContext, inst) {
     });
 
     var evaluatedLines = [];
-    if (nonControlChildren.length > 0){
-        _.each(nonControlChildren, function(child, index, list) {
-            evaluatedLines.push(child.evaluate(context));                
-        });
-    }
+    _.each(nonControlChildren, function(child, index, list) {
+        evaluatedLines.push(child.evaluate(context));                
+    });
 
     if (evaluatedLines.length == 1){
         lines.push(evaluatedLines[0]);
@@ -788,16 +786,12 @@ ModuleInstantiation.prototype.evaluate = function(context) {
 
 ModuleInstantiation.prototype.evaluateChildren = function(context) {
 
-
     var childModules = []
 
     for (var i = 0; i < this.children.length; i++) {
         var childInst = this.children[i];
-
-        var childAdaptor = factory.getAdaptor(childInst);
-
-        var evaluatedChild = childAdaptor.evaluate(context, childInst);
         
+        var evaluatedChild = childInst.evaluate(context);
         if (evaluatedChild !== undefined){
             childModules.push(evaluatedChild);
         }
@@ -840,7 +834,6 @@ Context.prototype.args = function(argnames, argexpr, call_argnames, call_argvalu
             this.setVariable(argnames[i], undefined);
         }
     };
-
     var posarg = 0;  
     for (var i = 0; i < call_argnames.length; i++) {
         if (call_argnames[i] === undefined) {
@@ -888,10 +881,10 @@ Context.prototype.evaluateFunction = function(name, argnames, argvalues) {
 Context.prototype.evaluateModule = function(inst) {
 
     var that = this;
-
-    _.each(inst.argexpr, function(expr,index,list) {
-        inst.argvalues.push(expr.evaluate(that));
-    });
+// this appears to double the argvalues when calling a submodule...
+//    _.each(inst.argexpr, function(expr,index,list) {
+//        inst.argvalues.push(expr.evaluate(that));
+//    });
 
     var customModule = _.find(this.modules_p, function(x) { return x.name == inst.name; });
     if (customModule !== undefined) {
@@ -1005,21 +998,20 @@ OpenjscadSolidFactory.prototype.getAdaptor = function(args) {
             return new RenderModule();
         default:
             if (args instanceof ModuleInstantiation){
-                return ModuleAdaptor(args)
+                return new ModuleAdaptor()
             }
             return undefined;
     }
 };
 
-function ModuleAdaptor(inst) {
-    var inst = inst;
-    return {
-        evaluate: function(parentContext){
-            inst.isSubmodule = true;
-            return parentContext.evaluateModule(inst);
-        }
-    };
 
+function ModuleAdaptor(a){
+    CoreModule.call(this, a);
+};
+
+ModuleAdaptor.prototype.evaluate = function(parentContext, inst){
+    inst.isSubmodule = true;
+    return parentContext.evaluateModule(inst);
 };
 
 
@@ -1281,6 +1273,7 @@ function TransformModule(a){
 
         for (var i = 0; i < children.length; i++) {
             var childInst = children[i];
+            childInst.argvalues = [];  // NOTE: not sure if this is the right solution!
             _.each(childInst.argexpr, function(expr,index,list) {
                 childInst.argvalues.push(expr.evaluate(context));
             });
@@ -1418,6 +1411,7 @@ function TranslateTransform(a){
 };
 
 TranslateTransform.prototype.evaluate = function(parentContext, inst){
+
 
     inst.argvalues = [];
 
@@ -1835,7 +1829,7 @@ function resetModule() {
     currmodule = new Module("root");
     context_stack = [];
     includes_stack = [];
-
+    module_stack = [];
 }/* Jison generated lexer */
 var lexer = (function(){
 var lexer = ({EOF:1,

@@ -1,5 +1,5 @@
 var assert = require("assert");
-var parser = require("../openscad").parser;
+var parser = require("../openscad-parser").parser;
 var fs = require("fs");
 
 function parse(s) {

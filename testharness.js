@@ -1,7 +1,7 @@
 var fs = require("fs");
 var _ = require("underscore");
 var CSG = require("./js/csg");
-var parser = require("./openscad").parser;
+var parser = require("./openscad-parser").parser;
 
 if (parser.yy === undefined){
 	parser.yy = {}

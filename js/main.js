@@ -1,0 +1,605 @@
+requirejs.config({
+    shim: {
+        'jquery-ui-latest': ['jquery-latest.min'],
+        'jquery.layout-latest.min': ['jquery-latest.min', 'jquery-ui-latest.min'],
+        'jquery-ui-latest.min': ['jquery-latest.min'],
+        'jquery.fontselector.min': ['jquery-latest.min'],
+        'jquery.jstree.min': ['jquery-latest.min'],
+        'jquery.textarea': ['jquery-latest.min'],
+        'jquery.mousewheel': ['jquery-latest.min'],
+        'bootstrap/bootstrap.min': ['jquery-latest.min'],
+        'sisyphus.min': ['jquery-latest.min'],
+        'openscad-parser': ['underscore-min', 'jquery-latest.min', 'openscad2openjscad_support', 'csg']
+
+    }
+});
+
+requirejs(["jquery-latest.min", "jquery-ui-latest.min", "jquery.layout-latest.min","jquery.fontselector.min","modernizr.min", "dropbox.min", 
+	"jquery.jstree.min", "bootstrap/bootstrap.min", "jquery.textarea", "jquery.mousewheel", "underscore-min", "sisyphus.min", "shortcut",
+	"openscad2openjscad_support", "lightgl", "csg", "openjscad", "openscad-parser"], function() {
+
+	var myLayout;
+    var gProcessor=null;
+    var defaultEditorContent = "union(){\n  cube([1,1,1]);\n\n  color(\"red\")\n  translate([1,1,1])\n    sphere(r=0.5);\n}";
+    var auto_reload;
+    var editorIsDirty = false;
+    var modelIsShown = false;
+    var currentFilename = '';
+    var client;
+    var uiLayout, logLayout;
+    var colorSchemes = {
+      "cornfield": { backgroundColor: [255/255, 255/255, 229/255], faceColor: [249/255, 215/255, 44/255] },
+      "metallic": { backgroundColor: [170/255, 170/255, 255/255], faceColor: [221/255, 221/255, 225/255] },
+      "sunset": { backgroundColor: [170/255, 68/255, 68/255], faceColor: [255/255, 170/255, 170/255] },
+      "sunrise": { backgroundColor: [196/255, 207/255, 210/255], faceColor: [255/255, 245/255, 184/255] }
+    };
+
+    $(function() {
+    	if (!Modernizr.webgl){
+        notify("This app needs webGL - Google Chrome would be a good choice of browser.")
+        return 
+      }
+
+      openscadParser.yy.logMessage = logMessage;
+
+      client = new Dropbox.Client({
+          key: "HXhDdRlFUUA=|ExW13h6tJ+jTCm96w87G1F3wvtvRRKnOdXuYBn3BIg==", sandbox: true
+      });
+      client.authDriver(new Dropbox.Drivers.Redirect({rememberUser: true}));
+
+      uiLayout = $('#container').layout({
+          minSize:      100
+        , center__paneSelector: ".outer-center"
+        , stateManagement: {
+            enabled:      true
+        ,    cookie: {
+                name:     "uiLayout"
+            }
+        }
+        , enableCursorHotkey: false
+        , center__children: {
+            minSize:        10
+          , center__onresize_end: resizeViewer
+          , south__size:      50
+          , stateManagement: {
+              enabled:      true
+          ,    cookie: {
+                  name:     "logLayout"
+              }
+          }
+          }
+      });
+
+      logLayout = $("#center-container").layout({
+          center__paneSelector: ".outer-center"
+          
+      })
+
+      $('#settingsForm').sisyphus({excludeFields: $('.sisyphusignore')});
+      show_axis = $('input[name=menu_view_show_axis]').attr("checked")=="checked";
+      show_grid = $('input[name=menu_view_show_grid]').attr("checked")=="checked";
+      auto_reload = $('input[name=menu_design_auto_reload]').attr("checked")=="checked";
+      hideEditor();
+      hideConsole();
+      if (!$('#sourcetype_openscad').attr('checked') && !$('#sourcetype_openjscad').attr('checked')){
+        $('#sourcetype_openscad').attr('checked','checked');
+      }
+
+      $('#editor').tabby();
+      
+      if (localStorage.getItem("lastEdit") != undefined){
+        $('#editor').val(localStorage.getItem("lastEdit"));
+      } else {
+        $('#editor').val(defaultEditorContent);
+      }
+
+      var font = (localStorage.getItem("preferencesFontFamily") != undefined)? localStorage.getItem("preferencesFontFamily") : "Courier New,Courier New,Courier,monospace";
+      setEditorFontFamily(font);
+
+      var fontSize = (localStorage.getItem("preferencesFontSize") != undefined)? Number(localStorage.getItem("preferencesFontSize")) : 12;
+      setEditorFontSize(fontSize);
+
+      var colorScheme = (localStorage.getItem("preferencesColorScheme") != undefined)? colorSchemes[localStorage.getItem("preferencesColorScheme")] : colorSchemes['cornfield'];
+
+      $('#editor').live('keyup blur', function(){
+        localStorage.setItem("lastEdit", $(this).val());
+      });
+
+      $("#editor").keypress(function(e) {
+        editorIsDirty = true;
+        if (e.keyCode == 10 && e.ctrlKey == true){
+            updateSolid();
+        }
+      });
+
+      shortcut.add("Ctrl+s",saveEditor);
+      shortcut.add("F4",updateSolid);
+
+      var viewerWidth = $('#viewer-container').width();
+      var viewerHeight = $('#viewer-container').height();
+
+      gProcessor = new OpenJsCad.Processor(viewerWidth, viewerHeight, document.getElementById("viewer-container"), null, logMessage,  colorScheme);
+  
+      var resizeTimeout;
+      window.onresize = function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(resizeViewer, 250); // set for 1/4 second.  May need to be adjusted.
+      };
+
+      $('.menu_option').on('click', function(e){
+        e.stopPropagation();
+      });
+
+      $('#menu_file_new').click(newEditor);
+
+      $('#menu_file_save').click(saveEditor);
+
+      $('#menu_file_dropbox_connect').click(connect);
+
+      $('#menu_file_dropbox_signout').click(disconnect);
+
+
+      if (getUrlParam("oauth_token") != "" || (client && client.oauth.token)){
+        connect();
+      } else {
+        for (var key in localStorage){
+          if (key.match(/^dropbox-auth.*/)) {
+            connect();
+            break;
+          }
+        }
+      }
+
+      if (auto_reload){
+        updateSolid();
+      }
+
+      $('.loadExample').click(function (argument) {
+          loadExample($(this).text());
+      })
+
+      $('#fontSelect').fontSelector({
+          'hide_fallbacks' : true,
+          'initial' : font,
+          'selected' : function(font) {
+            setEditorFontFamily(font);      
+            localStorage.setItem("preferencesFontFamily", font);    
+          }
+      });
+
+      $('#preferencesFontSize').change(function(){
+        var fontSize = Number($("#preferencesFontSize option:selected").val());
+        
+        setEditorFontSize(fontSize);
+        localStorage.setItem("preferencesFontSize", fontSize);
+      });
+
+      $('#colorScheme').change(function () {
+        var scheme = $("#colorScheme option:selected").val();
+        setColorScheme(scheme);
+
+        if (modelIsShown){
+          updateSolid();
+        }
+
+      });
+    });
+
+function setColorScheme (schemeName) {
+      var scheme = colorSchemes[schemeName];
+      if (scheme === undefined){
+        logMessage("Unknown color scheme.");
+        return;
+      }
+      localStorage.setItem("preferencesColorScheme", schemeName);
+      viewer.setColorScheme(scheme);
+      if (modelIsShown){
+        updateSolid();
+      }
+    }
+
+    function setEditorFontFamily(font){
+      $('#editor').css('font-family', font);
+    }
+
+    function setEditorFontSize(fontSize){
+      $('#editor').css('font-size', fontSize);
+      $('#preferencesFontSize option').attr('selected','');
+      $('#preferencesFontSize option[value='+fontSize+']').attr('selected','selected');
+    }
+
+    function loadExample (filename) {
+      var exampleElement = $('#'+filename.replace(/\./g, "_"))
+
+      if (!exampleElement.length){
+        logMessage("Unable to find example: " + filename);
+        return;
+      }
+
+      if (editorIsDirty || currentFilename == ''){
+        if (!confirm("Editor has unsaved changes. Continue?")){
+          return;
+        }
+      }
+      currentFilename = filename;
+      $('#editor').val(exampleElement.text());
+      $('#editor').blur();
+      
+    }
+
+    function getUrlParam( param ){
+      param = param.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+      var exp = "[\\?&]"+param+"=([^&#]*)";
+      var regexp = new RegExp( exp ); 
+      var results = regexp.exec( window.location.href );
+      if( results == null ){
+        return "";
+      } else {
+        return results[1];
+      }
+    }
+
+    function newEditor () {
+        if (editorIsDirty || currentFilename == ''){
+          if (!confirm("Editor has unsaved changes. Continue?")){
+            return;
+          }
+        }
+
+        $('#editor').val('');
+        currentFilename = '';
+        gProcessor.clearViewer();
+        modelIsShown = false;
+
+    };
+
+    function saveEditor() {
+      if (currentFilename == undefined || currentFilename == ''){
+        currentFilename = prompt("Filename:", "newfile.scad");         
+      }
+      if (currentFilename != null) {
+        //TODO path....
+        writeFile("/", currentFilename, $('#editor').val());    
+      }
+    }
+
+    function resizeViewer(x,ui){
+      viewerWidth = $(ui).width();
+      viewerHeight = $(ui).height();
+
+      if (viewerWidth<=0&&viewerHeight<=0){
+        return;
+      }
+
+      gProcessor.canvasResize(viewerWidth, viewerHeight);
+      $('.viewer').width(viewerWidth);
+      $('.viewer').height(viewerHeight);
+    }
+
+    function notify(msg){
+        console.log(msg);  
+    }
+
+    function extractLibraryNames (text) {
+      var lines = text.split("\n");
+        for (var i in lines){
+          var line = lines[i];
+
+          var includedLibrary = line.match(/include <([^>]*)>;/);
+          if (includedLibrary != null){
+            globalLibs[includedLibrary[1]] = undefined;
+          }
+
+          var usedLibrary = line.match(/use <([^>]*)>;/);
+          if (usedLibrary != null){
+            globalLibs[usedLibrary[1]] = undefined;
+          }
+
+        }
+    }
+
+    var globalLibs = {}
+
+    function collateLibraries(text, cb){
+
+      extractLibraryNames(text);
+
+      _.each(globalLibs, function (value, key, list) {
+        if (value == undefined){
+
+          client.readFile(key, null, function(error, content, stat) {
+            if (error) {
+              return showError(error);
+            }
+
+            globalLibs[key] = content;
+
+            collateLibraries(content, cb);
+
+          });
+        }
+      })
+
+      if (cb){
+        var currentGlobalLibContents = _.values(globalLibs);
+
+        if (_.indexOf(currentGlobalLibContents, undefined) == -1){
+          cb();
+        }
+      }
+    }
+
+
+    function updateSolid() {
+      if ($('#sourcetype_openscad').attr("checked")== "checked"){
+
+        var openSCADText = $('#editor').val()
+
+        collateLibraries(openSCADText, function(libs){
+
+          var lines = openSCADText.split("\n");
+          var libraries = [];
+
+          for (var i in lines){
+            var line = lines[i];
+
+            var includedLibrary = line.match(/include <([^>]*)>;/);
+            if (includedLibrary != null){
+              libraries.push(['include',includedLibrary[1]]);
+            }
+
+            var usedLibrary = line.match(/use <([^>]*)>;/);
+            if (usedLibrary != null){
+              libraries.push(['use',usedLibrary[1]]);
+            }
+
+          }
+          newParse(lines, libraries, display);
+        });
+      } else {
+        gProcessor.setJsCad($('#editor').val());
+        modelIsShown = true;
+      }
+    }
+
+    function newParse(lines, libraries, cb) {
+
+      if (libraries.length>0){
+
+        var library = libraries[0];
+        var isUse = library[0] == 'use';
+        var filename = library[1];
+
+        var libContent = globalLibs[filename];
+
+        if (isUse){
+          var usedModuleResult = openscadParser.parse(libContent);
+          openscadParser.yy.context = usedModuleResult.context;
+        } else {
+          var fileTextLines = libContent.split("\n");
+          lines = _.union(fileTextLines, lines);
+        }
+
+        newParse(lines, libraries.slice(1), cb);
+
+      } else {
+        var result = openscadParser.parse(lines.join('\n'));
+        cb(result);
+      }
+      
+    }
+
+    function display(result) {
+      var resultText = result.lines.join('\n');
+
+      console.log(resultText);
+      
+      gProcessor.setJsCad(resultText);
+      modelIsShown = true;
+    }
+
+
+    function onError(e) {
+      console.log('Error' + e.name);
+    }
+
+    var showError = function(error) {
+      if (window.console) {  // Skip the "if" in node.js code.
+        console.error(error);
+      }
+
+      switch (error.status) {
+      case 401:
+        // If you're using dropbox.js, the only cause behind this error is that
+        // the user token expired.
+        // Get the user through the authentication flow again.
+        break;
+
+      case 404:
+        // The file or folder you tried to access is not in the user's Dropbox.
+        // Handling this error is specific to your application.
+        break;
+
+      case 507:
+        // The user is over their Dropbox quota.
+        // Tell them their Dropbox is full. Refreshing the page won't help.
+        break;
+
+      case 503:
+        // Too many API requests. Tell the user to try again later.
+        // Long-term, optimize your code to use fewer API calls.
+        break;
+
+      case 400:  // Bad input parameter
+      case 403:  // Bad OAuth request.
+      case 405:  // Request method not expected
+      default:
+        // Caused by a bug in dropbox.js, in your application, or in Dropbox.
+        // Tell the user an error occurred, ask them to refresh the page.
+      }
+
+      return false;
+    };
+
+    var filetree;
+
+      $(document).on('dblclick','.dbFile', function (e) {
+        var stat = $(this).data("stat");
+      if (!stat){
+        return;
+      }
+      if (stat.isFile){
+        readFile(stat.path);
+      }
+      });
+
+    function readDir(path, root) {
+
+      client.readdir(path, function(error, entries, stat, stats) {
+        if (error) {
+          return showError(error);
+        }
+
+        _.each(stats, function (stat) {
+
+          var id = stat.path.replace(/\//g, '_').replace(/\./g, '_')
+
+          if (stat.isFile){
+          filetree.create_node(
+                root, 'inside', 
+                { attr: {id:id, class:"dbFile"}, metadata: {stat: stat}, data: {title:stat.name, icon: "img/led-icons/page_white_text.png"} }
+            );
+          } else {
+            filetree.create_node(
+                root, 'inside', 
+                { attr: {id:id},  state: "closed", metadata: {stat: stat}, data: stat.name }
+            );
+          }
+
+        });
+
+        filetree.open_node(root);
+        root.data("isloaded", true);
+
+      });
+    };
+
+    function readFile(path) {
+      client.readFile(path, null, function(error, content, stat) {
+        if (error) {
+          return showError(error);
+        }
+
+        if (editorIsDirty){
+          alert("Current editor is not saved.");
+          return;
+        }
+
+        $('#editor').val(content);
+        $('#editor-tabs a[href="#editorTab"]').tab('show');
+
+      });
+    };
+
+    function writeFile(path, filename, content) {
+      client.writeFile(path + filename, content, function(error, stat) {
+        if (error) {
+          return showError(error);
+        }
+
+        console.log("File saved.");
+        editorIsDirty = false;
+      });
+    };
+
+    function connect(){
+      client.authenticate(function(error, client) {
+        if (error) {
+          return showError(error);
+        }
+        $('#notificationbar').attr("title", "Connected to Dropbox");
+        $('#notificationbar').html("<img src='img/led-icons/connect.png'>&nbsp;Dropbox</li>")
+        initFilelist();
+      });
+    };
+
+    function disconnect(){
+      if (confirm("Signout from Dropbox completely?")){
+        client.signOut(function(error) {
+          if (error) {
+            return showError(error);
+          }
+
+          $('#notificationbar').attr("title", "Not Connected to Dropbox");
+          $('#notificationbar').html("<img src='img/led-icons/disconnect.png'>&nbsp;Dropbox</li>")
+          $('#jstree_container').html("<button class='btn btn-success' type='button' onclick='connect();'>Connect to Dropbox</button>");
+          
+        });
+      }
+    };
+
+    function initFilelist(){
+      $("#jstree_container").bind("loaded.jstree", function (event, data) {
+          filetree = $.jstree._reference('#jstree_container');
+          readDir("/", $('#root'));
+        }).bind("open_node.jstree", function (e, data) {
+        var id = data.args[0].attr("id");
+        var isloaded = data.args[0].data("isloaded")
+        if (isloaded === undefined){
+          isloaded = false;
+        }
+
+        if (isloaded){
+          return;
+        }
+
+        var stat = data.args[0].data("stat");
+
+        if (stat !== undefined){
+          readDir(stat.path, $('#'+id));
+        }
+      }).jstree({        
+        core : { animation:200 },
+            plugins : [ "themes", "json_data", "ui" ],
+            json_data: {
+              data: [
+                {
+                  data: "/",
+                  attr: {id:"root"},
+                  metadata: {path:"/"}
+                }
+              ]
+          }
+        });
+      }
+
+      function showGrid(show){
+        show_grid = show;
+        updateSolid();
+      }
+
+      function showAxis(show){
+        show_axis = show;
+        updateSolid();
+      }
+
+      function hideEditor() {
+        if ($('input[name=menu_view_hide_editor]').attr('checked')=='checked'){
+          uiLayout.close("west");  
+        } else {
+          uiLayout.open("west");  
+        }
+      }
+    
+      function hideConsole() {
+        if ($('input[name=menu_view_hide_console]').attr('checked')=='checked'){
+          logLayout.close("south");
+        } else {
+          logLayout.open("south");
+        }
+      }
+
+      function clearConsole() {
+        $('#log').val("");
+      }
+});

@@ -1,6 +1,6 @@
 var assert = require("assert");
 var fs = require("fs");
-var parser = require("../openscad").parser;
+var parser = require("../openscad-parser").parser;
 
 
 function parse(s) {
@@ -24,6 +24,11 @@ exports["test transformed submodule with extra line"] = function() {
 
 exports["test transformed submodule with color mod"] = function() {
 	check("transformedSubmoduleEx3");
+}
+
+exports["test nested submodules"] = function() {
+	check("nestedSubmoduleEx1");
+	check("nestedSubmoduleEx2");
 }
 
 

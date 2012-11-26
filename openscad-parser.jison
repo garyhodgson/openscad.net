@@ -134,16 +134,18 @@ statement_begin:
     |   TOK_MODULE TOK_ID '(' arguments_decl optional_commas ')'
         {
 
-            var submodule = new Module($2);
+            var p_currmodule = currmodule;
+            module_stack.push(currmodule);
             
-            submodule.argnames = $4.argnames;
-            submodule.argexpr = $4.argexpr;
-            
-            currmodule.modules.push(submodule);
-            currmodule.currentSubmodule++;
+            currmodule = new Module($2);
 
-            delete $4;
+            p_currmodule.modules.push(currmodule);
+
+            currmodule.argnames = $4.argnames;
+            currmodule.argexpr = $4.argexpr;
             
+            delete $4;
+           
         } 
 
     ;
@@ -152,17 +154,13 @@ statement_end:
         ';'
     |   '{' inner_input '}'
         {
-            if (currmodule.currentSubmodule > 0){
-                currmodule.currentSubmodule--
+            if (module_stack.length > 0){
+                currmodule = module_stack.pop();
             }
         } 
     |   module_instantiation 
         {
-            if (currmodule.currentSubmodule > 0){
-                currmodule.modules[currmodule.currentSubmodule -1].children.push($1);
-            } else {
-                currmodule.children.push($1);    
-            }            
+            currmodule.children.push($1);    
         } 
     |   TOK_ID '=' expr ';'
         {  
@@ -240,7 +238,7 @@ module_instantiation:
             $$ = $1;
             if ($$) {
                 $$.children = $2.children;
-            }else {
+            } else {
                 for (var i = 0; i < $2.children.length; i++)
                 delete $2.children[i];
             }   
@@ -262,7 +260,9 @@ module_instantiation_list:
         {
             $$ = $1;
             if ($$) {
-                if ($2) $$.children.push($2);
+                if ($2) {
+                    $$.children.push($2);
+                }
             } else {
                 delete $2;
             }
@@ -593,9 +593,9 @@ argument_call:
 %%
 
 /*
-var _ = require("underscore");
-require("./js/csg");
-require("./js/openscad2openjscad_support");
+var _ = require("underscore-min");
+require("csg");
+require("openscad2openjscad_support");
 */
 
 function Expression(value) {
@@ -762,11 +762,9 @@ Module.prototype.evaluate = function(parentContext, inst) {
     });
 
     var evaluatedLines = [];
-    if (nonControlChildren.length > 0){
-        _.each(nonControlChildren, function(child, index, list) {
-            evaluatedLines.push(child.evaluate(context));                
-        });
-    }
+    _.each(nonControlChildren, function(child, index, list) {
+        evaluatedLines.push(child.evaluate(context));                
+    });
 
     if (evaluatedLines.length == 1){
         lines.push(evaluatedLines[0]);
@@ -815,16 +813,12 @@ ModuleInstantiation.prototype.evaluate = function(context) {
 
 ModuleInstantiation.prototype.evaluateChildren = function(context) {
 
-
     var childModules = []
 
     for (var i = 0; i < this.children.length; i++) {
         var childInst = this.children[i];
-
-        var childAdaptor = factory.getAdaptor(childInst);
-
-        var evaluatedChild = childAdaptor.evaluate(context, childInst);
         
+        var evaluatedChild = childInst.evaluate(context);
         if (evaluatedChild !== undefined){
             childModules.push(evaluatedChild);
         }
@@ -867,7 +861,6 @@ Context.prototype.args = function(argnames, argexpr, call_argnames, call_argvalu
             this.setVariable(argnames[i], undefined);
         }
     };
-
     var posarg = 0;  
     for (var i = 0; i < call_argnames.length; i++) {
         if (call_argnames[i] === undefined) {
@@ -915,10 +908,10 @@ Context.prototype.evaluateFunction = function(name, argnames, argvalues) {
 Context.prototype.evaluateModule = function(inst) {
 
     var that = this;
-
-    _.each(inst.argexpr, function(expr,index,list) {
-        inst.argvalues.push(expr.evaluate(that));
-    });
+// this appears to double the argvalues when calling a submodule...
+//    _.each(inst.argexpr, function(expr,index,list) {
+//        inst.argvalues.push(expr.evaluate(that));
+//    });
 
     var customModule = _.find(this.modules_p, function(x) { return x.name == inst.name; });
     if (customModule !== undefined) {
@@ -1032,21 +1025,20 @@ OpenjscadSolidFactory.prototype.getAdaptor = function(args) {
             return new RenderModule();
         default:
             if (args instanceof ModuleInstantiation){
-                return ModuleAdaptor(args)
+                return new ModuleAdaptor()
             }
             return undefined;
     }
 };
 
-function ModuleAdaptor(inst) {
-    var inst = inst;
-    return {
-        evaluate: function(parentContext){
-            inst.isSubmodule = true;
-            return parentContext.evaluateModule(inst);
-        }
-    };
 
+function ModuleAdaptor(a){
+    CoreModule.call(this, a);
+};
+
+ModuleAdaptor.prototype.evaluate = function(parentContext, inst){
+    inst.isSubmodule = true;
+    return parentContext.evaluateModule(inst);
 };
 
 
@@ -1308,6 +1300,7 @@ function TransformModule(a){
 
         for (var i = 0; i < children.length; i++) {
             var childInst = children[i];
+            childInst.argvalues = [];  // NOTE: not sure if this is the right solution!
             _.each(childInst.argexpr, function(expr,index,list) {
                 childInst.argvalues.push(expr.evaluate(context));
             });
@@ -1445,6 +1438,7 @@ function TranslateTransform(a){
 };
 
 TranslateTransform.prototype.evaluate = function(parentContext, inst){
+
 
     inst.argvalues = [];
 
@@ -1862,5 +1856,5 @@ function resetModule() {
     currmodule = new Module("root");
     context_stack = [];
     includes_stack = [];
-
+    module_stack = [];
 }
