@@ -14,7 +14,7 @@ requirejs.config({
     }
 });
 
-requirejs(["jquery-latest.min", "jquery-ui-latest.min", "jquery.layout-latest.min","jquery.fontselector.min","modernizr.min", "dropbox.min", 
+define("main",["jquery-latest.min", "jquery-ui-latest.min", "jquery.layout-latest.min","jquery.fontselector.min","modernizr.min", "dropbox.min", 
 	"jquery.jstree.min", "bootstrap/bootstrap.min", "jquery.textarea", "jquery.mousewheel", "underscore-min", "sisyphus.min", "shortcut",
 	"openscad2openjscad_support", "lightgl", "csg", "openjscad", "openscad-parser"], function() {
 
@@ -181,11 +181,36 @@ requirejs(["jquery-latest.min", "jquery-ui-latest.min", "jquery.layout-latest.mi
         if (modelIsShown){
           updateSolid();
         }
-
       });
+
+      $('#menu_design_reload_compile').click(updateSolid);
+
+      $('#menu_design_export_stl').click(function(){
+      	gProcessor.generateOutputFile();
+      });
+
+      $('input[name=menu_view_hide_editor]').change(hideEditor);
+      $('input[name=menu_view_hide_console]').change(hideConsole);
+
+      $('input[name=menu_view_show_axis]').change(function () {
+      	showAxis($(this).attr('checked')=='checked');
+      });
+
+	  $('input[name=menu_view_show_grid]').change(function () {
+      	showGrid($(this).attr('checked')=='checked');
+      });
+
+	  $('input[name=menu_design_auto_reload]').change(function () {
+      	auto_reload = $(this).attr('checked')=='checked';
+      });
+
+      $('#menu_view_clear_console').click(clearConsole);
+
+      $('#connect_to_dropbox').click(connect);
+
     });
 
-function setColorScheme (schemeName) {
+	function setColorScheme (schemeName) {
       var scheme = colorSchemes[schemeName];
       if (scheme === undefined){
         logMessage("Unknown color scheme.");

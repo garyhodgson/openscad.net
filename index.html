@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="css/openscad.net.css">
 
   <script data-main="js/main" src="js/require.js"></script>
-  
+
 </head>
 <body>
 
@@ -82,17 +82,17 @@
             <li class="dropdown">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown">Design <b class="caret"></b></a>
               <ul class="dropdown-menu">
-                <li>&nbsp;<input type="checkbox" class="menu_option" name="menu_design_auto_reload" value="auto_reload" onchange="auto_reload = $(this).attr('checked')=='checked';">&nbsp;Automatic Reload</li>
-                <li><a href="#" id="menu_design_reload_compile" onclick="updateSolid();">Reload and Compile [F4]</a></li>
-                <li><a href="#" id="menu_design_export_stl" onclick="gProcessor.generateOutputFile();">Export as STL / DXF</a></li>
+                <li>&nbsp;<input type="checkbox" class="menu_option" name="menu_design_auto_reload" value="auto_reload">&nbsp;Automatic Reload</li>
+                <li><a href="#" id="menu_design_reload_compile">Reload and Compile [F4]</a></li>
+                <li><a href="#" id="menu_design_export_stl">Export as STL / DXF</a></li>
               </ul>
             </li>
 
             <li class="dropdown">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown">View <b class="caret"></b></a>
               <ul class="dropdown-menu">
-                <li>&nbsp;<input type="checkbox" class="menu_option" name="menu_view_show_axis" value="show_axis" onchange="showAxis($(this).attr('checked')=='checked');">&nbsp;Show Axis</li>
-                <li>&nbsp;<input type="checkbox" class="menu_option" name="menu_view_show_grid" value="show_grid" onchange="showGrid($(this).attr('checked')=='checked');">&nbsp;Show Grid</li>
+                <li>&nbsp;<input type="checkbox" class="menu_option" name="menu_view_show_axis" value="show_axis" >&nbsp;Show Axis</li>
+                <li>&nbsp;<input type="checkbox" class="menu_option" name="menu_view_show_grid" value="show_grid" >&nbsp;Show Grid</li>
                 <li class="divider"></li>
                 <li><a href="#" id="menu_view_top" onclick="viewer.cameraAngle(0,0,0);">Top</a></li>
                 <li><a href="#" id="menu_view_bottom" onclick="viewer.cameraAngle(180,0,0);">Bottom</a></li>
@@ -103,10 +103,10 @@
                 <li><a href="#" id="menu_view_back" onclick="viewer.cameraAngle(325,0,325);">Diagonal</a></li>
                 <li><a href="#" id="menu_view_back" onclick="viewer.cameraPosition(0,0);">Center</a></li>
                 <li class="divider"></li>
-                <li>&nbsp;<input type="checkbox" class="menu_option" name="menu_view_hide_editor" value="hide_editor" onchange="hideEditor();">&nbsp;Hide Editor</li>
-                <li>&nbsp;<input type="checkbox" class="menu_option" name="menu_view_hide_console" value="hide_console" onchange="hideConsole();">&nbsp;Hide Console</li>
+                <li>&nbsp;<input type="checkbox" class="menu_option" name="menu_view_hide_editor" value="hide_editor">&nbsp;Hide Editor</li>
+                <li>&nbsp;<input type="checkbox" class="menu_option" name="menu_view_hide_console" value="hide_console">&nbsp;Hide Console</li>
                 <li class="divider"></li>
-                <li><a href="#" id="menu_view_clear_console" onclick="clearConsole();">Clear Console</a></li>
+                <li><a href="#" id="menu_view_clear_console">Clear Console</a></li>
               </ul>
             </li>
 
@@ -157,7 +157,7 @@
         </div>
         <div class="tab-pane" id="filesTab">
           <div id="jstree_container">
-            <button class="btn btn-success" type="button" onclick="connect();">Connect to Dropbox</button>
+            <button id="connect_to_dropbox" class="btn btn-success" type="button">Connect to Dropbox</button>
           </div>
         </div>
       </div>
