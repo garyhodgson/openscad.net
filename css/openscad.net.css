@@ -160,3 +160,7 @@ canvas {
 #fontSelect li:hover {
 	background: #DDD;
 }
+
+#share_link {
+	width: 97%;
+}

@@ -8,15 +8,15 @@ requirejs.config({
         'jquery.textarea': ['jquery-latest.min'],
         'jquery.mousewheel': ['jquery-latest.min'],
         'bootstrap/bootstrap.min': ['jquery-latest.min'],
-        'sisyphus.min': ['jquery-latest.min'],
+        'garlic.min': ['jquery-latest.min'],
         'openscad-parser': ['underscore-min', 'jquery-latest.min', 'openscad2openjscad_support', 'csg']
 
     }
 });
 
-define("main",["jquery-latest.min", "jquery-ui-latest.min", "jquery.layout-latest.min","jquery.fontselector.min","modernizr.min", "dropbox.min", 
-	"jquery.jstree.min", "bootstrap/bootstrap.min", "jquery.textarea", "jquery.mousewheel", "underscore-min", "sisyphus.min", "shortcut",
-	"openscad2openjscad_support", "lightgl", "csg", "openjscad", "openscad-parser"], function() {
+define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-latest.min", "jquery.layout-latest.min","jquery.fontselector.min","modernizr.min", "dropbox.min", 
+	"jquery.jstree.min", "bootstrap/bootstrap.min", "jquery.textarea", "jquery.mousewheel", "underscore-min", "garlic.min", "shortcut",
+	"openscad2openjscad_support", "lightgl", "csg", "openjscad", "openscad-parser"], function(jQuery, examples_insert) {
 
 	var myLayout;
     var gProcessor=null;
@@ -35,6 +35,7 @@ define("main",["jquery-latest.min", "jquery-ui-latest.min", "jquery.layout-lates
     };
 
     $(function() {
+
     	if (!Modernizr.webgl){
         notify("This app needs webGL - Google Chrome would be a good choice of browser.")
         return 
@@ -72,10 +73,9 @@ define("main",["jquery-latest.min", "jquery-ui-latest.min", "jquery.layout-lates
 
       logLayout = $("#center-container").layout({
           center__paneSelector: ".outer-center"
-          
       })
 
-      $('#settingsForm').sisyphus({excludeFields: $('.sisyphusignore')});
+      $('#settingsForm').garlic({conflictManager: {enabled: false}});
       show_axis = $('input[name=menu_view_show_axis]').attr("checked")=="checked";
       show_grid = $('input[name=menu_view_show_grid]').attr("checked")=="checked";
       auto_reload = $('input[name=menu_design_auto_reload]').attr("checked")=="checked";
@@ -86,11 +86,21 @@ define("main",["jquery-latest.min", "jquery-ui-latest.min", "jquery.layout-lates
       }
 
       $('#editor').tabby();
-      
-      if (localStorage.getItem("lastEdit") != undefined){
+
+      if (localStorage.getItem("lastEdit") !== undefined){
         $('#editor').val(localStorage.getItem("lastEdit"));
       } else {
         $('#editor').val(defaultEditorContent);
+      }
+
+      if (getUrlParam('c') !== undefined){
+        if (localStorage.getItem("lastEdit") !== undefined && confirm("Overwrite existing editor contents with URL parameter content?")){
+            $('#editor').val(atob(unescape(getUrlParam('c'))));
+            editorIsDirty = true;
+            localStorage.setItem("lastEdit", $('#editor').val());
+        } else {
+          $('#editor').val(localStorage.getItem("lastEdit"));
+        }
       }
 
       var font = (localStorage.getItem("preferencesFontFamily") != undefined)? localStorage.getItem("preferencesFontFamily") : "Courier New,Courier New,Courier,monospace";
@@ -106,9 +116,10 @@ define("main",["jquery-latest.min", "jquery-ui-latest.min", "jquery.layout-lates
       });
 
       $("#editor").keypress(function(e) {
-        editorIsDirty = true;
         if (e.keyCode == 10 && e.ctrlKey == true){
             updateSolid();
+        } else {
+          editorIsDirty = true;
         }
       });
 
@@ -196,11 +207,11 @@ define("main",["jquery-latest.min", "jquery-ui-latest.min", "jquery.layout-lates
       	showAxis($(this).attr('checked')=='checked');
       });
 
-	  $('input[name=menu_view_show_grid]').change(function () {
+	    $('input[name=menu_view_show_grid]').change(function () {
       	showGrid($(this).attr('checked')=='checked');
       });
 
-	  $('input[name=menu_design_auto_reload]').change(function () {
+	    $('input[name=menu_design_auto_reload]').change(function () {
       	auto_reload = $(this).attr('checked')=='checked';
       });
 
@@ -208,9 +219,32 @@ define("main",["jquery-latest.min", "jquery-ui-latest.min", "jquery.layout-lates
 
       $('#connect_to_dropbox').click(connect);
 
+      $('#examples').prepend(examples_insert);
+
+      $('#shareLinkModal').on('shown', function () {
+        $("#share_link").select();
+      });
+
+      $('#menu_file_share_as_link').click(function(){
+        $('#share_link').val(location.href + "?c=" + escape(btoa($('#editor').val())));
+        $('#shareLinkModal').modal('show');
+      });
+
     });
 
-	function setColorScheme (schemeName) {
+    function getUrlParam( param ){
+      param = param.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+      var exp = "[\\?&]"+param+"=([^&#]*)";
+      var regexp = new RegExp( exp ); 
+      var results = regexp.exec( window.location.href );
+      if( results == null ){
+        return undefined;
+      } else {
+        return results[1];
+      }
+    }
+
+  	function setColorScheme (schemeName) {
       var scheme = colorSchemes[schemeName];
       if (scheme === undefined){
         logMessage("Unknown color scheme.");
@@ -258,7 +292,7 @@ define("main",["jquery-latest.min", "jquery-ui-latest.min", "jquery.layout-lates
       var regexp = new RegExp( exp ); 
       var results = regexp.exec( window.location.href );
       if( results == null ){
-        return "";
+        return undefined;
       } else {
         return results[1];
       }

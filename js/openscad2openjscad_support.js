@@ -315,15 +315,15 @@ Math['tandeg'] = function(degree) {
 };
 
 
-    function logMessage(msg) {
-      if (msg == ""){
-        return;
-      }
-      var val = $('#log').val();
-      if (val == ""){
-        $('#log').val(msg);
-      } else {
-        $('#log').val($('#log').val()+"\n"+msg)
-      }
-      $('#log').scrollTop($('#log')[0].scrollHeight);
-    }
+function logMessage(msg) {
+  if (msg == ""){
+    return;
+  }
+  var val = $('#log').val();
+  if (val == ""){
+    $('#log').val(msg);
+  } else {
+    $('#log').val($('#log').val()+"\n"+msg)
+  }
+  $('#log').scrollTop($('#log')[0].scrollHeight);
+}
