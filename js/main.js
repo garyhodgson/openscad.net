@@ -13,14 +13,14 @@ requirejs.config({
 
     }
 });
+var filetree;
 
 define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-latest.min", "jquery.layout-latest.min","jquery.fontselector.min","modernizr.min", "dropbox.min", 
-	"jquery.jstree.min", "bootstrap/bootstrap.min", "jquery.textarea", "jquery.mousewheel", "underscore-min", "garlic.min", "shortcut",
+	"jquery.jstree.min", "bootstrap/bootstrap.min", "jquery.textarea", "jquery.mousewheel", "underscore-min", "garlic.min", "shortcut", "bootbox.min",
 	"openscad2openjscad_support", "lightgl", "csg", "openjscad", "openscad-parser"], function(jQuery, examples_insert) {
 
-	var myLayout;
+	  var myLayout;
     var gProcessor=null;
-    var defaultEditorContent = "union(){\n  cube([1,1,1]);\n\n  color(\"red\")\n  translate([1,1,1])\n    sphere(r=0.5);\n}";
     var auto_reload;
     var editorIsDirty = false;
     var modelIsShown = false;
@@ -37,7 +37,7 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
     $(function() {
 
     	if (!Modernizr.webgl){
-        notify("This app needs webGL - Google Chrome would be a good choice of browser.")
+        logMessage("This app needs webGL - Google Chrome would be a good choice of browser.")
         return 
       }
 
@@ -49,27 +49,27 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
       client.authDriver(new Dropbox.Drivers.Redirect({rememberUser: true}));
 
       uiLayout = $('#container').layout({
-          minSize:      100
-        , center__paneSelector: ".outer-center"
-        , stateManagement: {
-            enabled:      true
-        ,    cookie: {
-                name:     "uiLayout"
-            }
-        }
-        , enableCursorHotkey: false
-        , center__children: {
-            minSize:        10
-          , center__onresize_end: resizeViewer
-          , south__size:      50
-          , stateManagement: {
-              enabled:      true
-          ,    cookie: {
-                  name:     "logLayout"
-              }
-          }
-          }
-      });
+                    minSize: 100, 
+                    center__paneSelector: ".outer-center", 
+                    stateManagement: {
+                      enabled: true,
+                      cookie: {
+                        name: "uiLayout"
+                      }
+                    }, 
+                    enableCursorHotkey: false, 
+                    center__children: {
+                      minSize: 10, 
+                      center__onresize_end: resizeViewer, 
+                      south__size: 50, 
+                      stateManagement: {
+                        enabled: true,
+                        cookie: {
+                          name: "logLayout"
+                        }
+                      }
+                    }
+                });
 
       logLayout = $("#center-container").layout({
           center__paneSelector: ".outer-center"
@@ -87,10 +87,8 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
 
       $('#editor').tabby();
 
-      if (localStorage.getItem("lastEdit") !== undefined){
+      if (localStorage.lastEdit !== undefined){
         $('#editor').val(localStorage.getItem("lastEdit"));
-      } else {
-        $('#editor').val(defaultEditorContent);
       }
 
       if (getUrlParam('c') !== undefined){
@@ -145,17 +143,16 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
 
       $('#menu_file_save').click(saveEditor);
 
-      $('#menu_file_dropbox_connect').click(connect);
+      $('#menu_file_dropbox_connect').click(connectToDropbox);
 
-      $('#menu_file_dropbox_signout').click(disconnect);
+      $('#menu_file_dropbox_signout').click(disconnectFromDropbox);
 
-
-      if (getUrlParam("oauth_token") != "" || (client && client.oauth.token)){
-        connect();
+      if (getUrlParam("oauth_token") !== undefined){
+        connectToDropbox();
       } else {
         for (var key in localStorage){
           if (key.match(/^dropbox-auth.*/)) {
-            connect();
+            connectToDropbox();
             break;
           }
         }
@@ -165,7 +162,7 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
         updateSolid();
       }
 
-      $('.loadExample').click(function (argument) {
+      $('.loadExample').click(function() {
           loadExample($(this).text());
       })
 
@@ -217,7 +214,7 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
 
       $('#menu_view_clear_console').click(clearConsole);
 
-      $('#connect_to_dropbox').click(connect);
+      $('#connect_to_dropbox').click(connectToDropbox);
 
       $('#examples').prepend(examples_insert);
 
@@ -228,6 +225,20 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
       $('#menu_file_share_as_link').click(function(){
         $('#share_link').val(location.href + "?c=" + escape(btoa($('#editor').val())));
         $('#shareLinkModal').modal('show');
+      });
+
+      $('#openFile').click(function () {
+        $('#fileOpenModal').modal('hide');
+
+        var stat = filetree.get_selected().data("stat");
+        if (!stat){
+          logMessage("Unable to read Dropbox data from selection.");
+          return;
+        }
+        if (stat.isFile){
+          readFile(stat.path);
+        }
+        
       });
 
     });
@@ -275,7 +286,7 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
         return;
       }
 
-      if (editorIsDirty || currentFilename == ''){
+      if (editorIsDirty){
         if (!confirm("Editor has unsaved changes. Continue?")){
           return;
         }
@@ -299,7 +310,7 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
     }
 
     function newEditor () {
-        if (editorIsDirty || currentFilename == ''){
+        if (editorIsDirty){
           if (!confirm("Editor has unsaved changes. Continue?")){
             return;
           }
@@ -309,17 +320,19 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
         currentFilename = '';
         gProcessor.clearViewer();
         modelIsShown = false;
+        localStorage.removeItem("lastEdit");
 
     };
 
     function saveEditor() {
-      if (currentFilename == undefined || currentFilename == ''){
-        currentFilename = prompt("Filename:", "newfile.scad");         
-      }
-      if (currentFilename != null) {
-        //TODO path....
-        writeFile("/", currentFilename, $('#editor').val());    
-      }
+
+      bootbox.prompt("File path and name?", "Cancel", "OK", function(filepath) {
+
+        if (!filepath) return;
+
+        writeFile(filepath, $('#editor').val());
+
+      }, currentFilename?currentFilename:"newfile.scad");
     }
 
     function resizeViewer(x,ui){
@@ -333,10 +346,6 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
       gProcessor.canvasResize(viewerWidth, viewerHeight);
       $('.viewer').width(viewerWidth);
       $('.viewer').height(viewerHeight);
-    }
-
-    function notify(msg){
-        console.log(msg);  
     }
 
     function extractLibraryNames (text) {
@@ -459,12 +468,12 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
 
 
     function onError(e) {
-      console.log('Error' + e.name);
+      logMessage('Error' + e.name);
     }
 
     var showError = function(error) {
       if (window.console) {  // Skip the "if" in node.js code.
-        console.error(error);
+        logMessage("Dropbox Error: "+error);
       }
 
       switch (error.status) {
@@ -500,17 +509,16 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
       return false;
     };
 
-    var filetree;
-
-      $(document).on('dblclick','.dbFile', function (e) {
-        var stat = $(this).data("stat");
+    // Filetree file double click
+    $(document).on('dblclick','.dbFile', function (e) {
+      var stat = $(this).data("stat");
       if (!stat){
         return;
       }
       if (stat.isFile){
         readFile(stat.path);
       }
-      });
+    });
 
     function readDir(path, root) {
 
@@ -545,7 +553,9 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
 
     function readFile(path) {
       client.readFile(path, null, function(error, content, stat) {
+        closeFileOpenModal();
         if (error) {
+          closeFileOpenModal();
           return showError(error);
         }
 
@@ -556,22 +566,39 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
 
         $('#editor').val(content);
         $('#editor-tabs a[href="#editorTab"]').tab('show');
-
+        editorIsDirty = false;
+        currentFilename = stat.path;
+        logMessage("Loaded file: " +stat.path);
       });
     };
 
-    function writeFile(path, filename, content) {
-      client.writeFile(path + filename, content, function(error, stat) {
+    function writeFile(filepath, content) {
+      client.writeFile(filepath, content, function(error, stat) {
         if (error) {
           return showError(error);
         }
 
-        console.log("File saved.");
+        logMessage("File saved: " +filepath);
+        currentFilename = filepath;
         editorIsDirty = false;
+
+        reloadFileTree();
+
       });
     };
 
-    function connect(){
+    function closeFileOpenModal() {
+      $('#fileOpenModal').modal('hide');
+    }
+
+    function reloadFileTree() {
+      filetree._get_children($('#root')).each(function(index,child){
+        filetree.delete_node(child);
+      });
+      readDir("/", $('#root'));
+    }
+
+    function connectToDropbox(){
       client.authenticate(function(error, client) {
         if (error) {
           return showError(error);
@@ -582,8 +609,10 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
       });
     };
 
-    function disconnect(){
-      if (confirm("Signout from Dropbox completely?")){
+    function disconnectFromDropbox(){
+      bootbox.confirm("Disconnect from Dropbox?", function(confirmed) {
+        if (!confirmed) return;
+
         client.signOut(function(error) {
           if (error) {
             return showError(error);
@@ -591,45 +620,48 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
 
           $('#notificationbar').attr("title", "Not Connected to Dropbox");
           $('#notificationbar').html("<img src='img/led-icons/disconnect.png'>&nbsp;Dropbox</li>")
-          $('#jstree_container').html("<button class='btn btn-success' type='button' onclick='connect();'>Connect to Dropbox</button>");
+          $('#jstree_container').html("<button class='btn btn-success' type='button' onclick='connectToDropbox();'>Connect to Dropbox</button>");
           
         });
-      }
+      });
     };
 
     function initFilelist(){
       $("#jstree_container").bind("loaded.jstree", function (event, data) {
-          filetree = $.jstree._reference('#jstree_container');
-          readDir("/", $('#root'));
+            filetree = $.jstree._reference('#jstree_container');
+            readDir("/", $('#root'));
         }).bind("open_node.jstree", function (e, data) {
-        var id = data.args[0].attr("id");
-        var isloaded = data.args[0].data("isloaded")
-        if (isloaded === undefined){
-          isloaded = false;
-        }
+            var id = data.args[0].attr("id");
+            var isloaded = data.args[0].data("isloaded")
+            if (isloaded === undefined){
+              isloaded = false;
+            }
 
-        if (isloaded){
-          return;
-        }
+            if (isloaded){
+              return;
+            }
 
-        var stat = data.args[0].data("stat");
+            var stat = data.args[0].data("stat");
 
-        if (stat !== undefined){
-          readDir(stat.path, $('#'+id));
-        }
-      }).jstree({        
-        core : { animation:200 },
-            plugins : [ "themes", "json_data", "ui" ],
-            json_data: {
-              data: [
-                {
-                  data: "/",
-                  attr: {id:"root"},
-                  metadata: {path:"/"}
-                }
-              ]
-          }
-        });
+            if (stat !== undefined){
+              readDir(stat.path, $('#'+id));
+            }
+      }).jstree({
+          ui: {
+            select_limit: 1
+          },
+          core : { animation: 200 },
+              plugins : [ "themes", "json_data", "ui" ],
+              json_data: {
+                data: [
+                  {
+                    data: "/",
+                    attr: {id:"root"},
+                    metadata: {path:"/"}
+                  }
+                ]
+            }
+          });
       }
 
       function showGrid(show){

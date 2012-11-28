@@ -27,8 +27,7 @@
               <a href="#" class="dropdown-toggle" data-toggle="dropdown">File <b class="caret"></b></a>
               <ul class="dropdown-menu">
                 <li><a href="#" id="menu_file_new">New</a></li>
-                <li class="disabled"><a href="#" id="menu_file_open">Open&hellip;</a></li>
-                <li class="disabled"><a href="#" id="menu_file_import">Import</a></li>
+                <li><a href="#" id="menu_file_open" data-toggle="modal" data-target="#fileOpenModal">Open&hellip;</a></li>
                 <li class="dropdown-submenu">
                   <a class="menu_option" href="#">Examples</a>
                   <ul class="dropdown-menu">
@@ -63,7 +62,7 @@
                 <li class="divider"></li>
                 <li class="nav-header">Dropbox</li>
                 <li><a href="#" id="menu_file_dropbox_connect">Connect</a></li>
-                <li><a href="#" id="menu_file_dropbox_signout">Signout</a></li>
+                <li><a href="#" id="menu_file_dropbox_signout">Disconnect</a></li>
               </ul>
             </li>
 
@@ -134,38 +133,17 @@
 <div id="container">
 
   <div class="outer-center" id="center-container">
+    <div class="ui-layout-center" id="viewer-container" oncontextmenu="return false;"></div>
 
-
-    <div class="pane ui-layout-center" id="viewer-container" oncontextmenu="return false;">
-    </div>
-
-    <div class="pane ui-layout-south" id="log-container">
-      <textarea id="log" class="sisyphusignore" name="log" readonly rows="40" cols="50"></textarea>
+    <div class="ui-layout-south" id="log-container">
+      <textarea id="log" name="log" readonly></textarea>
     </div>
   </div>
 
-
-  <div class="pane ui-layout-west">
-
-    <div class="tabbable">
-      <ul class="nav nav-tabs" id="editor-tabs">
-        <li class="active"><a href="#editorTab" data-toggle="tab">Editor</a></li>
-        <li><a href="#filesTab" data-toggle="tab">Files</a></li>
-      </ul>
-      <div class="tab-content">
-        <div class="tab-pane active" id="editorTab">
-          <textarea id="editor" class="sisyphusignore" name="editor" rows="40" cols="50"></textarea>
-        </div>
-        <div class="tab-pane" id="filesTab">
-          <div id="jstree_container">
-            <button id="connect_to_dropbox" class="btn btn-success" type="button">Connect to Dropbox</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-
+  <div class="ui-layout-west editor-layout">
+    <textarea id="editor"  name="editor"></textarea>
   </div>
+
 </div>
 
 <!--Note: the example content is loaded via requireJS text plugin after startup. -->
@@ -227,8 +205,9 @@
           <li>minkowski and hull transformations.</li>
           <li>$fa, $fs global variables.</li>
           <li>intersection_for and assign statements.</li>
-          <li>Modifier characters: #, !, %).</li>
+          <li>Modifier characters: #, !, and %).</li>
         </ul>
+        Also check the <a target="_blank" href="https://github.com/garyhodgson/openscad.net/issues">issue list</a> in the github project for bugs.
     </p>
   </div>
   <div class="modal-footer">
@@ -323,6 +302,26 @@
 </div>
   
 
-    
+<div id="fileOpenModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="fileOpenModalLabel" aria-hidden="true">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h3 id="fileOpenModalLabel">Open File</h3>
+  </div>
+  <div class="modal-body">
+
+    <div id="jstree_container">
+      <button id="connect_to_dropbox" class="btn btn-success" type="button">Connect to Dropbox</button>
+    </div>
+
+
+  </div>
+  <div class="modal-footer">
+    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+    <button id="openFile" class="btn btn-primary">Open</button>
+  </div>
+</div>
+
+
+
 </body>
 </html>
