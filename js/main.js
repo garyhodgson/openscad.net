@@ -107,7 +107,9 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
       var fontSize = (localStorage.getItem("preferencesFontSize") != undefined)? Number(localStorage.getItem("preferencesFontSize")) : 12;
       setEditorFontSize(fontSize);
 
-      var colorScheme = (localStorage.getItem("preferencesColorScheme") != undefined)? colorSchemes[localStorage.getItem("preferencesColorScheme")] : colorSchemes['cornfield'];
+      var colorSchemeName = (localStorage.getItem("preferencesColorScheme") != undefined)? localStorage.getItem("preferencesColorScheme") : 'cornfield';
+      var colorScheme = colorSchemes[colorSchemeName];
+      setColorScheme(colorSchemeName);
 
       $('#editor').live('keyup blur', function(){
         localStorage.setItem("lastEdit", $(this).val());
@@ -183,12 +185,10 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
       });
 
       $('#colorScheme').change(function () {
-        var scheme = $("#colorScheme option:selected").val();
-        setColorScheme(scheme);
+        var schemeName = $("#colorScheme option:selected").val();
 
-        if (modelIsShown){
-          updateSolid();
-        }
+        setColorScheme(schemeName);
+        localStorage.setItem("preferencesColorScheme", schemeName);
       });
 
       $('#menu_design_reload_compile').click(updateSolid);
@@ -261,8 +261,12 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
         logMessage("Unknown color scheme.");
         return;
       }
-      localStorage.setItem("preferencesColorScheme", schemeName);
-      viewer.setColorScheme(scheme);
+      
+      if (viewer) {
+        viewer.setColorScheme(scheme);
+      }
+      $('#colorScheme option').attr('selected','');
+      $('#colorScheme option[value='+schemeName+']').attr('selected','selected');
       if (modelIsShown){
         updateSolid();
       }
