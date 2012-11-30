@@ -592,6 +592,7 @@ argument_call:
 
 %%
 
+// Note: Uncomment the following lines to use the parser with node, e.g. for testing.
 //var _ = require("underscore");
 //require("./csg.js");
 //require("./openscad2openjscad_support.js");
@@ -1022,6 +1023,7 @@ OpenjscadSolidFactory.prototype.getAdaptor = function(args) {
         case "child":
             return new Child();
         case "render":
+        case "assign": // Note: assign does the same as render in this case - re-evaluate the arguments and process the children.
             return new RenderModule();
         default:
             if (args instanceof ModuleInstantiation){
@@ -1040,7 +1042,6 @@ ModuleAdaptor.prototype.evaluate = function(parentContext, inst){
     inst.isSubmodule = true;
     return parentContext.evaluateModule(inst);
 };
-
 
 function RenderModule(a){
     TransformModule.call(this, a);
@@ -1066,6 +1067,7 @@ RenderModule.prototype.evaluate = function(parentContext, inst){
         return "";
     });
 };
+
 
 function printContext(c){
     console.log(c.vars);

@@ -30,7 +30,7 @@ OpenJsCad.Viewer = function(containerelement, width, height, initialdepth, color
   gl.viewport(0, 0, width, height);
   gl.matrixMode(gl.PROJECTION);
   gl.loadIdentity();
-  gl.perspective(45, width / height, 0.5, 1024);
+  gl.perspective(45, width / height, 0.5, 4096);
   gl.matrixMode(gl.MODELVIEW);
 
   // Set up WebGL state
@@ -389,7 +389,7 @@ OpenJsCad.parseJsCadScriptSync = function(script, mainParameters, debugging) {
 // callback: should be function(error, csg)
 OpenJsCad.parseJsCadScriptASync = function(script, mainParameters, callback) {
   var baselibraries = [
-    "js/openscad2openjscad_support.js",
+    "js/openscad-parser-support.js",
     "js/csg.js",
     "js/openjscad.js"
   ];

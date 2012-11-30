@@ -9,7 +9,7 @@ requirejs.config({
         'jquery.mousewheel': ['jquery-latest.min'],
         'bootstrap/bootstrap.min': ['jquery-latest.min'],
         'garlic.min': ['jquery-latest.min'],
-        'openscad-parser': ['underscore-min', 'jquery-latest.min', 'openscad2openjscad_support', 'csg']
+        'openscad-parser': ['underscore-min', 'jquery-latest.min', 'openscad-parser-support', 'csg']
 
     }
 });
@@ -17,7 +17,7 @@ var filetree;
 
 define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-latest.min", "jquery.layout-latest.min","jquery.fontselector.min","modernizr.min", "dropbox.min", 
 	"jquery.jstree.min", "bootstrap/bootstrap.min", "jquery.textarea", "jquery.mousewheel", "underscore-min", "garlic.min", "shortcut", "bootbox.min",
-	"openscad2openjscad_support", "lightgl", "csg", "openjscad", "openscad-parser"], function(jQuery, examples_insert) {
+	"openscad-parser-support", "lightgl", "csg", "openjscad", "openscad-parser"], function(jQuery, examples_insert) {
 
 	  var myLayout;
     var gProcessor=null;

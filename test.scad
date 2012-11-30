@@ -1,8 +1,9 @@
-intersection_for(n = [1 : 6])
+for (i = [10:50])
 {
-    rotate([0, 0, n * 60])
+    assign (angle = i*360/20, distance = i*10, r = i*2)
     {
-        translate([5,0,0])
-        sphere(r=12);
+        rotate(angle, [1, 0, 0])
+        translate([0, distance, 0])
+        sphere(r = r);
     }
 }
