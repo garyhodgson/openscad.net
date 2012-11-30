@@ -592,11 +592,9 @@ argument_call:
 
 %%
 
-/*
-var _ = require("underscore-min");
-require("csg");
-require("openscad2openjscad_support");
-*/
+//var _ = require("underscore");
+//require("./csg.js");
+//require("./openscad2openjscad_support.js");
 
 function Expression(value) {
     this.children = [];
@@ -801,11 +799,11 @@ ModuleInstantiation.prototype.evaluate = function(context) {
             that.argvalues.push(expr.evaluate(context));
         });
 
-        this.context = context;
+        that.context = context;
 
-        evaluatedModule = context.evaluateModule(this);
-        this.context = null;
-        this.argvalues = [];
+        evaluatedModule = context.evaluateModule(that);
+        that.context = null;
+        that.argvalues = [];
 
     //}
     return evaluatedModule;
@@ -1016,7 +1014,9 @@ OpenjscadSolidFactory.prototype.getAdaptor = function(args) {
         case "multmatrix":
             return new MultimatrixTransform();
         case "for":
-            return new ForLoopStatement();
+            return new ForLoopStatement({csgOp:"union"});
+        case "intersection_for":
+            return new ForLoopStatement({csgOp:"intersect"});
         case "if":
             return new IfStatement();
         case "child":
@@ -1188,6 +1188,7 @@ IfStatement.prototype.evaluate = function(parentContext, inst){
 
 function ForLoopStatement(a){
     ControlModule.call(this, a);
+    this.csgOp = a.csgOp;
 
     this.forEval = function(parentEvaluatedChildren, inst, recurs_length, call_argnames, call_argvalues, arg_context)
     {
@@ -1224,7 +1225,7 @@ function ForLoopStatement(a){
 
         // Note: we union here so subsequent actions (e.g. translate) can be performed on the entire result of the for loop.
         if (_.isArray(evaluatedChildren) && evaluatedChildren.length > 1){
-            var unionedEvaluatedChildren = _.first(evaluatedChildren)+".union([" + _.rest(evaluatedChildren) + "])";
+            var unionedEvaluatedChildren = _.first(evaluatedChildren)+"."+this.csgOp+"([" + _.rest(evaluatedChildren) + "])";
             evaluatedChildren = unionedEvaluatedChildren;
         }
         return evaluatedChildren;
@@ -1232,6 +1233,11 @@ function ForLoopStatement(a){
 };
 
 ForLoopStatement.prototype.evaluate = function(context, inst) {
+
+    if (inst.context === undefined){
+        inst.context = context;
+    }
+
     return this.forEval([], inst, 0, inst.argnames, inst.argvalues, inst.context);
 };
 
@@ -1299,8 +1305,11 @@ function TransformModule(a){
       var childModules = []
 
         for (var i = 0; i < children.length; i++) {
+
             var childInst = children[i];
+
             childInst.argvalues = [];  // NOTE: not sure if this is the right solution!
+
             _.each(childInst.argexpr, function(expr,index,list) {
                 childInst.argvalues.push(expr.evaluate(context));
             });
@@ -1388,7 +1397,6 @@ RotateTransform.prototype.evaluate = function(parentContext, inst){
         inst.argvalues.push(expr.evaluate(parentContext));
     });
 
-
     var context = newContext(parentContext, ["a","v"], [], inst);
 
     var a = contextVariableLookup(context, "a", 0);
@@ -1468,6 +1476,7 @@ CSGModule.prototype.evaluate = function(parentContext, inst){
     for (var i = 0; i < inst.children.length; i++) {
 
         var childInst = inst.children[i];
+        childInst.argvalues = [];
         _.each(childInst.argexpr, function(expr,index,list) {
             childInst.argvalues.push(expr.evaluate(context));
         });
@@ -1500,7 +1509,8 @@ Sphere.prototype.evaluate = function(parentContext, inst){
     context.args(argnames, argexpr, inst.argnames, inst.argvalues);
     
     var r = contextVariableLookup(context, "r", 1);
-    var resolution = contextVariableLookup(context, "$fn", DEFAULT_RESOLUTION);
+    var resolution = get_fragments_from_r(r, context);
+
     var openjscadParameters = {center:[0,0,0], resolution:resolution, radius:r};
                
     return _.template('CSG.sphere({center: [<%=String(center)%>], radius: <%= radius %>, resolution: <%= resolution%>})', openjscadParameters);

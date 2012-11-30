@@ -85,7 +85,7 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
         $('#sourcetype_openscad').attr('checked','checked');
       }
 
-      $('#editor').tabby();
+      $('#editor').tabby({tabString:'    '});
 
       if (localStorage.lastEdit !== undefined){
         $('#editor').val(localStorage.getItem("lastEdit"));
