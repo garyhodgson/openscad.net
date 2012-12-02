@@ -22,6 +22,7 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
     var filetree;
     var gProcessor=null;
     var auto_reload;
+    var lastEditorContent = '';
     var editorIsDirty = false;
     var modelIsShown = false;
     var connectedToDropbox = false;
@@ -88,15 +89,14 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
       $('#editor').tabby({tabString:'    '});
 
       if (localStorage.lastEdit !== undefined){
-        $('#editor').val(localStorage.getItem("lastEdit"));
+        setEditorContent(localStorage.getItem("lastEdit"));
       }
 
       if (getUrlParam('c') !== undefined){
         if (localStorage.getItem("lastEdit") !== undefined && confirm("Overwrite existing editor contents with URL parameter content?")){
-            $('#editor').val(atob(unescape(getUrlParam('c'))));
-            editorIsDirty = true;
-            localStorage.setItem("lastEdit", $('#editor').val());
-            setCurrentFilename('');
+          setEditorContent(atob(unescape(getUrlParam('c'))));
+          localStorage.setItem("lastEdit", $('#editor').val());
+          setCurrentFilename('');
         }
       }
       resizeEditor(); // needed to take into account any scrollbars
@@ -111,15 +111,17 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
       var colorScheme = colorSchemes[colorSchemeName];
       setColorScheme(colorSchemeName);
 
-      $('#editor').live('keyup blur', function(){
-        localStorage.setItem("lastEdit", $(this).val());
+      $('#editor').live('keyup', function(){
+        if ($(this).val() != lastEditorContent){
+            editorIsDirty = true;
+            localStorage.setItem("lastEdit", $(this).val());
+            lastEditorContent = $(this).val();
+          }
       });
 
       $("#editor").keypress(function(e) {
         if (e.keyCode == 10 && e.ctrlKey == true){
             updateSolid();
-        } else {
-          editorIsDirty = true;
         }
       });
 
@@ -243,6 +245,13 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
 
     });
 
+
+    function setEditorContent(content){
+      lastEditorContent = content;
+      $('#editor').val(content);
+      editorIsDirty = false;
+    }
+
     function getUrlParam( param ){
       param = param.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
       var exp = "[\\?&]"+param+"=([^&#]*)";
@@ -304,8 +313,7 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
         }
       }
       setCurrentFilename(filename);
-      $('#editor').val(exampleElement.text());
-      $('#editor').blur();
+      setEditorContent(exampleElement.text());
       
     }
 
