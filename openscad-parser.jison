@@ -595,7 +595,7 @@ argument_call:
 // Note: Uncomment the following lines to use the parser with node, e.g. for testing.
 //var _ = require("underscore");
 //require("./csg.js");
-//require("./openscad2openjscad_support.js");
+//require("./openscad-parser-support.js");
 
 function Expression(value) {
     this.children = [];
@@ -765,10 +765,11 @@ Module.prototype.evaluate = function(parentContext, inst) {
         evaluatedLines.push(child.evaluate(context));                
     });
 
-    if (evaluatedLines.length == 1){
-        lines.push(evaluatedLines[0]);
-    } else if (evaluatedLines.length > 1){
-        lines.push(_.first(evaluatedLines)+".union([" +_.rest(evaluatedLines)+"])");
+    var cleanedLines = _.compact(evaluatedLines);
+    if (cleanedLines.length == 1){
+        lines.push(cleanedLines[0]);
+    } else if (cleanedLines.length > 1){
+        lines.push(_.first(cleanedLines)+".union([" +_.rest(cleanedLines)+"])");
     }
     
     return lines;
@@ -893,7 +894,7 @@ Context.prototype.evaluateFunction = function(name, argnames, argvalues) {
     }
 
     if (_.has(functionNameLookup, name)){
-        return functionNameLookup[name](argvalues);
+        return functionNameLookup[name].apply(this, argvalues);
     }
 
     if (this.parentContext !== undefined){
@@ -1171,21 +1172,28 @@ IfStatement.prototype.evaluate = function(parentContext, inst){
     var context = newContext(parentContext, [], [], inst);
 
     var childrenToEvaluate = (inst.argvalues.length > 0 && inst.argvalues[0])? inst.children : inst.else_children;
-    var childModules = []
+
+    var childModules = [];
 
     for (var i = 0; i < childrenToEvaluate.length; i++) {
 
         var childInst = childrenToEvaluate[i];
+
+        childInst.argvalues = [];
 
         _.each(childInst.argexpr, function(expr,index,list) {
             childInst.argvalues.push(expr.evaluate(context));
         });
 
         var childAdaptor = factory.getAdaptor(childInst);
+
         childModules.push(childAdaptor.evaluate(context, childInst));
     };
-
-    return childModules;
+    if (_.isEmpty(childModules)){
+        return undefined;
+    } else {
+        return childModules;
+    }
 };
 
 function ForLoopStatement(a){
@@ -1321,8 +1329,13 @@ function TransformModule(a){
             
             childModules.push(transformedChild);
         };
+
+        if (childModules.length == 1){
+            return childModules[0];
+        } else {
+            return childModules;
+        }
         
-        return childModules;
   }
 
 };
@@ -1490,7 +1503,6 @@ CSGModule.prototype.evaluate = function(parentContext, inst){
             childModules.push(evaluatedChild);
         }
     };
-
     if (childModules.length <= 1){
         return childModules[0];
     } else {

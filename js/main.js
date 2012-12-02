@@ -13,20 +13,19 @@ requirejs.config({
 
     }
 });
-var filetree;
+    var uiLayout, logLayout;
 
 define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-latest.min", "jquery.layout-latest.min","jquery.fontselector.min","modernizr.min", "dropbox.min", 
-	"jquery.jstree.min", "bootstrap/bootstrap.min", "jquery.textarea", "jquery.mousewheel", "underscore-min", "garlic.min", "shortcut", "bootbox.min",
-	"openscad-parser-support", "lightgl", "csg", "openjscad", "openscad-parser"], function(jQuery, examples_insert) {
+  "jquery.jstree.min", "bootstrap/bootstrap.min", "jquery.textarea", "jquery.mousewheel", "underscore-min", "garlic.min", "shortcut", "bootbox.min",
+  "openscad-parser-support", "lightgl", "csg", "openjscad", "openscad-parser"], function(jQuery, examples_insert) {
 
-	  var myLayout;
+    var filetree;
     var gProcessor=null;
     var auto_reload;
     var editorIsDirty = false;
     var modelIsShown = false;
-    var currentFilename = '';
+    var connectedToDropbox = false;
     var client;
-    var uiLayout, logLayout;
     var colorSchemes = {
       "cornfield": { backgroundColor: [255/255, 255/255, 229/255], faceColor: [249/255, 215/255, 44/255] },
       "metallic": { backgroundColor: [170/255, 170/255, 255/255], faceColor: [221/255, 221/255, 225/255] },
@@ -50,7 +49,8 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
 
       uiLayout = $('#container').layout({
                     minSize: 100, 
-                    center__paneSelector: ".outer-center", 
+                    center__paneSelector: ".outer-center",
+                    west__onresize_end: resizeEditor,
                     stateManagement: {
                       enabled: true,
                       cookie: {
@@ -96,10 +96,10 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
             $('#editor').val(atob(unescape(getUrlParam('c'))));
             editorIsDirty = true;
             localStorage.setItem("lastEdit", $('#editor').val());
-        } else {
-          $('#editor').val(localStorage.getItem("lastEdit"));
+            setCurrentFilename('');
         }
       }
+      resizeEditor(); // needed to take into account any scrollbars
 
       var font = (localStorage.getItem("preferencesFontFamily") != undefined)? localStorage.getItem("preferencesFontFamily") : "Courier New,Courier New,Courier,monospace";
       setEditorFontFamily(font);
@@ -255,6 +255,14 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
       }
     }
 
+    function setCurrentFilename(filename) {
+      $('#currentFilename').val(filename);
+    }
+
+    function getCurrentFilename() {
+      return $('#currentFilename').val();
+    }
+
   	function setColorScheme (schemeName) {
       var scheme = colorSchemes[schemeName];
       if (scheme === undefined){
@@ -295,7 +303,7 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
           return;
         }
       }
-      currentFilename = filename;
+      setCurrentFilename(filename);
       $('#editor').val(exampleElement.text());
       $('#editor').blur();
       
@@ -321,7 +329,7 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
         }
 
         $('#editor').val('');
-        currentFilename = '';
+        setCurrentFilename('');
         gProcessor.clearViewer();
         modelIsShown = false;
         localStorage.removeItem("lastEdit");
@@ -330,13 +338,24 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
 
     function saveEditor() {
 
+      if (!connectedToDropbox){
+        bootbox.alert("Not connected to Dropbox. Please connect and attempt to save again.");
+        return;
+      }
+
+      var filename = getCurrentFilename() != ''?getCurrentFilename():'newfile.scad';
+
       bootbox.prompt("File path and name?", "Cancel", "OK", function(filepath) {
 
         if (!filepath) return;
 
         writeFile(filepath, $('#editor').val());
 
-      }, currentFilename?currentFilename:"newfile.scad");
+      }, filename);
+    }
+
+    function resizeEditor(){
+      $('#editor').width(uiLayout.state.west.layoutWidth-20)
     }
 
     function resizeViewer(x,ui){
@@ -559,19 +578,19 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
       client.readFile(path, null, function(error, content, stat) {
         closeFileOpenModal();
         if (error) {
-          closeFileOpenModal();
           return showError(error);
         }
 
         if (editorIsDirty){
-          alert("Current editor is not saved.");
-          return;
+          if(!confirm("Current editor is not saved, continue?")){
+            return;
+          }
         }
 
         $('#editor').val(content);
         $('#editor-tabs a[href="#editorTab"]').tab('show');
         editorIsDirty = false;
-        currentFilename = stat.path;
+        setCurrentFilename(stat.path);
         logMessage("Loaded file: " +stat.path);
       });
     };
@@ -583,7 +602,7 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
         }
 
         logMessage("File saved: " +filepath);
-        currentFilename = filepath;
+        setCurrentFilename(filepath);
         editorIsDirty = false;
 
         reloadFileTree();
@@ -610,6 +629,7 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
         $('#notificationbar').attr("title", "Connected to Dropbox");
         $('#notificationbar').html("<img src='img/led-icons/connect.png'>&nbsp;Dropbox</li>")
         initFilelist();
+        connectedToDropbox = true;
       });
     };
 
@@ -618,6 +638,7 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
         if (!confirmed) return;
 
         client.signOut(function(error) {
+          connectedToDropbox = false;
           if (error) {
             return showError(error);
           }
