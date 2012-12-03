@@ -90,6 +90,8 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
 
       if (localStorage.lastEdit !== undefined){
         setEditorContent(localStorage.getItem("lastEdit"));
+      } else {
+        setEditorContent("// Example script. Press F4, or choose Reload and Compile from the Design menu, to render.\n\nsize = 50;\nhole = 25;\n\nfunction r_from_dia(d) = d / 2;\n\ncy_r = r_from_dia(hole);\ncy_h = r_from_dia(size * 2.5);\n\nmodule rotcy(rot, r, h) {\n    rotate(90, rot)\n      cylinder(r = r, h = h, center = true);\n}\n\ndifference() {\n    sphere(r = r_from_dia(size));\n    rotcy([0, 0, 0], cy_r, cy_h);\n    rotcy([1, 0, 0], cy_r, cy_h);\n    rotcy([0, 1, 0], cy_r, cy_h);\n}");
       }
 
       if (getUrlParam('c') !== undefined){
@@ -340,7 +342,7 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
         setCurrentFilename('');
         gProcessor.clearViewer();
         modelIsShown = false;
-        localStorage.removeItem("lastEdit");
+        localStorage.setItem("lastEdit", "");
 
     };
 
