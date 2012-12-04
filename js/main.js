@@ -198,7 +198,11 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
       $('#menu_design_reload_compile').click(updateSolid);
 
       $('#menu_design_export_stl').click(function(){
-      	gProcessor.generateOutputFile();
+        if (modelIsShown){
+          gProcessor.generateOutputFile();
+        } else {
+          logMessage("Please render the model before attempting to export.");
+        }
       });
 
       $('input[name=menu_view_hide_editor]').change(hideEditor);
@@ -458,7 +462,7 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
           newParse(lines, libraries, display);
         });
       } else {
-        gProcessor.setJsCad($('#editor').val());
+        gProcessor.setJsCad($('#editor').val(), getOutputFilename());
         modelIsShown = true;
       }
     }
@@ -495,8 +499,19 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
 
       console.log(resultText);
       
-      gProcessor.setJsCad(resultText);
+      gProcessor.setJsCad(resultText, getOutputFilename());
       modelIsShown = true;
+    }
+
+    function getOutputFilename(){
+      var currentFilename = getCurrentFilename();
+      if (currentFilename == ''){
+        return "output";
+      }
+
+      var y = currentFilename.substring(currentFilename.lastIndexOf("/") + 1); 
+      var q = y.lastIndexOf("."); 
+      return y.substring(0,q==-1?y.length:q);
     }
 
 
@@ -505,10 +520,8 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
     }
 
     var showError = function(error) {
-      if (window.console) {  // Skip the "if" in node.js code.
-        logMessage("Dropbox Error: "+error);
-      }
-
+      logMessage("Dropbox Error: "+error);
+      
       switch (error.status) {
       case 401:
         // If you're using dropbox.js, the only cause behind this error is that
@@ -701,12 +714,16 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
 
       function showGrid(show){
         show_grid = show;
-        updateSolid();
+        if (modelIsShown){
+          updateSolid();
+        }
       }
 
       function showAxis(show){
         show_axis = show;
-        updateSolid();
+        if (modelIsShown){
+          updateSolid();
+        }
       }
 
       function hideEditor() {
