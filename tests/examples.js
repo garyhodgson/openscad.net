@@ -1,5 +1,5 @@
 var assert = require("assert");
-var parser = require("../js/openscad-parser").parser;
+var parser = require("../openscad-parser").parser;
 var fs = require("fs");
 
 function parse(s) {
@@ -7,9 +7,10 @@ function parse(s) {
 }
 
 function check(testFileName) {
-    var actual = fs.readFileSync("examples/"+testFileName+".scad", "UTF8");
-    var expected = fs.readFileSync("examples/"+testFileName+".jscad", "UTF8");
-    assert.ok(parse(actual).lines.join('\n').indexOf(expected));
+    var test = fs.readFileSync("examples/"+testFileName+".scad", "utf8");
+    var expected = fs.readFileSync("examples/"+testFileName+".jscad", "utf8").replace(/\n/g,'');
+    var actual = parse(test).lines.join('').replace(/\n/g,'');
+    assert.equal(actual, expected, console.log("\nExpected:\n" + expected + "\n\nActual:\n" + actual + "\n"));
 }
 
 exports["test example001"] = function() { 	 check("example001"); }

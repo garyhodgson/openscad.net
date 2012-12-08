@@ -675,7 +675,6 @@ OpenJsCad.Processor.prototype = {
     }
     else
     {
-      this.enableItems();
       if(this.onchange) this.onchange();
     }
   },
@@ -779,7 +778,6 @@ OpenJsCad.Processor.prototype = {
         that.setError(errtxt);
         that.logMessage("Error.");
       }
-      that.enableItems();
       if(that.onchange) that.onchange();
     }
   },
@@ -806,7 +804,6 @@ OpenJsCad.Processor.prototype = {
         OpenJsCad.revokeBlobUrl(this.outputFileBlobUrl);
         this.outputFileBlobUrl = null;
       }
-      this.enableItems();
       if(this.onchange) this.onchange();
     }
   },

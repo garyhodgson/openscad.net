@@ -180,10 +180,14 @@ case 27:
         
 break;
 case 28:
-            this.$ = $$[$0];
-            if (this.$) {
-                this.$.tag_background = true;
-            }
+            /* - NOTE: Currently unimplemented, therefore not displaying parts marked with %
+                this.$ = $$[$0];
+                if (this.$) {
+                    this.$.tag_background = true;
+                }
+            */
+            delete $$[$0];
+            this.$ = undefined;
         
 break;
 case 29:
@@ -735,7 +739,12 @@ Module.prototype.evaluate = function(parentContext, inst) {
 
     var evaluatedLines = [];
     _.each(nonControlChildren, function(child, index, list) {
-        evaluatedLines.push(child.evaluate(context));                
+        var evaluatedChild = child.evaluate(context)
+        if (evaluatedChild == undefined || (_.isArray(evaluatedChild) && _.isEmpty(evaluatedChild))){
+            // ignore
+        } else {
+            evaluatedLines.push(evaluatedChild);
+        }
     });
 
     var cleanedLines = _.compact(evaluatedLines);
@@ -1306,7 +1315,7 @@ function TransformModule(a){
         if (childModules.length == 1){
             return childModules[0];
         } else {
-            return childModules;
+            return _.first(childModules)+".union([" + _.rest(childModules) + "])";
         }
         
   }
@@ -1387,23 +1396,21 @@ RotateTransform.prototype.evaluate = function(parentContext, inst){
 
     var context = newContext(parentContext, ["a","v"], [], inst);
 
-    var a = contextVariableLookup(context, "a", 0);
-    var v = contextVariableLookup(context, "v", undefined);
-    if (v === undefined && !(_.isArray(a))){
-        var val = a;
-        a = [val,val,val];
-    }
+    var a = contextVariableLookup(context, "a", undefined);
 
-    return this.transformChildren(inst.children, context, function(){
-        if (v === undefined){
+    if (_.isArray(a)){
+        return this.transformChildren(inst.children, context, function(){
             return _.template('.rotateX(<%=degreeX%>).rotateY(<%=degreeY%>).rotateZ(<%=degreeZ%>)', {degreeX:a[0],degreeY:a[1],degreeZ:a[2]});
-        } else {
+        });
+    } else {
+        var v = contextVariableLookup(context, "v", undefined);
+        return this.transformChildren(inst.children, context, function(){
             if (v.toString() =="0,0,0"){
                 v = [0,0,1];
             }
             return _.template('.transform(CSG.Matrix4x4.rotation([0,0,0], [<%=vector%>], <%=degree%>))', {degree:a, vector:v});
-        }
-    });
+        });
+    }
 };
 
 
@@ -1761,21 +1768,19 @@ var functionNameLookup = {"cos":Math.cosdeg,"sin":Math.sindeg, "acos":Math.acosd
     },
     "lookup": function(){
         var low_p, low_v, high_p, high_v;
-        var args = arguments[0];
-
-        if (args.length < 2){
-            logMessage("Lookup arguments are invalid. Incorrect parameter count. " +  args);
+        if (arguments.length < 2){
+            logMessage("Lookup arguments are invalid. Incorrect parameter count. " +  arguments);
             return undefined;
         }
 
-        var p = args[0];
-        var vector = args[1];
+        var p = arguments[0];
+        var vector = arguments[1];
         if (!_.isNumber(p)        ||      // First must be a number
             !_.isArray(vector)      ||      // Second must be a vector of vectors
             vector.length < 2       ||
             (vector.length >=2 && !_.isArray(vector[0]))
             ){
-            logMessage("Lookup arguments are invalid. Incorrect parameters. " +  args);
+            logMessage("Lookup arguments are invalid. Incorrect parameters. " +  arguments);
             return undefined;
         }
 
