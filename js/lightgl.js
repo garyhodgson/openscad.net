@@ -5,4 +5,1992 @@
  * Copyright 2011 Evan Wallace
  * Released under the MIT license
  */
- var GL=function(){function c(){a.MODELVIEW=1|j,a.PROJECTION=2|j;var b=new l,c=new l;a.modelviewMatrix=new l,a.projectionMatrix=new l;var f,g,d=[],e=[];a.matrixMode=function(b){switch(b){case a.MODELVIEW:f="modelviewMatrix",g=d;break;case a.PROJECTION:f="projectionMatrix",g=e;break;default:throw"invalid matrix mode "+b}},a.loadIdentity=function(){l.identity(a[f])},a.loadMatrix=function(b){for(var c=b.m,d=a[f].m,e=0;16>e;e++)d[e]=c[e]},a.multMatrix=function(b){a.loadMatrix(l.multiply(a[f],b,c))},a.perspective=function(c,d,e,f){a.multMatrix(l.perspective(c,d,e,f,b))},a.frustum=function(c,d,e,f,g,h){a.multMatrix(l.frustum(c,d,e,f,g,h,b))},a.ortho=function(c,d,e,f,g,h){a.multMatrix(l.ortho(c,d,e,f,g,h,b))},a.scale=function(c,d,e){a.multMatrix(l.scale(c,d,e,b))},a.translate=function(c,d,e){a.multMatrix(l.translate(c,d,e,b))},a.rotate=function(c,d,e,f){a.multMatrix(l.rotate(c,d,e,f,b))},a.lookAt=function(c,d,e,f,g,h,i,j,k){a.multMatrix(l.lookAt(c,d,e,f,g,h,i,j,k,b))},a.pushMatrix=function(){g.push(Array.prototype.slice.call(a[f].m))},a.popMatrix=function(){var b=g.pop();a[f].m=k?new Float32Array(b):b},a.project=function(b,c,d,e,f,g){e=e||a.modelviewMatrix,f=f||a.projectionMatrix,g=g||a.getParameter(a.VIEWPORT);var h=f.transformPoint(e.transformPoint(new E(b,c,d)));return new E(g[0]+g[2]*(.5*h.x+.5),g[1]+g[3]*(.5*h.y+.5),.5*h.z+.5)},a.unProject=function(d,e,f,g,h,i){g=g||a.modelviewMatrix,h=h||a.projectionMatrix,i=i||a.getParameter(a.VIEWPORT);var j=new E(2*((d-i[0])/i[2])-1,2*((e-i[1])/i[3])-1,2*f-1);return l.inverse(l.multiply(h,g,b),c).transformPoint(j)},a.matrixMode(a.MODELVIEW)}function d(){var b={mesh:new o({coords:!0,colors:!0,triangles:!1}),mode:-1,coord:[0,0,0,0],color:[1,1,1,1],pointSize:1,shader:new v("      uniform float pointSize;      varying vec4 color;      varying vec4 coord;      void main() {        color = gl_Color;        coord = gl_TexCoord;        gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;        gl_PointSize = pointSize;      }    ","      uniform sampler2D texture;      uniform float pointSize;      uniform bool useTexture;      varying vec4 color;      varying vec4 coord;      void main() {        gl_FragColor = color;        if (useTexture) gl_FragColor *= texture2D(texture, coord.xy);      }    ")};a.pointSize=function(a){b.shader.uniforms({pointSize:a})},a.begin=function(a){if(-1!=b.mode)throw"mismatched gl.begin() and gl.end() calls";b.mode=a,b.mesh.colors=[],b.mesh.coords=[],b.mesh.vertices=[]},a.color=function(a,c,d,e){b.color=1==arguments.length?a.toArray().concat(1):[a,c,d,e||1]},a.texCoord=function(a,c){b.coord=1==arguments.length?a.toArray(2):[a,c]},a.vertex=function(a,c,d){b.mesh.colors.push(b.color),b.mesh.coords.push(b.coord),b.mesh.vertices.push(1==arguments.length?a.toArray():[a,c,d])},a.end=function(){if(-1==b.mode)throw"mismatched gl.begin() and gl.end() calls";b.mesh.compile(),b.shader.uniforms({useTexture:!!a.getParameter(a.TEXTURE_BINDING_2D)}).draw(b.mesh,b.mode),b.mode=-1}}function e(){function j(){for(var a in e)if(i.call(e,a)&&e[a])return!0;return!1}function k(b){var e={};for(var g in b)e[g]="function"==typeof b[g]?function(a){return function(){a.apply(b,arguments)}}(b[g]):b[g];e.original=b,e.x=e.pageX,e.y=e.pageY;for(var h=a.canvas;h;h=h.offsetParent)e.x-=h.offsetLeft,e.y-=h.offsetTop;return f?(e.deltaX=e.x-c,e.deltaY=e.y-d):(e.deltaX=0,e.deltaY=0,f=!0),c=e.x,d=e.y,e.dragging=j(),e.preventDefault=function(){e.original.preventDefault()},e.stopPropagation=function(){e.original.stopPropagation()},e}function l(c){a=b,j()||(g(document,"mousemove",m),g(document,"mouseup",n),h(a.canvas,"mousemove",m),h(a.canvas,"mouseup",n)),e[c.which]=!0,c=k(c),a.onmousedown&&a.onmousedown(c),c.preventDefault()}function m(c){a=b,c=k(c),a.onmousemove&&a.onmousemove(c),c.preventDefault()}function n(c){a=b,e[c.which]=!1,j()||(h(document,"mousemove",m),h(document,"mouseup",n),g(a.canvas,"mousemove",m),g(a.canvas,"mouseup",n)),c=k(c),a.onmouseup&&a.onmouseup(c),c.preventDefault()}function o(){f=!1}function p(){e={},f=!1}var b=a,c=0,d=0,e={},f=!1,i=Object.prototype.hasOwnProperty;g(a.canvas,"mousedown",l),g(a.canvas,"mousemove",m),g(a.canvas,"mouseup",n),g(a.canvas,"mouseover",o),g(a.canvas,"mouseout",o),g(document,"contextmenu",p)}function f(a){var b={8:"BACKSPACE",9:"TAB",13:"ENTER",16:"SHIFT",27:"ESCAPE",32:"SPACE",37:"LEFT",38:"UP",39:"RIGHT",40:"DOWN"};return b[a]||(a>=65&&90>=a?String.fromCharCode(a):null)}function g(a,b,c){a.addEventListener(b,c)}function h(a,b,c){a.removeEventListener(b,c)}function i(){(function(b){a.makeCurrent=function(){a=b}})(a),a.animate=function(){function e(){a=d;var f=(new Date).getTime();a.onupdate&&a.onupdate((f-c)/1e3),a.ondraw&&a.ondraw(),b(e),c=f}var b=window.requestAnimationFrame||window.mozRequestAnimationFrame||window.webkitRequestAnimationFrame||function(a){setTimeout(a,1e3/60)},c=(new Date).getTime(),d=a;e()},a.fullscreen=function(b){function h(){a.canvas.width=window.innerWidth-d-e,a.canvas.height=window.innerHeight-c-f,a.viewport(0,0,a.canvas.width,a.canvas.height),!b.camera&&"camera"in b||(a.matrixMode(a.PROJECTION),a.loadIdentity(),a.perspective(b.fov||45,a.canvas.width/a.canvas.height,b.near||.1,b.far||1e3),a.matrixMode(a.MODELVIEW)),a.ondraw&&a.ondraw()}b=b||{};var c=b.paddingTop||0,d=b.paddingLeft||0,e=b.paddingRight||0,f=b.paddingBottom||0;if(!document.body)throw"document.body doesn't exist yet (call gl.fullscreen() from window.onload() or from inside the <body> tag)";document.body.appendChild(a.canvas),document.body.style.overflow="hidden",a.canvas.style.position="absolute",a.canvas.style.left=d+"px",a.canvas.style.top=c+"px",g(window,"resize",h),h()}}function l(){var a=Array.prototype.concat.apply([],arguments);a.length||(a=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]),this.m=k?new Float32Array(a):a}function m(){this.unique=[],this.indices=[],this.map={}}function n(a,b){this.buffer=null,this.target=a,this.type=b,this.data=[]}function o(a){a=a||{},this.vertexBuffers={},this.indexBuffers={},this.addVertexBuffer("vertices","gl_Vertex"),a.coords&&this.addVertexBuffer("coords","gl_TexCoord"),a.normals&&this.addVertexBuffer("normals","gl_Normal"),a.colors&&this.addVertexBuffer("colors","gl_Color"),"triangles"in a&&!a.triangles||this.addIndexBuffer("triangles"),a.lines&&this.addIndexBuffer("lines")}function q(a){return new E(2*(1&a)-1,(2&a)-1,(4&a)/2-1)}function r(a,b,c){this.t=arguments.length?a:Number.MAX_VALUE,this.hit=b,this.normal=c}function s(){var b=a.getParameter(a.VIEWPORT),c=a.modelviewMatrix.m,d=new E(c[0],c[4],c[8]),e=new E(c[1],c[5],c[9]),f=new E(c[2],c[6],c[10]),g=new E(c[3],c[7],c[11]);this.eye=new E(-g.dot(d),-g.dot(e),-g.dot(f));var h=b[0],i=h+b[2],j=b[1],k=j+b[3];this.ray00=a.unProject(h,j,1).subtract(this.eye),this.ray10=a.unProject(i,j,1).subtract(this.eye),this.ray01=a.unProject(h,k,1).subtract(this.eye),this.ray11=a.unProject(i,k,1).subtract(this.eye),this.viewport=b}function t(a,b,c){for(;null!=(result=a.exec(b));)c(result)}function v(b,c){function d(a){var b=document.getElementById(a);return b?b.text:a}function j(a,b){var c={},d=/^((\s*\/\/.*\n|\s*#extension.*\n)+)[^]*$/.exec(b);return b=d?d[1]+a+b.substr(d[1].length):a+b,t(/\bgl_\w+\b/g,a,function(a){a in c||(b=b.replace(RegExp("\\b"+a+"\\b","g"),u+a),c[a]=!0)}),b}function k(b,c){var d=a.createShader(b);if(a.shaderSource(d,c),a.compileShader(d),!a.getShaderParameter(d,a.COMPILE_STATUS))throw"compile error: "+a.getShaderInfoLog(d);return d}b=d(b),c=d(c);var e="    uniform mat3 gl_NormalMatrix;    uniform mat4 gl_ModelViewMatrix;    uniform mat4 gl_ProjectionMatrix;    uniform mat4 gl_ModelViewProjectionMatrix;    uniform mat4 gl_ModelViewMatrixInverse;    uniform mat4 gl_ProjectionMatrixInverse;    uniform mat4 gl_ModelViewProjectionMatrixInverse;  ",f=e+"    attribute vec4 gl_Vertex;    attribute vec4 gl_TexCoord;    attribute vec3 gl_Normal;    attribute vec4 gl_Color;    vec4 ftransform() {      return gl_ModelViewProjectionMatrix * gl_Vertex;    }  ",g="    precision highp float;  "+e,h=b+c,i={};if(t(/\b(gl_[^;]*)\b;/g,e,function(a){var b=a[1];if(-1!=h.indexOf(b)){var c=b.replace(/[a-z_]/g,"");i[c]=u+b}}),-1!=h.indexOf("ftransform")&&(i.MVPM=u+"gl_ModelViewProjectionMatrix"),this.usedMatrices=i,b=j(f,b),c=j(g,c),this.program=a.createProgram(),a.attachShader(this.program,k(a.VERTEX_SHADER,b)),a.attachShader(this.program,k(a.FRAGMENT_SHADER,c)),a.linkProgram(this.program),!a.getProgramParameter(this.program,a.LINK_STATUS))throw"link error: "+a.getProgramInfoLog(this.program);this.attributes={},this.uniformLocations={};var l={};t(/uniform\s+sampler(1D|2D|3D|Cube)\s+(\w+)\s*;/g,b+c,function(a){l[a[2]]=1}),this.isSampler=l}function w(a){var b=Object.prototype.toString.call(a);return"[object Array]"==b||"[object Float32Array]"==b}function x(a){var b=Object.prototype.toString.call(a);return"[object Number]"==b||"[object Boolean]"==b}function A(b,c,d){d=d||{},this.id=a.createTexture(),this.width=b,this.height=c,this.format=d.format||a.RGBA,this.type=d.type||a.UNSIGNED_BYTE,a.bindTexture(a.TEXTURE_2D,this.id),a.pixelStorei(a.UNPACK_FLIP_Y_WEBGL,1),a.texParameteri(a.TEXTURE_2D,a.TEXTURE_MAG_FILTER,d.filter||d.magFilter||a.LINEAR),a.texParameteri(a.TEXTURE_2D,a.TEXTURE_MIN_FILTER,d.filter||d.minFilter||a.LINEAR),a.texParameteri(a.TEXTURE_2D,a.TEXTURE_WRAP_S,d.wrap||d.wrapS||a.CLAMP_TO_EDGE),a.texParameteri(a.TEXTURE_2D,a.TEXTURE_WRAP_T,d.wrap||d.wrapT||a.CLAMP_TO_EDGE),a.texImage2D(a.TEXTURE_2D,0,this.format,b,c,0,this.format,this.type,null)}function E(a,b,c){this.x=a||0,this.y=b||0,this.z=c||0}var a,b={create:function(b){b=b||{};var f=document.createElement("canvas");f.width=800,f.height=600,"alpha"in b||(b.alpha=!1);try{a=f.getContext("webgl",b)}catch(g){}try{a=a||f.getContext("experimental-webgl",b)}catch(g){}if(!a)throw"WebGL not supported";return c(),d(),e(),i(),a},keys:{},Matrix:l,Indexer:m,Buffer:n,Mesh:o,HitTest:r,Raytracer:s,Shader:v,Texture:A,Vector:E};g(document,"keydown",function(a){if(!a.altKey&&!a.ctrlKey&&!a.metaKey){var c=f(a.keyCode);c&&(b.keys[c]=!0),b.keys[a.keyCode]=!0}}),g(document,"keyup",function(a){if(!a.altKey&&!a.ctrlKey&&!a.metaKey){var c=f(a.keyCode);c&&(b.keys[c]=!1),b.keys[a.keyCode]=!1}});var j=305397760,k="undefined"!=typeof Float32Array;l.prototype={inverse:function(){return l.inverse(this,new l)},transpose:function(){return l.transpose(this,new l)},multiply:function(a){return l.multiply(this,a,new l)},transformPoint:function(a){var b=this.m;return new E(b[0]*a.x+b[1]*a.y+b[2]*a.z+b[3],b[4]*a.x+b[5]*a.y+b[6]*a.z+b[7],b[8]*a.x+b[9]*a.y+b[10]*a.z+b[11]).divide(b[12]*a.x+b[13]*a.y+b[14]*a.z+b[15])},transformVector:function(a){var b=this.m;return new E(b[0]*a.x+b[1]*a.y+b[2]*a.z,b[4]*a.x+b[5]*a.y+b[6]*a.z,b[8]*a.x+b[9]*a.y+b[10]*a.z)}},l.inverse=function(a,b){b=b||new l;var c=a.m,d=b.m;d[0]=c[5]*c[10]*c[15]-c[5]*c[14]*c[11]-c[6]*c[9]*c[15]+c[6]*c[13]*c[11]+c[7]*c[9]*c[14]-c[7]*c[13]*c[10],d[1]=-c[1]*c[10]*c[15]+c[1]*c[14]*c[11]+c[2]*c[9]*c[15]-c[2]*c[13]*c[11]-c[3]*c[9]*c[14]+c[3]*c[13]*c[10],d[2]=c[1]*c[6]*c[15]-c[1]*c[14]*c[7]-c[2]*c[5]*c[15]+c[2]*c[13]*c[7]+c[3]*c[5]*c[14]-c[3]*c[13]*c[6],d[3]=-c[1]*c[6]*c[11]+c[1]*c[10]*c[7]+c[2]*c[5]*c[11]-c[2]*c[9]*c[7]-c[3]*c[5]*c[10]+c[3]*c[9]*c[6],d[4]=-c[4]*c[10]*c[15]+c[4]*c[14]*c[11]+c[6]*c[8]*c[15]-c[6]*c[12]*c[11]-c[7]*c[8]*c[14]+c[7]*c[12]*c[10],d[5]=c[0]*c[10]*c[15]-c[0]*c[14]*c[11]-c[2]*c[8]*c[15]+c[2]*c[12]*c[11]+c[3]*c[8]*c[14]-c[3]*c[12]*c[10],d[6]=-c[0]*c[6]*c[15]+c[0]*c[14]*c[7]+c[2]*c[4]*c[15]-c[2]*c[12]*c[7]-c[3]*c[4]*c[14]+c[3]*c[12]*c[6],d[7]=c[0]*c[6]*c[11]-c[0]*c[10]*c[7]-c[2]*c[4]*c[11]+c[2]*c[8]*c[7]+c[3]*c[4]*c[10]-c[3]*c[8]*c[6],d[8]=c[4]*c[9]*c[15]-c[4]*c[13]*c[11]-c[5]*c[8]*c[15]+c[5]*c[12]*c[11]+c[7]*c[8]*c[13]-c[7]*c[12]*c[9],d[9]=-c[0]*c[9]*c[15]+c[0]*c[13]*c[11]+c[1]*c[8]*c[15]-c[1]*c[12]*c[11]-c[3]*c[8]*c[13]+c[3]*c[12]*c[9],d[10]=c[0]*c[5]*c[15]-c[0]*c[13]*c[7]-c[1]*c[4]*c[15]+c[1]*c[12]*c[7]+c[3]*c[4]*c[13]-c[3]*c[12]*c[5],d[11]=-c[0]*c[5]*c[11]+c[0]*c[9]*c[7]+c[1]*c[4]*c[11]-c[1]*c[8]*c[7]-c[3]*c[4]*c[9]+c[3]*c[8]*c[5],d[12]=-c[4]*c[9]*c[14]+c[4]*c[13]*c[10]+c[5]*c[8]*c[14]-c[5]*c[12]*c[10]-c[6]*c[8]*c[13]+c[6]*c[12]*c[9],d[13]=c[0]*c[9]*c[14]-c[0]*c[13]*c[10]-c[1]*c[8]*c[14]+c[1]*c[12]*c[10]+c[2]*c[8]*c[13]-c[2]*c[12]*c[9],d[14]=-c[0]*c[5]*c[14]+c[0]*c[13]*c[6]+c[1]*c[4]*c[14]-c[1]*c[12]*c[6]-c[2]*c[4]*c[13]+c[2]*c[12]*c[5],d[15]=c[0]*c[5]*c[10]-c[0]*c[9]*c[6]-c[1]*c[4]*c[10]+c[1]*c[8]*c[6]+c[2]*c[4]*c[9]-c[2]*c[8]*c[5];for(var e=c[0]*d[0]+c[1]*d[4]+c[2]*d[8]+c[3]*d[12],f=0;16>f;f++)d[f]/=e;return b},l.transpose=function(a,b){b=b||new l;var c=a.m,d=b.m;return d[0]=c[0],d[1]=c[4],d[2]=c[8],d[3]=c[12],d[4]=c[1],d[5]=c[5],d[6]=c[9],d[7]=c[13],d[8]=c[2],d[9]=c[6],d[10]=c[10],d[11]=c[14],d[12]=c[3],d[13]=c[7],d[14]=c[11],d[15]=c[15],b},l.multiply=function(a,b,c){c=c||new l;var d=a.m,e=b.m,f=c.m;return f[0]=d[0]*e[0]+d[1]*e[4]+d[2]*e[8]+d[3]*e[12],f[1]=d[0]*e[1]+d[1]*e[5]+d[2]*e[9]+d[3]*e[13],f[2]=d[0]*e[2]+d[1]*e[6]+d[2]*e[10]+d[3]*e[14],f[3]=d[0]*e[3]+d[1]*e[7]+d[2]*e[11]+d[3]*e[15],f[4]=d[4]*e[0]+d[5]*e[4]+d[6]*e[8]+d[7]*e[12],f[5]=d[4]*e[1]+d[5]*e[5]+d[6]*e[9]+d[7]*e[13],f[6]=d[4]*e[2]+d[5]*e[6]+d[6]*e[10]+d[7]*e[14],f[7]=d[4]*e[3]+d[5]*e[7]+d[6]*e[11]+d[7]*e[15],f[8]=d[8]*e[0]+d[9]*e[4]+d[10]*e[8]+d[11]*e[12],f[9]=d[8]*e[1]+d[9]*e[5]+d[10]*e[9]+d[11]*e[13],f[10]=d[8]*e[2]+d[9]*e[6]+d[10]*e[10]+d[11]*e[14],f[11]=d[8]*e[3]+d[9]*e[7]+d[10]*e[11]+d[11]*e[15],f[12]=d[12]*e[0]+d[13]*e[4]+d[14]*e[8]+d[15]*e[12],f[13]=d[12]*e[1]+d[13]*e[5]+d[14]*e[9]+d[15]*e[13],f[14]=d[12]*e[2]+d[13]*e[6]+d[14]*e[10]+d[15]*e[14],f[15]=d[12]*e[3]+d[13]*e[7]+d[14]*e[11]+d[15]*e[15],c},l.identity=function(a){a=a||new l;var b=a.m;return b[0]=b[5]=b[10]=b[15]=1,b[1]=b[2]=b[3]=b[4]=b[6]=b[7]=b[8]=b[9]=b[11]=b[12]=b[13]=b[14]=0,a},l.perspective=function(a,b,c,d,e){var f=Math.tan(a*Math.PI/360)*c,g=f*b;return l.frustum(-g,g,-f,f,c,d,e)},l.frustum=function(a,b,c,d,e,f,g){g=g||new l;var h=g.m;return h[0]=2*e/(b-a),h[1]=0,h[2]=(b+a)/(b-a),h[3]=0,h[4]=0,h[5]=2*e/(d-c),h[6]=(d+c)/(d-c),h[7]=0,h[8]=0,h[9]=0,h[10]=-(f+e)/(f-e),h[11]=-2*f*e/(f-e),h[12]=0,h[13]=0,h[14]=-1,h[15]=0,g},l.ortho=function(a,b,c,d,e,f,g){g=g||new l;var h=g.m;return h[0]=2/(b-a),h[1]=0,h[2]=0,h[3]=-(b+a)/(b-a),h[4]=0,h[5]=2/(d-c),h[6]=0,h[7]=-(d+c)/(d-c),h[8]=0,h[9]=0,h[10]=-2/(f-e),h[11]=-(f+e)/(f-e),h[12]=0,h[13]=0,h[14]=0,h[15]=1,g},l.scale=function(a,b,c,d){d=d||new l;var e=d.m;return e[0]=a,e[1]=0,e[2]=0,e[3]=0,e[4]=0,e[5]=b,e[6]=0,e[7]=0,e[8]=0,e[9]=0,e[10]=c,e[11]=0,e[12]=0,e[13]=0,e[14]=0,e[15]=1,d},l.translate=function(a,b,c,d){d=d||new l;var e=d.m;return e[0]=1,e[1]=0,e[2]=0,e[3]=a,e[4]=0,e[5]=1,e[6]=0,e[7]=b,e[8]=0,e[9]=0,e[10]=1,e[11]=c,e[12]=0,e[13]=0,e[14]=0,e[15]=1,d},l.rotate=function(a,b,c,d,e){if(!a||!b&&!c&&!d)return l.identity(e);e=e||new l;var f=e.m,g=Math.sqrt(b*b+c*c+d*d);a*=Math.PI/180,b/=g,c/=g,d/=g;var h=Math.cos(a),i=Math.sin(a),j=1-h;return f[0]=b*b*j+h,f[1]=b*c*j-d*i,f[2]=b*d*j+c*i,f[3]=0,f[4]=c*b*j+d*i,f[5]=c*c*j+h,f[6]=c*d*j-b*i,f[7]=0,f[8]=d*b*j-c*i,f[9]=d*c*j+b*i,f[10]=d*d*j+h,f[11]=0,f[12]=0,f[13]=0,f[14]=0,f[15]=1,e},l.lookAt=function(a,b,c,d,e,f,g,h,i,j){j=j||new l;var k=j.m,m=new E(a,b,c),n=new E(d,e,f),o=new E(g,h,i),p=m.subtract(n).unit(),q=o.cross(p).unit(),r=p.cross(q).unit();return k[0]=q.x,k[1]=q.y,k[2]=q.z,k[3]=-q.dot(m),k[4]=r.x,k[5]=r.y,k[6]=r.z,k[7]=-r.dot(m),k[8]=p.x,k[9]=p.y,k[10]=p.z,k[11]=-p.dot(m),k[12]=0,k[13]=0,k[14]=0,k[15]=1,j},m.prototype={add:function(a){var b=JSON.stringify(a);return b in this.map||(this.map[b]=this.unique.length,this.unique.push(a)),this.map[b]}},n.prototype={compile:function(b){for(var c=[],d=0,e=1e4;this.data.length>d;d+=e)c=Array.prototype.concat.apply(c,this.data.slice(d,d+e));var f=this.data.length?c.length/this.data.length:0;if(f!=Math.round(f))throw"buffer elements not of consistent size, average size is "+f;this.buffer=this.buffer||a.createBuffer(),this.buffer.length=c.length,this.buffer.spacing=f,a.bindBuffer(this.target,this.buffer),a.bufferData(this.target,new this.type(c),b||a.STATIC_DRAW)}},o.prototype={addVertexBuffer:function(b,c){var d=this.vertexBuffers[c]=new n(a.ARRAY_BUFFER,Float32Array);d.name=b,this[b]=[]},addIndexBuffer:function(b){this.indexBuffers[b]=new n(a.ELEMENT_ARRAY_BUFFER,Uint16Array),this[b]=[]},compile:function(){for(var a in this.vertexBuffers){var b=this.vertexBuffers[a];b.data=this[b.name],b.compile()}for(var c in this.indexBuffers){var b=this.indexBuffers[c];b.data=this[c],b.compile()}},transform:function(a){if(this.vertices=this.vertices.map(function(b){return a.transformPoint(E.fromArray(b)).toArray()}),this.normals){var b=a.inverse().transpose();this.normals=this.normals.map(function(a){return b.transformVector(E.fromArray(a)).unit().toArray()})}return this.compile(),this},computeNormals:function(){this.normals||this.addVertexBuffer("normals","gl_Normal");for(var a=0;this.vertices.length>a;a++)this.normals[a]=new E;for(var a=0;this.triangles.length>a;a++){var b=this.triangles[a],c=E.fromArray(this.vertices[b[0]]),d=E.fromArray(this.vertices[b[1]]),e=E.fromArray(this.vertices[b[2]]),f=d.subtract(c).cross(e.subtract(c)).unit();this.normals[b[0]]=this.normals[b[0]].add(f),this.normals[b[1]]=this.normals[b[1]].add(f),this.normals[b[2]]=this.normals[b[2]].add(f)}for(var a=0;this.vertices.length>a;a++)this.normals[a]=this.normals[a].unit().toArray();return this.compile(),this},computeWireframe:function(){for(var a=new m,b=0;this.triangles.length>b;b++)for(var c=this.triangles[b],d=0;c.length>d;d++){var e=c[d],f=c[(d+1)%c.length];a.add([Math.min(e,f),Math.max(e,f)])}return this.lines||this.addIndexBuffer("lines"),this.lines=a.unique,this.compile(),this},getAABB:function(){var a={min:new E(Number.MAX_VALUE,Number.MAX_VALUE,Number.MAX_VALUE)};a.max=a.min.negative();for(var b=0;this.vertices.length>b;b++){var c=E.fromArray(this.vertices[b]);a.min=E.min(a.min,c),a.max=E.max(a.max,c)}return a},getBoundingSphere:function(){for(var a=this.getAABB(),b={center:a.min.add(a.max).divide(2),radius:0},c=0;this.vertices.length>c;c++)b.radius=Math.max(b.radius,E.fromArray(this.vertices[c]).subtract(b.center).length());return b}},o.plane=function(a){a=a||{};var b=new o(a);detailX=a.detailX||a.detail||1,detailY=a.detailY||a.detail||1;for(var c=0;detailY>=c;c++)for(var d=c/detailY,e=0;detailX>=e;e++){var f=e/detailX;if(b.vertices.push([2*f-1,2*d-1,0]),b.coords&&b.coords.push([f,d]),b.normals&&b.normals.push([0,0,1]),detailX>e&&detailY>c){var g=e+c*(detailX+1);b.triangles.push([g,g+1,g+detailX+1]),b.triangles.push([g+detailX+1,g+1,g+detailX+2])}}return b.compile(),b};var p=[[0,4,2,6,-1,0,0],[1,3,5,7,1,0,0],[0,1,4,5,0,-1,0],[2,6,3,7,0,1,0],[0,2,1,3,0,0,-1],[4,5,6,7,0,0,1]];o.cube=function(a){for(var b=new o(a),c=0;p.length>c;c++){for(var d=p[c],e=4*c,f=0;4>f;f++){var g=d[f];b.vertices.push(q(g).toArray()),b.coords&&b.coords.push([1&f,(2&f)/2]),b.normals&&b.normals.push(d.slice(4,7))}b.triangles.push([e,e+1,e+2]),b.triangles.push([e+2,e+1,e+3])}return b.compile(),b},o.sphere=function(a){function b(a,b,c){return h?[a,c,b]:[a,b,c]}function c(a){return a+(a-a*a)/2}a=a||{};var d=new o(a),e=new m;detail=a.detail||6;for(var f=0;8>f;f++)for(var g=q(f),h=g.x*g.y*g.z>0,i=[],j=0;detail>=j;j++){for(var k=0;detail>=j+k;k++){var l=j/detail,n=k/detail,p=(detail-j-k)/detail,r={vertex:new E(c(l),c(n),c(p)).unit().multiply(g).toArray()};d.coords&&(r.coord=g.y>0?[1-l,p]:[p,1-l]),i.push(e.add(r))}if(j>0)for(var k=0;detail>=j+k;k++){var l=(j-1)*(detail+1)+(j-1-(j-1)*(j-1))/2+k,n=j*(detail+1)+(j-j*j)/2+k;d.triangles.push(b(i[l],i[l+1],i[n])),detail>j+k&&d.triangles.push(b(i[n],i[l+1],i[n+1]))}}return d.vertices=e.unique.map(function(a){return a.vertex}),d.coords&&(d.coords=e.unique.map(function(a){return a.coord})),d.normals&&(d.normals=d.vertices),d.compile(),d},o.load=function(a,b){b=b||{},"coords"in b||(b.coords=!!a.coords),"normals"in b||(b.normals=!!a.normals),"colors"in b||(b.colors=!!a.colors),"triangles"in b||(b.triangles=!!a.triangles),"lines"in b||(b.lines=!!a.lines);var c=new o(b);return c.vertices=a.vertices,c.coords&&(c.coords=a.coords),c.normals&&(c.normals=a.normals),c.colors&&(c.colors=a.colors),c.triangles&&(c.triangles=a.triangles),c.lines&&(c.lines=a.lines),c.compile(),c},r.prototype={mergeWith:function(a){a.t>0&&a.t<this.t&&(this.t=a.t,this.hit=a.hit,this.normal=a.normal)}},s.prototype={getRayForPixel:function(a,b){a=(a-this.viewport[0])/this.viewport[2],b=1-(b-this.viewport[1])/this.viewport[3];var c=E.lerp(this.ray00,this.ray10,a),d=E.lerp(this.ray01,this.ray11,a);return E.lerp(c,d,b).unit()}},s.hitTestBox=function(a,b,c,d){var e=c.subtract(a).divide(b),f=d.subtract(a).divide(b),g=E.min(e,f),h=E.max(e,f),i=g.max(),j=h.min();if(i>0&&j>i){var k=1e-6,l=a.add(b.multiply(i));return c=c.add(k),d=d.subtract(k),new r(i,l,new E((l.x>d.x)-(l.x<c.x),(l.y>d.y)-(l.y<c.y),(l.z>d.z)-(l.z<c.z)))}return null},s.hitTestSphere=function(a,b,c,d){var e=a.subtract(c),f=b.dot(b),g=2*b.dot(e),h=e.dot(e)-d*d,i=g*g-4*f*h;if(i>0){var j=(-g-Math.sqrt(i))/(2*f),k=a.add(b.multiply(j));return new r(j,k,k.subtract(c).divide(d))}return null},s.hitTestTriangle=function(a,b,c,d,e){var f=d.subtract(c),g=e.subtract(c),h=f.cross(g).unit(),i=h.dot(c.subtract(a))/h.dot(b);if(i>0){var j=a.add(b.multiply(i)),k=j.subtract(c),l=g.dot(g),m=g.dot(f),n=g.dot(k),o=f.dot(f),p=f.dot(k),q=l*o-m*m,s=(o*n-m*p)/q,t=(l*p-m*n)/q;if(s>=0&&t>=0&&1>=s+t)return new r(i,j,h)}return null};var u="LIGHTGL";new l,new l,v.prototype={uniforms:function(b){a.useProgram(this.program);for(var c in b){var d=this.uniformLocations[c]||a.getUniformLocation(this.program,c);if(d){this.uniformLocations[c]=d;var e=b[c];if(e instanceof E?e=[e.x,e.y,e.z]:e instanceof l&&(e=e.m),w(e))switch(e.length){case 1:a.uniform1fv(d,new Float32Array(e));break;case 2:a.uniform2fv(d,new Float32Array(e));break;case 3:a.uniform3fv(d,new Float32Array(e));break;case 4:a.uniform4fv(d,new Float32Array(e));break;case 9:a.uniformMatrix3fv(d,!1,new Float32Array([e[0],e[3],e[6],e[1],e[4],e[7],e[2],e[5],e[8]]));break;case 16:a.uniformMatrix4fv(d,!1,new Float32Array([e[0],e[4],e[8],e[12],e[1],e[5],e[9],e[13],e[2],e[6],e[10],e[14],e[3],e[7],e[11],e[15]]));break;default:throw"don't know how to load uniform \""+c+'" of length '+e.length}else{if(!x(e))throw'attempted to set uniform "'+c+'" to invalid value '+e;(this.isSampler[c]?a.uniform1i:a.uniform1f).call(a,d,e)}}}return this},draw:function(b,c){this.drawBuffers(b.vertexBuffers,b.indexBuffers[c==a.LINES?"lines":"triangles"],2>arguments.length?a.TRIANGLES:c)},drawBuffers:function(b,c,d){var e=this.usedMatrices,f=a.modelviewMatrix,g=a.projectionMatrix,h=e.MVMI||e.NM?f.inverse():null,i=e.PMI?g.inverse():null,j=e.MVPM||e.MVPMI?g.multiply(f):null,k={};if(e.MVM&&(k[e.MVM]=f),e.MVMI&&(k[e.MVMI]=h),e.PM&&(k[e.PM]=g),e.PMI&&(k[e.PMI]=i),e.MVPM&&(k[e.MVPM]=j),e.MVPMI&&(k[e.MVPMI]=j.inverse()),e.NM){var l=h.m;k[e.NM]=[l[0],l[4],l[8],l[1],l[5],l[9],l[2],l[6],l[10]]}this.uniforms(k);var m=0;for(var n in b){var o=b[n],p=this.attributes[n]||a.getAttribLocation(this.program,n.replace(/^(gl_.*)$/,u+"$1"));-1!=p&&o.buffer&&(this.attributes[n]=p,a.bindBuffer(a.ARRAY_BUFFER,o.buffer),a.enableVertexAttribArray(p),a.vertexAttribPointer(p,o.buffer.spacing,a.FLOAT,!1,0,0),m=o.buffer.length/o.buffer.spacing)}for(var n in this.attributes)n in b||a.disableVertexAttribArray(this.attributes[n]);return!m||c&&!c.buffer||(c?(a.bindBuffer(a.ELEMENT_ARRAY_BUFFER,c.buffer),a.drawElements(d,c.buffer.length,a.UNSIGNED_SHORT,0)):a.drawArrays(d,0,m)),this}};var B,C,D;return A.prototype={bind:function(b){a.activeTexture(a.TEXTURE0+(b||0)),a.bindTexture(a.TEXTURE_2D,this.id)},unbind:function(b){a.activeTexture(a.TEXTURE0+(b||0)),a.bindTexture(a.TEXTURE_2D,null)},drawTo:function(b){var c=a.getParameter(a.VIEWPORT);B=B||a.createFramebuffer(),C=C||a.createRenderbuffer(),a.bindFramebuffer(a.FRAMEBUFFER,B),a.bindRenderbuffer(a.RENDERBUFFER,C),(this.width!=C.width||this.height!=C.height)&&(C.width=this.width,C.height=this.height,a.renderbufferStorage(a.RENDERBUFFER,a.DEPTH_COMPONENT16,this.width,this.height)),a.framebufferTexture2D(a.FRAMEBUFFER,a.COLOR_ATTACHMENT0,a.TEXTURE_2D,this.id,0),a.framebufferRenderbuffer(a.FRAMEBUFFER,a.DEPTH_ATTACHMENT,a.RENDERBUFFER,C),a.viewport(0,0,this.width,this.height),b(),a.bindFramebuffer(a.FRAMEBUFFER,null),a.bindRenderbuffer(a.RENDERBUFFER,null),a.viewport(c[0],c[1],c[2],c[3])},swapWith:function(a){var b;b=a.id,a.id=this.id,this.id=b,b=a.width,a.width=this.width,this.width=b,b=a.height,a.height=this.height,this.height=b}},A.fromImage=function(b,c){c=c||{};var d=new A(b.width,b.height,c);try{a.texImage2D(a.TEXTURE_2D,0,d.format,d.format,d.type,b)}catch(e){throw"file:"==location.protocol?'image not loaded for security reasons (serve this page over "http://" instead)':"image not loaded for security reasons (image must originate from the same domain as this page or use Cross-Origin Resource Sharing)"}return c.minFilter&&c.minFilter!=a.NEAREST&&c.minFilter!=a.LINEAR&&a.generateMipmap(a.TEXTURE_2D),d},A.fromURL=function(b,c){D=D||function(){var a=document.createElement("canvas").getContext("2d");a.canvas.width=a.canvas.height=128;for(var b=0;a.canvas.height>b;b+=16)for(var c=0;a.canvas.width>c;c+=16)a.fillStyle=16&(c^b)?"#FFF":"#DDD",a.fillRect(c,b,16,16);return a.canvas}();var d=A.fromImage(D,c),e=new Image,f=a;return e.onload=function(){f.makeCurrent(),A.fromImage(e,c).swapWith(d)},e.src=b,d},E.prototype={negative:function(){return new E(-this.x,-this.y,-this.z)},add:function(a){return a instanceof E?new E(this.x+a.x,this.y+a.y,this.z+a.z):new E(this.x+a,this.y+a,this.z+a)},subtract:function(a){return a instanceof E?new E(this.x-a.x,this.y-a.y,this.z-a.z):new E(this.x-a,this.y-a,this.z-a)},multiply:function(a){return a instanceof E?new E(this.x*a.x,this.y*a.y,this.z*a.z):new E(this.x*a,this.y*a,this.z*a)},divide:function(a){return a instanceof E?new E(this.x/a.x,this.y/a.y,this.z/a.z):new E(this.x/a,this.y/a,this.z/a)},equals:function(a){return this.x==a.x&&this.y==a.y&&this.z==a.z},dot:function(a){return this.x*a.x+this.y*a.y+this.z*a.z},cross:function(a){return new E(this.y*a.z-this.z*a.y,this.z*a.x-this.x*a.z,this.x*a.y-this.y*a.x)},length:function(){return Math.sqrt(this.dot(this))},unit:function(){return this.divide(this.length())},min:function(){return Math.min(Math.min(this.x,this.y),this.z)},max:function(){return Math.max(Math.max(this.x,this.y),this.z)},toAngles:function(){return{theta:Math.atan2(this.z,this.x),phi:Math.asin(this.y/this.length())}},toArray:function(a){return[this.x,this.y,this.z].slice(0,a||3)},clone:function(){return new E(this.x,this.y,this.z)},init:function(a,b,c){return this.x=a,this.y=b,this.z=c,this}},E.negative=function(a,b){return b.x=-a.x,b.y=-a.y,b.z=-a.z,b},E.add=function(a,b,c){return b instanceof E?(c.x=a.x+b.x,c.y=a.y+b.y,c.z=a.z+b.z):(c.x=a.x+b,c.y=a.y+b,c.z=a.z+b),c},E.subtract=function(a,b,c){return b instanceof E?(c.x=a.x-b.x,c.y=a.y-b.y,c.z=a.z-b.z):(c.x=a.x-b,c.y=a.y-b,c.z=a.z-b),c},E.multiply=function(a,b,c){return b instanceof E?(c.x=a.x*b.x,c.y=a.y*b.y,c.z=a.z*b.z):(c.x=a.x*b,c.y=a.y*b,c.z=a.z*b),c},E.divide=function(a,b,c){return b instanceof E?(c.x=a.x/b.x,c.y=a.y/b.y,c.z=a.z/b.z):(c.x=a.x/b,c.y=a.y/b,c.z=a.z/b),c},E.cross=function(a,b,c){return c.x=a.y*b.z-a.z*b.y,c.y=a.z*b.x-a.x*b.z,c.z=a.x*b.y-a.y*b.x,c},E.unit=function(a,b){var c=a.length();return b.x=a.x/c,b.y=a.y/c,b.z=a.z/c,b},E.fromAngles=function(a,b){return new E(Math.cos(a)*Math.cos(b),Math.sin(b),Math.sin(a)*Math.cos(b))},E.randomDirection=function(){return E.fromAngles(2*Math.random()*Math.PI,Math.asin(2*Math.random()-1))},E.min=function(a,b){return new E(Math.min(a.x,b.x),Math.min(a.y,b.y),Math.min(a.z,b.z))},E.max=function(a,b){return new E(Math.max(a.x,b.x),Math.max(a.y,b.y),Math.max(a.z,b.z))},E.lerp=function(a,b,c){return b.subtract(a).multiply(c).add(a)},E.fromArray=function(a){return new E(a[0],a[1],a[2])},b}();
+var GL = (function() {
+
+// src/main.js
+// The internal `gl` variable holds the current WebGL context.
+var gl;
+
+var GL = {
+  // ### Initialization
+  // 
+  // `GL.create()` creates a new WebGL context and augments it with more
+  // methods. The alpha channel is disabled by default because it usually causes
+  // unintended transparencies in the canvas.
+  create: function(options) {
+    options = options || {};
+    var canvas = document.createElement('canvas');
+    canvas.width = 800;
+    canvas.height = 600;
+    if (!('alpha' in options)) options.alpha = false;
+    try { gl = canvas.getContext('webgl', options); } catch (e) {}
+    try { gl = gl || canvas.getContext('experimental-webgl', options); } catch (e) {}
+    if (!gl) throw 'WebGL not supported';
+    addMatrixStack();
+    addImmediateMode();
+    addEventListeners();
+    addOtherMethods();
+    return gl;
+  },
+
+  // `GL.keys` contains a mapping of key codes to booleans indicating whether
+  // that key is currently pressed.
+  keys: {},
+
+  // Export all external classes.
+  Matrix: Matrix,
+  Indexer: Indexer,
+  Buffer: Buffer,
+  Mesh: Mesh,
+  HitTest: HitTest,
+  Raytracer: Raytracer,
+  Shader: Shader,
+  Texture: Texture,
+  Vector: Vector
+};
+
+// ### Matrix stack
+// 
+// Implement the OpenGL modelview and projection matrix stacks, along with some
+// other useful GLU matrix functions.
+
+function addMatrixStack() {
+  gl.MODELVIEW = ENUM | 1;
+  gl.PROJECTION = ENUM | 2;
+  var tempMatrix = new Matrix();
+  var resultMatrix = new Matrix();
+  gl.modelviewMatrix = new Matrix();
+  gl.projectionMatrix = new Matrix();
+  var modelviewStack = [];
+  var projectionStack = [];
+  var matrix, stack;
+  gl.matrixMode = function(mode) {
+    switch (mode) {
+      case gl.MODELVIEW:
+        matrix = 'modelviewMatrix';
+        stack = modelviewStack;
+        break;
+      case gl.PROJECTION:
+        matrix = 'projectionMatrix';
+        stack = projectionStack;
+        break;
+      default:
+        throw 'invalid matrix mode ' + mode;
+    }
+  };
+  gl.loadIdentity = function() {
+    Matrix.identity(gl[matrix]);
+  };
+  gl.loadMatrix = function(m) {
+    var from = m.m, to = gl[matrix].m;
+    for (var i = 0; i < 16; i++) {
+      to[i] = from[i];
+    }
+  };
+  gl.multMatrix = function(m) {
+    gl.loadMatrix(Matrix.multiply(gl[matrix], m, resultMatrix));
+  };
+  gl.perspective = function(fov, aspect, near, far) {
+    gl.multMatrix(Matrix.perspective(fov, aspect, near, far, tempMatrix));
+  };
+  gl.frustum = function(l, r, b, t, n, f) {
+    gl.multMatrix(Matrix.frustum(l, r, b, t, n, f, tempMatrix));
+  };
+  gl.ortho = function(l, r, b, t, n, f) {
+    gl.multMatrix(Matrix.ortho(l, r, b, t, n, f, tempMatrix));
+  };
+  gl.scale = function(x, y, z) {
+    gl.multMatrix(Matrix.scale(x, y, z, tempMatrix));
+  };
+  gl.translate = function(x, y, z) {
+    gl.multMatrix(Matrix.translate(x, y, z, tempMatrix));
+  };
+  gl.rotate = function(a, x, y, z) {
+    gl.multMatrix(Matrix.rotate(a, x, y, z, tempMatrix));
+  };
+  gl.lookAt = function(ex, ey, ez, cx, cy, cz, ux, uy, uz) {
+    gl.multMatrix(Matrix.lookAt(ex, ey, ez, cx, cy, cz, ux, uy, uz, tempMatrix));
+  };
+  gl.pushMatrix = function() {
+    stack.push(Array.prototype.slice.call(gl[matrix].m));
+  };
+  gl.popMatrix = function() {
+    var m = stack.pop();
+    gl[matrix].m = hasFloat32Array ? new Float32Array(m) : m;
+  };
+  gl.project = function(objX, objY, objZ, modelview, projection, viewport) {
+    modelview = modelview || gl.modelviewMatrix;
+    projection = projection || gl.projectionMatrix;
+    viewport = viewport || gl.getParameter(gl.VIEWPORT);
+    var point = projection.transformPoint(modelview.transformPoint(new Vector(objX, objY, objZ)));
+    return new Vector(
+      viewport[0] + viewport[2] * (point.x * 0.5 + 0.5),
+      viewport[1] + viewport[3] * (point.y * 0.5 + 0.5),
+      point.z * 0.5 + 0.5
+    );
+  };
+  gl.unProject = function(winX, winY, winZ, modelview, projection, viewport) {
+    modelview = modelview || gl.modelviewMatrix;
+    projection = projection || gl.projectionMatrix;
+    viewport = viewport || gl.getParameter(gl.VIEWPORT);
+    var point = new Vector(
+      (winX - viewport[0]) / viewport[2] * 2 - 1,
+      (winY - viewport[1]) / viewport[3] * 2 - 1,
+      winZ * 2 - 1
+    );
+    return Matrix.inverse(Matrix.multiply(projection, modelview, tempMatrix), resultMatrix).transformPoint(point);
+  };
+  gl.matrixMode(gl.MODELVIEW);
+}
+
+// ### Immediate mode
+// 
+// Provide an implementation of OpenGL's deprecated immediate mode. This is
+// depricated for a reason: constantly re-specifying the geometry is a bad
+// idea for performance. You should use a `GL.Mesh` instead, which specifies
+// the geometry once and caches it on the graphics card. Still, nothing
+// beats a quick `gl.begin(gl.POINTS); gl.vertex(1, 2, 3); gl.end();` for
+// debugging. This intentionally doesn't implement fixed-function lighting
+// because it's only meant for quick debugging tasks.
+
+function addImmediateMode() {
+  var immediateMode = {
+    mesh: new Mesh({ coords: true, colors: true, triangles: false }),
+    mode: -1,
+    coord: [0, 0, 0, 0],
+    color: [1, 1, 1, 1],
+    pointSize: 1,
+    shader: new Shader('\
+      uniform float pointSize;\
+      varying vec4 color;\
+      varying vec4 coord;\
+      void main() {\
+        color = gl_Color;\
+        coord = gl_TexCoord;\
+        gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\
+        gl_PointSize = pointSize;\
+      }\
+    ', '\
+      uniform sampler2D texture;\
+      uniform float pointSize;\
+      uniform bool useTexture;\
+      varying vec4 color;\
+      varying vec4 coord;\
+      void main() {\
+        gl_FragColor = color;\
+        if (useTexture) gl_FragColor *= texture2D(texture, coord.xy);\
+      }\
+    ')
+  };
+  gl.pointSize = function(pointSize) {
+    immediateMode.shader.uniforms({ pointSize: pointSize });
+  };
+  gl.begin = function(mode) {
+    if (immediateMode.mode != -1) throw 'mismatched gl.begin() and gl.end() calls';
+    immediateMode.mode = mode;
+    immediateMode.mesh.colors = [];
+    immediateMode.mesh.coords = [];
+    immediateMode.mesh.vertices = [];
+  };
+  gl.color = function(r, g, b, a) {
+    immediateMode.color = (arguments.length == 1) ? r.toArray().concat(1) : [r, g, b, a || 1];
+  };
+  gl.texCoord = function(s, t) {
+    immediateMode.coord = (arguments.length == 1) ? s.toArray(2) : [s, t];
+  };
+  gl.vertex = function(x, y, z) {
+    immediateMode.mesh.colors.push(immediateMode.color);
+    immediateMode.mesh.coords.push(immediateMode.coord);
+    immediateMode.mesh.vertices.push(arguments.length == 1 ? x.toArray() : [x, y, z]);
+  };
+  gl.end = function() {
+    if (immediateMode.mode == -1) throw 'mismatched gl.begin() and gl.end() calls';
+    immediateMode.mesh.compile();
+    immediateMode.shader.uniforms({
+      useTexture: !!gl.getParameter(gl.TEXTURE_BINDING_2D)
+    }).draw(immediateMode.mesh, immediateMode.mode);
+    immediateMode.mode = -1;
+  };
+}
+
+// ### Improved mouse events
+// 
+// This adds event listeners on the `gl.canvas` element that call
+// `gl.onmousedown()`, `gl.onmousemove()`, and `gl.onmouseup()` with an
+// augmented event object. The event object also has the properties `x`, `y`,
+// `deltaX`, `deltaY`, and `dragging`.
+function addEventListeners() {
+  var context = gl, oldX = 0, oldY = 0, buttons = {}, hasOld = false;
+  var has = Object.prototype.hasOwnProperty;
+  function isDragging() {
+    for (var b in buttons) {
+      if (has.call(buttons, b) && buttons[b]) return true;
+    }
+    return false;
+  }
+  function augment(original) {
+    // Make a copy of original, a native `MouseEvent`, so we can overwrite
+    // WebKit's non-standard read-only `x` and `y` properties (which are just
+    // duplicates of `pageX` and `pageY`). We can't just use
+    // `Object.create(original)` because some `MouseEvent` functions must be
+    // called in the context of the original event object.
+    var e = {};
+    for (var name in original) {
+      if (typeof original[name] == 'function') {
+        e[name] = (function(callback) {
+          return function() {
+            callback.apply(original, arguments);
+          };
+        })(original[name]);
+      } else {
+        e[name] = original[name];
+      }
+    }
+    e.original = original;
+    e.x = e.pageX;
+    e.y = e.pageY;
+    for (var obj = gl.canvas; obj; obj = obj.offsetParent) {
+      e.x -= obj.offsetLeft;
+      e.y -= obj.offsetTop;
+    }
+    if (hasOld) {
+      e.deltaX = e.x - oldX;
+      e.deltaY = e.y - oldY;
+    } else {
+      e.deltaX = 0;
+      e.deltaY = 0;
+      hasOld = true;
+    }
+    oldX = e.x;
+    oldY = e.y;
+    e.dragging = isDragging();
+    e.preventDefault = function() {
+      e.original.preventDefault();
+    };
+    e.stopPropagation = function() {
+      e.original.stopPropagation();
+    };
+    return e;
+  }
+  function mousedown(e) {
+    gl = context;
+    if (!isDragging()) {
+      // Expand the event handlers to the document to handle dragging off canvas.
+      on(document, 'mousemove', mousemove);
+      on(document, 'mouseup', mouseup);
+      off(gl.canvas, 'mousemove', mousemove);
+      off(gl.canvas, 'mouseup', mouseup);
+    }
+    buttons[e.which] = true;
+    e = augment(e);
+    if (gl.onmousedown) gl.onmousedown(e);
+    e.preventDefault();
+  }
+  function mousemove(e) {
+    gl = context;
+    e = augment(e);
+    if (gl.onmousemove) gl.onmousemove(e);
+    e.preventDefault();
+  }
+  function mouseup(e) {
+    gl = context;
+    buttons[e.which] = false;
+    if (!isDragging()) {
+      // Shrink the event handlers back to the canvas when dragging ends.
+      off(document, 'mousemove', mousemove);
+      off(document, 'mouseup', mouseup);
+      on(gl.canvas, 'mousemove', mousemove);
+      on(gl.canvas, 'mouseup', mouseup);
+    }
+    e = augment(e);
+    if (gl.onmouseup) gl.onmouseup(e);
+    e.preventDefault();
+  }
+  function reset() {
+    hasOld = false;
+  }
+  function resetAll() {
+    buttons = {};
+    hasOld = false;
+  }
+  on(gl.canvas, 'mousedown', mousedown);
+  on(gl.canvas, 'mousemove', mousemove);
+  on(gl.canvas, 'mouseup', mouseup);
+  on(gl.canvas, 'mouseover', reset);
+  on(gl.canvas, 'mouseout', reset);
+  on(document, 'contextmenu', resetAll);
+}
+
+// ### Automatic keyboard state
+// 
+// The current keyboard state is stored in `GL.keys`, a map of integer key
+// codes to booleans indicating whether that key is currently pressed. Certain
+// keys also have named identifiers that can be used directly, such as
+// `GL.keys.SPACE`. Values in `GL.keys` are initially undefined until that
+// key is pressed for the first time. If you need a boolean value, you can
+// cast the value to boolean by applying the not operator twice (as in
+// `!!GL.keys.SPACE`).
+
+function mapKeyCode(code) {
+  var named = {
+    8: 'BACKSPACE',
+    9: 'TAB',
+    13: 'ENTER',
+    16: 'SHIFT',
+    27: 'ESCAPE',
+    32: 'SPACE',
+    37: 'LEFT',
+    38: 'UP',
+    39: 'RIGHT',
+    40: 'DOWN'
+  };
+  return named[code] || (code >= 65 && code <= 90 ? String.fromCharCode(code) : null);
+}
+
+function on(element, name, callback) {
+  element.addEventListener(name, callback);
+}
+
+function off(element, name, callback) {
+  element.removeEventListener(name, callback);
+}
+
+on(document, 'keydown', function(e) {
+  if (!e.altKey && !e.ctrlKey && !e.metaKey) {
+    var key = mapKeyCode(e.keyCode);
+    if (key) GL.keys[key] = true;
+    GL.keys[e.keyCode] = true;
+  }
+});
+
+on(document, 'keyup', function(e) {
+  if (!e.altKey && !e.ctrlKey && !e.metaKey) {
+    var key = mapKeyCode(e.keyCode);
+    if (key) GL.keys[key] = false;
+    GL.keys[e.keyCode] = false;
+  }
+});
+
+function addOtherMethods() {
+  // ### Multiple contexts
+  // 
+  // When using multiple contexts in one web page, `gl.makeCurrent()` must be
+  // called before issuing commands to a different context.
+  (function(context) {
+    gl.makeCurrent = function() {
+      gl = context;
+    };
+  })(gl);
+
+  // ### Animation
+  // 
+  // Call `gl.animate()` to provide an animation loop that repeatedly calls
+  // `gl.onupdate()` and `gl.ondraw()`.
+  gl.animate = function() {
+    var post =
+      window.requestAnimationFrame ||
+      window.mozRequestAnimationFrame ||
+      window.webkitRequestAnimationFrame ||
+      function(callback) { setTimeout(callback, 1000 / 60); };
+    var time = new Date().getTime();
+    var context = gl;
+    function update() {
+      gl = context;
+      var now = new Date().getTime();
+      if (gl.onupdate) gl.onupdate((now - time) / 1000);
+      if (gl.ondraw) gl.ondraw();
+      post(update);
+      time = now;
+    }
+    update();
+  };
+
+  // ### Fullscreen
+  // 
+  // Provide an easy way to get a fullscreen app running, including an
+  // automatic 3D perspective projection matrix by default. This should be
+  // called once.
+  // 
+  // Just fullscreen, no automatic camera:
+  // 
+  //     gl.fullscreen({ camera: false });
+  // 
+  // Adjusting field of view, near plane distance, and far plane distance:
+  // 
+  //     gl.fullscreen({ fov: 45, near: 0.1, far: 1000 });
+  // 
+  // Adding padding from the edge of the window:
+  // 
+  //     gl.fullscreen({ paddingLeft: 250, paddingBottom: 60 });
+  // 
+  gl.fullscreen = function(options) {
+    options = options || {};
+    var top = options.paddingTop || 0;
+    var left = options.paddingLeft || 0;
+    var right = options.paddingRight || 0;
+    var bottom = options.paddingBottom || 0;
+    if (!document.body) {
+      throw 'document.body doesn\'t exist yet (call gl.fullscreen() from ' +
+        'window.onload() or from inside the <body> tag)';
+    }
+    document.body.appendChild(gl.canvas);
+    document.body.style.overflow = 'hidden';
+    gl.canvas.style.position = 'absolute';
+    gl.canvas.style.left = left + 'px';
+    gl.canvas.style.top = top + 'px';
+    function resize() {
+      gl.canvas.width = window.innerWidth - left - right;
+      gl.canvas.height = window.innerHeight - top - bottom;
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+      if (options.camera || !('camera' in options)) {
+        gl.matrixMode(gl.PROJECTION);
+        gl.loadIdentity();
+        gl.perspective(options.fov || 45, gl.canvas.width / gl.canvas.height,
+          options.near || 0.1, options.far || 1000);
+        gl.matrixMode(gl.MODELVIEW);
+      }
+      if (gl.ondraw) gl.ondraw();
+    }
+    on(window, 'resize', resize);
+    resize();
+  };
+}
+
+// A value to bitwise-or with new enums to make them distinguishable from the
+// standard WebGL enums.
+var ENUM = 0x12340000;
+
+// src/matrix.js
+// Represents a 4x4 matrix stored in row-major order that uses Float32Arrays
+// when available. Matrix operations can either be done using convenient
+// methods that return a new matrix for the result or optimized methods
+// that store the result in an existing matrix to avoid generating garbage.
+
+var hasFloat32Array = (typeof Float32Array != 'undefined');
+
+// ### new GL.Matrix([elements])
+// 
+// This constructor takes 16 arguments in row-major order, which can be passed
+// individually, as a list, or even as four lists, one for each row. If the
+// arguments are omitted then the identity matrix is constructed instead.
+function Matrix() {
+  var m = Array.prototype.concat.apply([], arguments);
+  if (!m.length) {
+    m = [
+      1, 0, 0, 0,
+      0, 1, 0, 0,
+      0, 0, 1, 0,
+      0, 0, 0, 1
+    ];
+  }
+  this.m = hasFloat32Array ? new Float32Array(m) : m;
+}
+
+Matrix.prototype = {
+  // ### .inverse()
+  // 
+  // Returns the matrix that when multiplied with this matrix results in the
+  // identity matrix.
+  inverse: function() {
+    return Matrix.inverse(this, new Matrix());
+  },
+
+  // ### .transpose()
+  // 
+  // Returns this matrix, exchanging columns for rows.
+  transpose: function() {
+    return Matrix.transpose(this, new Matrix());
+  },
+
+  // ### .multiply(matrix)
+  // 
+  // Returns the concatenation of the transforms for this matrix and `matrix`.
+  // This emulates the OpenGL function `glMultMatrix()`.
+  multiply: function(matrix) {
+    return Matrix.multiply(this, matrix, new Matrix());
+  },
+
+  // ### .transformPoint(point)
+  // 
+  // Transforms the vector as a point with a w coordinate of 1. This
+  // means translations will have an effect, for example.
+  transformPoint: function(v) {
+    var m = this.m;
+    return new Vector(
+      m[0] * v.x + m[1] * v.y + m[2] * v.z + m[3],
+      m[4] * v.x + m[5] * v.y + m[6] * v.z + m[7],
+      m[8] * v.x + m[9] * v.y + m[10] * v.z + m[11]
+    ).divide(m[12] * v.x + m[13] * v.y + m[14] * v.z + m[15]);
+  },
+
+  // ### .transformPoint(vector)
+  // 
+  // Transforms the vector as a vector with a w coordinate of 0. This
+  // means translations will have no effect, for example.
+  transformVector: function(v) {
+    var m = this.m;
+    return new Vector(
+      m[0] * v.x + m[1] * v.y + m[2] * v.z,
+      m[4] * v.x + m[5] * v.y + m[6] * v.z,
+      m[8] * v.x + m[9] * v.y + m[10] * v.z
+    );
+  }
+};
+
+// ### GL.Matrix.inverse(matrix[, result])
+// 
+// Returns the matrix that when multiplied with `matrix` results in the
+// identity matrix. You can optionally pass an existing matrix in `result`
+// to avoid allocating a new matrix. This implementation is from the Mesa
+// OpenGL function `__gluInvertMatrixd()` found in `project.c`.
+Matrix.inverse = function(matrix, result) {
+  result = result || new Matrix();
+  var m = matrix.m, r = result.m;
+
+  r[0] = m[5]*m[10]*m[15] - m[5]*m[14]*m[11] - m[6]*m[9]*m[15] + m[6]*m[13]*m[11] + m[7]*m[9]*m[14] - m[7]*m[13]*m[10];
+  r[1] = -m[1]*m[10]*m[15] + m[1]*m[14]*m[11] + m[2]*m[9]*m[15] - m[2]*m[13]*m[11] - m[3]*m[9]*m[14] + m[3]*m[13]*m[10];
+  r[2] = m[1]*m[6]*m[15] - m[1]*m[14]*m[7] - m[2]*m[5]*m[15] + m[2]*m[13]*m[7] + m[3]*m[5]*m[14] - m[3]*m[13]*m[6];
+  r[3] = -m[1]*m[6]*m[11] + m[1]*m[10]*m[7] + m[2]*m[5]*m[11] - m[2]*m[9]*m[7] - m[3]*m[5]*m[10] + m[3]*m[9]*m[6];
+
+  r[4] = -m[4]*m[10]*m[15] + m[4]*m[14]*m[11] + m[6]*m[8]*m[15] - m[6]*m[12]*m[11] - m[7]*m[8]*m[14] + m[7]*m[12]*m[10];
+  r[5] = m[0]*m[10]*m[15] - m[0]*m[14]*m[11] - m[2]*m[8]*m[15] + m[2]*m[12]*m[11] + m[3]*m[8]*m[14] - m[3]*m[12]*m[10];
+  r[6] = -m[0]*m[6]*m[15] + m[0]*m[14]*m[7] + m[2]*m[4]*m[15] - m[2]*m[12]*m[7] - m[3]*m[4]*m[14] + m[3]*m[12]*m[6];
+  r[7] = m[0]*m[6]*m[11] - m[0]*m[10]*m[7] - m[2]*m[4]*m[11] + m[2]*m[8]*m[7] + m[3]*m[4]*m[10] - m[3]*m[8]*m[6];
+
+  r[8] = m[4]*m[9]*m[15] - m[4]*m[13]*m[11] - m[5]*m[8]*m[15] + m[5]*m[12]*m[11] + m[7]*m[8]*m[13] - m[7]*m[12]*m[9];
+  r[9] = -m[0]*m[9]*m[15] + m[0]*m[13]*m[11] + m[1]*m[8]*m[15] - m[1]*m[12]*m[11] - m[3]*m[8]*m[13] + m[3]*m[12]*m[9];
+  r[10] = m[0]*m[5]*m[15] - m[0]*m[13]*m[7] - m[1]*m[4]*m[15] + m[1]*m[12]*m[7] + m[3]*m[4]*m[13] - m[3]*m[12]*m[5];
+  r[11] = -m[0]*m[5]*m[11] + m[0]*m[9]*m[7] + m[1]*m[4]*m[11] - m[1]*m[8]*m[7] - m[3]*m[4]*m[9] + m[3]*m[8]*m[5];
+
+  r[12] = -m[4]*m[9]*m[14] + m[4]*m[13]*m[10] + m[5]*m[8]*m[14] - m[5]*m[12]*m[10] - m[6]*m[8]*m[13] + m[6]*m[12]*m[9];
+  r[13] = m[0]*m[9]*m[14] - m[0]*m[13]*m[10] - m[1]*m[8]*m[14] + m[1]*m[12]*m[10] + m[2]*m[8]*m[13] - m[2]*m[12]*m[9];
+  r[14] = -m[0]*m[5]*m[14] + m[0]*m[13]*m[6] + m[1]*m[4]*m[14] - m[1]*m[12]*m[6] - m[2]*m[4]*m[13] + m[2]*m[12]*m[5];
+  r[15] = m[0]*m[5]*m[10] - m[0]*m[9]*m[6] - m[1]*m[4]*m[10] + m[1]*m[8]*m[6] + m[2]*m[4]*m[9] - m[2]*m[8]*m[5];
+
+  var det = m[0]*r[0] + m[1]*r[4] + m[2]*r[8] + m[3]*r[12];
+  for (var i = 0; i < 16; i++) r[i] /= det;
+  return result;
+};
+
+// ### GL.Matrix.transpose(matrix[, result])
+// 
+// Returns `matrix`, exchanging columns for rows. You can optionally pass an
+// existing matrix in `result` to avoid allocating a new matrix.
+Matrix.transpose = function(matrix, result) {
+  result = result || new Matrix();
+  var m = matrix.m, r = result.m;
+  r[0] = m[0]; r[1] = m[4]; r[2] = m[8]; r[3] = m[12];
+  r[4] = m[1]; r[5] = m[5]; r[6] = m[9]; r[7] = m[13];
+  r[8] = m[2]; r[9] = m[6]; r[10] = m[10]; r[11] = m[14];
+  r[12] = m[3]; r[13] = m[7]; r[14] = m[11]; r[15] = m[15];
+  return result;
+};
+
+// ### GL.Matrix.multiply(left, right[, result])
+// 
+// Returns the concatenation of the transforms for `left` and `right`. You can
+// optionally pass an existing matrix in `result` to avoid allocating a new
+// matrix. This emulates the OpenGL function `glMultMatrix()`.
+Matrix.multiply = function(left, right, result) {
+  result = result || new Matrix();
+  var a = left.m, b = right.m, r = result.m;
+
+  r[0] = a[0] * b[0] + a[1] * b[4] + a[2] * b[8] + a[3] * b[12];
+  r[1] = a[0] * b[1] + a[1] * b[5] + a[2] * b[9] + a[3] * b[13];
+  r[2] = a[0] * b[2] + a[1] * b[6] + a[2] * b[10] + a[3] * b[14];
+  r[3] = a[0] * b[3] + a[1] * b[7] + a[2] * b[11] + a[3] * b[15];
+
+  r[4] = a[4] * b[0] + a[5] * b[4] + a[6] * b[8] + a[7] * b[12];
+  r[5] = a[4] * b[1] + a[5] * b[5] + a[6] * b[9] + a[7] * b[13];
+  r[6] = a[4] * b[2] + a[5] * b[6] + a[6] * b[10] + a[7] * b[14];
+  r[7] = a[4] * b[3] + a[5] * b[7] + a[6] * b[11] + a[7] * b[15];
+
+  r[8] = a[8] * b[0] + a[9] * b[4] + a[10] * b[8] + a[11] * b[12];
+  r[9] = a[8] * b[1] + a[9] * b[5] + a[10] * b[9] + a[11] * b[13];
+  r[10] = a[8] * b[2] + a[9] * b[6] + a[10] * b[10] + a[11] * b[14];
+  r[11] = a[8] * b[3] + a[9] * b[7] + a[10] * b[11] + a[11] * b[15];
+
+  r[12] = a[12] * b[0] + a[13] * b[4] + a[14] * b[8] + a[15] * b[12];
+  r[13] = a[12] * b[1] + a[13] * b[5] + a[14] * b[9] + a[15] * b[13];
+  r[14] = a[12] * b[2] + a[13] * b[6] + a[14] * b[10] + a[15] * b[14];
+  r[15] = a[12] * b[3] + a[13] * b[7] + a[14] * b[11] + a[15] * b[15];
+
+  return result;
+};
+
+// ### GL.Matrix.identity([result])
+// 
+// Returns an identity matrix. You can optionally pass an existing matrix in
+// `result` to avoid allocating a new matrix. This emulates the OpenGL function
+// `glLoadIdentity()`.
+Matrix.identity = function(result) {
+  result = result || new Matrix();
+  var m = result.m;
+  m[0] = m[5] = m[10] = m[15] = 1;
+  m[1] = m[2] = m[3] = m[4] = m[6] = m[7] = m[8] = m[9] = m[11] = m[12] = m[13] = m[14] = 0;
+  return result;
+};
+
+// ### GL.Matrix.perspective(fov, aspect, near, far[, result])
+// 
+// Returns a perspective transform matrix, which makes far away objects appear
+// smaller than nearby objects. The `aspect` argument should be the width
+// divided by the height of your viewport and `fov` is the top-to-bottom angle
+// of the field of view in degrees. You can optionally pass an existing matrix
+// in `result` to avoid allocating a new matrix. This emulates the OpenGL
+// function `gluPerspective()`.
+Matrix.perspective = function(fov, aspect, near, far, result) {
+  var y = Math.tan(fov * Math.PI / 360) * near;
+  var x = y * aspect;
+  return Matrix.frustum(-x, x, -y, y, near, far, result);
+};
+
+// ### GL.Matrix.frustum(left, right, bottom, top, near, far[, result])
+// 
+// Sets up a viewing frustum, which is shaped like a truncated pyramid with the
+// camera where the point of the pyramid would be. You can optionally pass an
+// existing matrix in `result` to avoid allocating a new matrix. This emulates
+// the OpenGL function `glFrustum()`.
+Matrix.frustum = function(l, r, b, t, n, f, result) {
+  result = result || new Matrix();
+  var m = result.m;
+
+  m[0] = 2 * n / (r - l);
+  m[1] = 0;
+  m[2] = (r + l) / (r - l);
+  m[3] = 0;
+
+  m[4] = 0;
+  m[5] = 2 * n / (t - b);
+  m[6] = (t + b) / (t - b);
+  m[7] = 0;
+
+  m[8] = 0;
+  m[9] = 0;
+  m[10] = -(f + n) / (f - n);
+  m[11] = -2 * f * n / (f - n);
+
+  m[12] = 0;
+  m[13] = 0;
+  m[14] = -1;
+  m[15] = 0;
+
+  return result;
+};
+
+// ### GL.Matrix.ortho(left, right, bottom, top, near, far[, result])
+// 
+// Returns an orthographic projection, in which objects are the same size no
+// matter how far away or nearby they are. You can optionally pass an existing
+// matrix in `result` to avoid allocating a new matrix. This emulates the OpenGL
+// function `glOrtho()`.
+Matrix.ortho = function(l, r, b, t, n, f, result) {
+  result = result || new Matrix();
+  var m = result.m;
+
+  m[0] = 2 / (r - l);
+  m[1] = 0;
+  m[2] = 0;
+  m[3] = -(r + l) / (r - l);
+
+  m[4] = 0;
+  m[5] = 2 / (t - b);
+  m[6] = 0;
+  m[7] = -(t + b) / (t - b);
+
+  m[8] = 0;
+  m[9] = 0;
+  m[10] = -2 / (f - n);
+  m[11] = -(f + n) / (f - n);
+
+  m[12] = 0;
+  m[13] = 0;
+  m[14] = 0;
+  m[15] = 1;
+
+  return result;
+};
+
+// ### GL.Matrix.scale(x, y, z[, result])
+// 
+// This emulates the OpenGL function `glScale()`. You can optionally pass an
+// existing matrix in `result` to avoid allocating a new matrix. 
+Matrix.scale = function(x, y, z, result) {
+  result = result || new Matrix();
+  var m = result.m;
+
+  m[0] = x;
+  m[1] = 0;
+  m[2] = 0;
+  m[3] = 0;
+
+  m[4] = 0;
+  m[5] = y;
+  m[6] = 0;
+  m[7] = 0;
+
+  m[8] = 0;
+  m[9] = 0;
+  m[10] = z;
+  m[11] = 0;
+
+  m[12] = 0;
+  m[13] = 0;
+  m[14] = 0;
+  m[15] = 1;
+
+  return result;
+};
+
+// ### GL.Matrix.translate(x, y, z[, result])
+// 
+// This emulates the OpenGL function `glTranslate()`. You can optionally pass
+// an existing matrix in `result` to avoid allocating a new matrix. 
+Matrix.translate = function(x, y, z, result) {
+  result = result || new Matrix();
+  var m = result.m;
+
+  m[0] = 1;
+  m[1] = 0;
+  m[2] = 0;
+  m[3] = x;
+
+  m[4] = 0;
+  m[5] = 1;
+  m[6] = 0;
+  m[7] = y;
+
+  m[8] = 0;
+  m[9] = 0;
+  m[10] = 1;
+  m[11] = z;
+
+  m[12] = 0;
+  m[13] = 0;
+  m[14] = 0;
+  m[15] = 1;
+
+  return result;
+};
+
+// ### GL.Matrix.rotate(a, x, y, z[, result])
+// 
+// Returns a matrix that rotates by `a` degrees around the vector `x, y, z`.
+// You can optionally pass an existing matrix in `result` to avoid allocating
+// a new matrix. This emulates the OpenGL function `glRotate()`. 
+Matrix.rotate = function(a, x, y, z, result) {
+  if (!a || (!x && !y && !z)) {
+    return Matrix.identity(result);
+  }
+
+  result = result || new Matrix();
+  var m = result.m;
+
+  var d = Math.sqrt(x*x + y*y + z*z);
+  a *= Math.PI / 180; x /= d; y /= d; z /= d;
+  var c = Math.cos(a), s = Math.sin(a), t = 1 - c;
+
+  m[0] = x * x * t + c;
+  m[1] = x * y * t - z * s;
+  m[2] = x * z * t + y * s;
+  m[3] = 0;
+
+  m[4] = y * x * t + z * s;
+  m[5] = y * y * t + c;
+  m[6] = y * z * t - x * s;
+  m[7] = 0;
+
+  m[8] = z * x * t - y * s;
+  m[9] = z * y * t + x * s;
+  m[10] = z * z * t + c;
+  m[11] = 0;
+
+  m[12] = 0;
+  m[13] = 0;
+  m[14] = 0;
+  m[15] = 1;
+
+  return result;
+};
+
+// ### GL.Matrix.lookAt(ex, ey, ez, cx, cy, cz, ux, uy, uz[, result])
+// 
+// Returns a matrix that puts the camera at the eye point `ex, ey, ez` looking
+// toward the center point `cx, cy, cz` with an up direction of `ux, uy, uz`.
+// You can optionally pass an existing matrix in `result` to avoid allocating
+// a new matrix. This emulates the OpenGL function `gluLookAt()`.
+Matrix.lookAt = function(ex, ey, ez, cx, cy, cz, ux, uy, uz, result) {
+  result = result || new Matrix();
+  var m = result.m;
+
+  var e = new Vector(ex, ey, ez);
+  var c = new Vector(cx, cy, cz);
+  var u = new Vector(ux, uy, uz);
+  var f = e.subtract(c).unit();
+  var s = u.cross(f).unit();
+  var t = f.cross(s).unit();
+
+  m[0] = s.x;
+  m[1] = s.y;
+  m[2] = s.z;
+  m[3] = -s.dot(e);
+
+  m[4] = t.x;
+  m[5] = t.y;
+  m[6] = t.z;
+  m[7] = -t.dot(e);
+
+  m[8] = f.x;
+  m[9] = f.y;
+  m[10] = f.z;
+  m[11] = -f.dot(e);
+
+  m[12] = 0;
+  m[13] = 0;
+  m[14] = 0;
+  m[15] = 1;
+
+  return result;
+};
+
+// src/mesh.js
+// Represents indexed triangle geometry with arbitrary additional attributes.
+// You need a shader to draw a mesh; meshes can't draw themselves.
+// 
+// A mesh is a collection of `GL.Buffer` objects which are either vertex buffers
+// (holding per-vertex attributes) or index buffers (holding the order in which
+// vertices are rendered). By default, a mesh has a position vertex buffer called
+// `vertices` and a triangle index buffer called `triangles`. New buffers can be
+// added using `addVertexBuffer()` and `addIndexBuffer()`. Two strings are
+// required when adding a new vertex buffer, the name of the data array on the
+// mesh instance and the name of the GLSL attribute in the vertex shader.
+// 
+// Example usage:
+// 
+//     var mesh = new GL.Mesh({ coords: true, lines: true });
+// 
+//     // Default attribute "vertices", available as "gl_Vertex" in
+//     // the vertex shader
+//     mesh.vertices = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0]];
+// 
+//     // Optional attribute "coords" enabled in constructor,
+//     // available as "gl_TexCoord" in the vertex shader
+//     mesh.coords = [[0, 0], [1, 0], [0, 1], [1, 1]];
+// 
+//     // Custom attribute "weights", available as "weight" in the
+//     // vertex shader
+//     mesh.addVertexBuffer('weights', 'weight');
+//     mesh.weights = [1, 0, 0, 1];
+// 
+//     // Default index buffer "triangles"
+//     mesh.triangles = [[0, 1, 2], [2, 1, 3]];
+// 
+//     // Optional index buffer "lines" enabled in constructor
+//     mesh.lines = [[0, 1], [0, 2], [1, 3], [2, 3]];
+// 
+//     // Upload provided data to GPU memory
+//     mesh.compile();
+
+// ### new GL.Indexer()
+// 
+// Generates indices into a list of unique objects from a stream of objects
+// that may contain duplicates. This is useful for generating compact indexed
+// meshes from unindexed data.
+function Indexer() {
+  this.unique = [];
+  this.indices = [];
+  this.map = {};
+}
+
+Indexer.prototype = {
+  // ### .add(v)
+  // 
+  // Adds the object `obj` to `unique` if it hasn't already been added. Returns
+  // the index of `obj` in `unique`.
+  add: function(obj) {
+    var key = JSON.stringify(obj);
+    if (!(key in this.map)) {
+      this.map[key] = this.unique.length;
+      this.unique.push(obj);
+    }
+    return this.map[key];
+  }
+};
+
+// ### new GL.Buffer(target, type)
+// 
+// Provides a simple method of uploading data to a GPU buffer. Example usage:
+// 
+//     var vertices = new GL.Buffer(gl.ARRAY_BUFFER, Float32Array);
+//     var indices = new GL.Buffer(gl.ELEMENT_ARRAY_BUFFER, Uint16Array);
+//     vertices.data = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0]];
+//     indices.data = [[0, 1, 2], [2, 1, 3]];
+//     vertices.compile();
+//     indices.compile();
+// 
+function Buffer(target, type) {
+  this.buffer = null;
+  this.target = target;
+  this.type = type;
+  this.data = [];
+}
+
+Buffer.prototype = {
+  // ### .compile(type)
+  // 
+  // Upload the contents of `data` to the GPU in preparation for rendering. The
+  // data must be a list of lists where each inner list has the same length. For
+  // example, each element of data for vertex normals would be a list of length three.
+  // This will remember the data length and element length for later use by shaders.
+  // The type can be either `gl.STATIC_DRAW` or `gl.DYNAMIC_DRAW`, and defaults to
+  // `gl.STATIC_DRAW`.
+  // 
+  // This could have used `[].concat.apply([], this.data)` to flatten
+  // the array but Google Chrome has a maximum number of arguments so the
+  // concatenations are chunked to avoid that limit.
+  compile: function(type) {
+    var data = [];
+    for (var i = 0, chunk = 10000; i < this.data.length; i += chunk) {
+      data = Array.prototype.concat.apply(data, this.data.slice(i, i + chunk));
+    }
+    var spacing = this.data.length ? data.length / this.data.length : 0;
+    if (spacing != Math.round(spacing)) throw 'buffer elements not of consistent size, average size is ' + spacing;
+    this.buffer = this.buffer || gl.createBuffer();
+    this.buffer.length = data.length;
+    this.buffer.spacing = spacing;
+    gl.bindBuffer(this.target, this.buffer);
+    gl.bufferData(this.target, new this.type(data), type || gl.STATIC_DRAW);
+  }
+};
+
+// ### new GL.Mesh([options])
+// 
+// Represents a collection of vertex buffers and index buffers. Each vertex
+// buffer maps to one attribute in GLSL and has a corresponding property set
+// on the Mesh instance. There is one vertex buffer by default: `vertices`,
+// which maps to `gl_Vertex`. The `coords`, `normals`, and `colors` vertex
+// buffers map to `gl_TexCoord`, `gl_Normal`, and `gl_Color` respectively,
+// and can be enabled by setting the corresponding options to true. There are
+// two index buffers, `triangles` and `lines`, which are used for rendering
+// `gl.TRIANGLES` and `gl.LINES`, respectively. Only `triangles` is enabled by
+// default, although `computeWireframe()` will add a normal buffer if it wasn't
+// initially enabled.
+function Mesh(options) {
+  options = options || {};
+  this.vertexBuffers = {};
+  this.indexBuffers = {};
+  this.addVertexBuffer('vertices', 'gl_Vertex');
+  if (options.coords) this.addVertexBuffer('coords', 'gl_TexCoord');
+  if (options.normals) this.addVertexBuffer('normals', 'gl_Normal');
+  if (options.colors) this.addVertexBuffer('colors', 'gl_Color');
+  if (!('triangles' in options) || options.triangles) this.addIndexBuffer('triangles');
+  if (options.lines) this.addIndexBuffer('lines');
+}
+
+Mesh.prototype = {
+  // ### .addVertexBuffer(name, attribute)
+  // 
+  // Add a new vertex buffer with a list as a property called `name` on this object
+  // and map it to the attribute called `attribute` in all shaders that draw this mesh.
+  addVertexBuffer: function(name, attribute) {
+    var buffer = this.vertexBuffers[attribute] = new Buffer(gl.ARRAY_BUFFER, Float32Array);
+    buffer.name = name;
+    this[name] = [];
+  },
+
+  // ### .addIndexBuffer(name)
+  // 
+  // Add a new index buffer with a list as a property called `name` on this object.
+  addIndexBuffer: function(name) {
+    var buffer = this.indexBuffers[name] = new Buffer(gl.ELEMENT_ARRAY_BUFFER, Uint16Array);
+    this[name] = [];
+  },
+
+  // ### .compile()
+  // 
+  // Upload all attached buffers to the GPU in preparation for rendering. This
+  // doesn't need to be called every frame, only needs to be done when the data
+  // changes.
+  compile: function() {
+    for (var attribute in this.vertexBuffers) {
+      var buffer = this.vertexBuffers[attribute];
+      buffer.data = this[buffer.name];
+      buffer.compile();
+    }
+
+    for (var name in this.indexBuffers) {
+      var buffer = this.indexBuffers[name];
+      buffer.data = this[name];
+      buffer.compile();
+    }
+  },
+
+  // ### .transform(matrix)
+  // 
+  // Transform all vertices by `matrix` and all normals by the inverse transpose
+  // of `matrix`.
+  transform: function(matrix) {
+    this.vertices = this.vertices.map(function(v) {
+      return matrix.transformPoint(Vector.fromArray(v)).toArray();
+    });
+    if (this.normals) {
+      var invTrans = matrix.inverse().transpose();
+      this.normals = this.normals.map(function(n) {
+        return invTrans.transformVector(Vector.fromArray(n)).unit().toArray();
+      });
+    }
+    this.compile();
+    return this;
+  },
+
+  // ### .computeNormals()
+  // 
+  // Computes a new normal for each vertex from the average normal of the
+  // neighboring triangles. This means adjacent triangles must share vertices
+  // for the resulting normals to be smooth.
+  computeNormals: function() {
+    if (!this.normals) this.addVertexBuffer('normals', 'gl_Normal');
+    for (var i = 0; i < this.vertices.length; i++) {
+      this.normals[i] = new Vector();
+    }
+    for (var i = 0; i < this.triangles.length; i++) {
+      var t = this.triangles[i];
+      var a = Vector.fromArray(this.vertices[t[0]]);
+      var b = Vector.fromArray(this.vertices[t[1]]);
+      var c = Vector.fromArray(this.vertices[t[2]]);
+      var normal = b.subtract(a).cross(c.subtract(a)).unit();
+      this.normals[t[0]] = this.normals[t[0]].add(normal);
+      this.normals[t[1]] = this.normals[t[1]].add(normal);
+      this.normals[t[2]] = this.normals[t[2]].add(normal);
+    }
+    for (var i = 0; i < this.vertices.length; i++) {
+      this.normals[i] = this.normals[i].unit().toArray();
+    }
+    this.compile();
+    return this;
+  },
+
+  // ### .computeWireframe()
+  // 
+  // Populate the `lines` index buffer from the `triangles` index buffer.
+  computeWireframe: function() {
+    var indexer = new Indexer();
+    for (var i = 0; i < this.triangles.length; i++) {
+      var t = this.triangles[i];
+      for (var j = 0; j < t.length; j++) {
+        var a = t[j], b = t[(j + 1) % t.length];
+        indexer.add([Math.min(a, b), Math.max(a, b)]);
+      }
+    }
+    if (!this.lines) this.addIndexBuffer('lines');
+    this.lines = indexer.unique;
+    this.compile();
+    return this;
+  },
+
+  // ### .getAABB()
+  // 
+  // Computes the axis-aligned bounding box, which is an object whose `min` and
+  // `max` properties contain the minimum and maximum coordinates of all vertices.
+  getAABB: function() {
+    var aabb = { min: new Vector(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE) };
+    aabb.max = aabb.min.negative();
+    for (var i = 0; i < this.vertices.length; i++) {
+      var v = Vector.fromArray(this.vertices[i]);
+      aabb.min = Vector.min(aabb.min, v);
+      aabb.max = Vector.max(aabb.max, v);
+    }
+    return aabb;
+  },
+
+  // ### .getBoundingSphere()
+  // 
+  // Computes a sphere that contains all vertices (not necessarily the smallest
+  // sphere). The returned object has two properties, `center` and `radius`.
+  getBoundingSphere: function() {
+    var aabb = this.getAABB();
+    var sphere = { center: aabb.min.add(aabb.max).divide(2), radius: 0 };
+    for (var i = 0; i < this.vertices.length; i++) {
+      sphere.radius = Math.max(sphere.radius,
+        Vector.fromArray(this.vertices[i]).subtract(sphere.center).length());
+    }
+    return sphere;
+  }
+};
+
+// ### GL.Mesh.plane([options])
+// 
+// Generates a square 2x2 mesh the xy plane centered at the origin. The
+// `options` argument specifies options to pass to the mesh constructor.
+// Additional options include `detailX` and `detailY`, which set the tesselation
+// in x and y, and `detail`, which sets both `detailX` and `detailY` at once.
+// Two triangles are generated by default.
+// Example usage:
+// 
+//     var mesh1 = GL.Mesh.plane();
+//     var mesh2 = GL.Mesh.plane({ detail: 5 });
+//     var mesh3 = GL.Mesh.plane({ detailX: 20, detailY: 40 });
+// 
+Mesh.plane = function(options) {
+  options = options || {};
+  var mesh = new Mesh(options);
+  detailX = options.detailX || options.detail || 1;
+  detailY = options.detailY || options.detail || 1;
+
+  for (var y = 0; y <= detailY; y++) {
+    var t = y / detailY;
+    for (var x = 0; x <= detailX; x++) {
+      var s = x / detailX;
+      mesh.vertices.push([2 * s - 1, 2 * t - 1, 0]);
+      if (mesh.coords) mesh.coords.push([s, t]);
+      if (mesh.normals) mesh.normals.push([0, 0, 1]);
+      if (x < detailX && y < detailY) {
+        var i = x + y * (detailX + 1);
+        mesh.triangles.push([i, i + 1, i + detailX + 1]);
+        mesh.triangles.push([i + detailX + 1, i + 1, i + detailX + 2]);
+      }
+    }
+  }
+
+  mesh.compile();
+  return mesh;
+};
+
+var cubeData = [
+  [0, 4, 2, 6, -1, 0, 0], // -x
+  [1, 3, 5, 7, +1, 0, 0], // +x
+  [0, 1, 4, 5, 0, -1, 0], // -y
+  [2, 6, 3, 7, 0, +1, 0], // +y
+  [0, 2, 1, 3, 0, 0, -1], // -z
+  [4, 5, 6, 7, 0, 0, +1]  // +z
+];
+
+function pickOctant(i) {
+  return new Vector((i & 1) * 2 - 1, (i & 2) - 1, (i & 4) / 2 - 1);
+}
+
+// ### GL.Mesh.cube([options])
+// 
+// Generates a 2x2x2 box centered at the origin. The `options` argument
+// specifies options to pass to the mesh constructor.
+Mesh.cube = function(options) {
+  var mesh = new Mesh(options);
+
+  for (var i = 0; i < cubeData.length; i++) {
+    var data = cubeData[i], v = i * 4;
+    for (var j = 0; j < 4; j++) {
+      var d = data[j];
+      mesh.vertices.push(pickOctant(d).toArray());
+      if (mesh.coords) mesh.coords.push([j & 1, (j & 2) / 2]);
+      if (mesh.normals) mesh.normals.push(data.slice(4, 7));
+    }
+    mesh.triangles.push([v, v + 1, v + 2]);
+    mesh.triangles.push([v + 2, v + 1, v + 3]);
+  }
+
+  mesh.compile();
+  return mesh;
+};
+
+// ### GL.Mesh.sphere([options])
+// 
+// Generates a geodesic sphere of radius 1. The `options` argument specifies
+// options to pass to the mesh constructor in addition to the `detail` option,
+// which controls the tesselation level. The detail is `6` by default.
+// Example usage:
+// 
+//     var mesh1 = GL.Mesh.sphere();
+//     var mesh2 = GL.Mesh.sphere({ detail: 2 });
+// 
+Mesh.sphere = function(options) {
+  function tri(a, b, c) { return flip ? [a, c, b] : [a, b, c]; }
+  function fix(x) { return x + (x - x * x) / 2; }
+  options = options || {};
+  var mesh = new Mesh(options);
+  var indexer = new Indexer();
+  detail = options.detail || 6;
+
+  for (var octant = 0; octant < 8; octant++) {
+    var scale = pickOctant(octant);
+    var flip = scale.x * scale.y * scale.z > 0;
+    var data = [];
+    for (var i = 0; i <= detail; i++) {
+      // Generate a row of vertices on the surface of the sphere
+      // using barycentric coordinates.
+      for (var j = 0; i + j <= detail; j++) {
+        var a = i / detail;
+        var b = j / detail;
+        var c = (detail - i - j) / detail;
+        var vertex = { vertex: new Vector(fix(a), fix(b), fix(c)).unit().multiply(scale).toArray() };
+        if (mesh.coords) vertex.coord = scale.y > 0 ? [1 - a, c] : [c, 1 - a];
+        data.push(indexer.add(vertex));
+      }
+
+      // Generate triangles from this row and the previous row.
+      if (i > 0) {
+        for (var j = 0; i + j <= detail; j++) {
+          var a = (i - 1) * (detail + 1) + ((i - 1) - (i - 1) * (i - 1)) / 2 + j;
+          var b = i * (detail + 1) + (i - i * i) / 2 + j;
+          mesh.triangles.push(tri(data[a], data[a + 1], data[b]));
+          if (i + j < detail) {
+            mesh.triangles.push(tri(data[b], data[a + 1], data[b + 1]));
+          }
+        }
+      }
+    }
+  }
+
+  // Reconstruct the geometry from the indexer.
+  mesh.vertices = indexer.unique.map(function(v) { return v.vertex; });
+  if (mesh.coords) mesh.coords = indexer.unique.map(function(v) { return v.coord; });
+  if (mesh.normals) mesh.normals = mesh.vertices;
+  mesh.compile();
+  return mesh;
+};
+
+// ### GL.Mesh.load(json[, options])
+// 
+// Creates a mesh from the JSON generated by the `convert/convert.py` script.
+// Example usage:
+// 
+//     var data = {
+//       vertices: [[0, 0, 0], [1, 0, 0], [0, 1, 0]],
+//       triangles: [[0, 1, 2]]
+//     };
+//     var mesh = GL.Mesh.load(data);
+// 
+Mesh.load = function(json, options) {
+  options = options || {};
+  if (!('coords' in options)) options.coords = !!json.coords;
+  if (!('normals' in options)) options.normals = !!json.normals;
+  if (!('colors' in options)) options.colors = !!json.colors;
+  if (!('triangles' in options)) options.triangles = !!json.triangles;
+  if (!('lines' in options)) options.lines = !!json.lines;
+  var mesh = new Mesh(options);
+  mesh.vertices = json.vertices;
+  if (mesh.coords) mesh.coords = json.coords;
+  if (mesh.normals) mesh.normals = json.normals;
+  if (mesh.colors) mesh.colors = json.colors;
+  if (mesh.triangles) mesh.triangles = json.triangles;
+  if (mesh.lines) mesh.lines = json.lines;
+  mesh.compile();
+  return mesh;
+};
+
+// src/raytracer.js
+// Provides a convenient raytracing interface.
+
+// ### new GL.HitTest([t, hit, normal])
+// 
+// This is the object used to return hit test results. If there are no
+// arguments, the constructed argument represents a hit infinitely far
+// away.
+function HitTest(t, hit, normal) {
+  this.t = arguments.length ? t : Number.MAX_VALUE;
+  this.hit = hit;
+  this.normal = normal;
+}
+
+// ### .mergeWith(other)
+// 
+// Changes this object to be the closer of the two hit test results.
+HitTest.prototype = {
+  mergeWith: function(other) {
+    if (other.t > 0 && other.t < this.t) {
+      this.t = other.t;
+      this.hit = other.hit;
+      this.normal = other.normal;
+    }
+  }
+};
+
+// ### new GL.Raytracer()
+// 
+// This will read the current modelview matrix, projection matrix, and viewport,
+// reconstruct the eye position, and store enough information to later generate
+// per-pixel rays using `getRayForPixel()`.
+// 
+// Example usage:
+// 
+//     var tracer = new GL.Raytracer();
+//     var ray = tracer.getRayForPixel(
+//       gl.canvas.width / 2,
+//       gl.canvas.height / 2);
+//     var result = GL.Raytracer.hitTestSphere(
+//       tracer.eye, ray, new GL.Vector(0, 0, 0), 1);
+function Raytracer() {
+  var v = gl.getParameter(gl.VIEWPORT);
+  var m = gl.modelviewMatrix.m;
+
+  var axisX = new Vector(m[0], m[4], m[8]);
+  var axisY = new Vector(m[1], m[5], m[9]);
+  var axisZ = new Vector(m[2], m[6], m[10]);
+  var offset = new Vector(m[3], m[7], m[11]);
+  this.eye = new Vector(-offset.dot(axisX), -offset.dot(axisY), -offset.dot(axisZ));
+
+  var minX = v[0], maxX = minX + v[2];
+  var minY = v[1], maxY = minY + v[3];
+  this.ray00 = gl.unProject(minX, minY, 1).subtract(this.eye);
+  this.ray10 = gl.unProject(maxX, minY, 1).subtract(this.eye);
+  this.ray01 = gl.unProject(minX, maxY, 1).subtract(this.eye);
+  this.ray11 = gl.unProject(maxX, maxY, 1).subtract(this.eye);
+  this.viewport = v;
+}
+
+Raytracer.prototype = {
+  // ### .getRayForPixel(x, y)
+  // 
+  // Returns the ray originating from the camera and traveling through the pixel `x, y`.
+  getRayForPixel: function(x, y) {
+    x = (x - this.viewport[0]) / this.viewport[2];
+    y = 1 - (y - this.viewport[1]) / this.viewport[3];
+    var ray0 = Vector.lerp(this.ray00, this.ray10, x);
+    var ray1 = Vector.lerp(this.ray01, this.ray11, x);
+    return Vector.lerp(ray0, ray1, y).unit();
+  }
+};
+
+// ### GL.Raytracer.hitTestBox(origin, ray, min, max)
+// 
+// Traces the ray starting from `origin` along `ray` against the axis-aligned box
+// whose coordinates extend from `min` to `max`. Returns a `HitTest` with the
+// information or `null` for no intersection.
+// 
+// This implementation uses the [slab intersection method](http://www.siggraph.org/education/materials/HyperGraph/raytrace/rtinter3.htm).
+Raytracer.hitTestBox = function(origin, ray, min, max) {
+  var tMin = min.subtract(origin).divide(ray);
+  var tMax = max.subtract(origin).divide(ray);
+  var t1 = Vector.min(tMin, tMax);
+  var t2 = Vector.max(tMin, tMax);
+  var tNear = t1.max();
+  var tFar = t2.min();
+
+  if (tNear > 0 && tNear < tFar) {
+    var epsilon = 1.0e-6, hit = origin.add(ray.multiply(tNear));
+    min = min.add(epsilon);
+    max = max.subtract(epsilon);
+    return new HitTest(tNear, hit, new Vector(
+      (hit.x > max.x) - (hit.x < min.x),
+      (hit.y > max.y) - (hit.y < min.y),
+      (hit.z > max.z) - (hit.z < min.z)
+    ));
+  }
+
+  return null;
+};
+
+// ### GL.Raytracer.hitTestSphere(origin, ray, center, radius)
+// 
+// Traces the ray starting from `origin` along `ray` against the sphere defined
+// by `center` and `radius`. Returns a `HitTest` with the information or `null`
+// for no intersection.
+Raytracer.hitTestSphere = function(origin, ray, center, radius) {
+  var offset = origin.subtract(center);
+  var a = ray.dot(ray);
+  var b = 2 * ray.dot(offset);
+  var c = offset.dot(offset) - radius * radius;
+  var discriminant = b * b - 4 * a * c;
+
+  if (discriminant > 0) {
+    var t = (-b - Math.sqrt(discriminant)) / (2 * a), hit = origin.add(ray.multiply(t));
+    return new HitTest(t, hit, hit.subtract(center).divide(radius));
+  }
+
+  return null;
+};
+
+// ### GL.Raytracer.hitTestTriangle(origin, ray, a, b, c)
+// 
+// Traces the ray starting from `origin` along `ray` against the triangle defined
+// by the points `a`, `b`, and `c`. Returns a `HitTest` with the information or
+// `null` for no intersection.
+Raytracer.hitTestTriangle = function(origin, ray, a, b, c) {
+  var ab = b.subtract(a);
+  var ac = c.subtract(a);
+  var normal = ab.cross(ac).unit();
+  var t = normal.dot(a.subtract(origin)) / normal.dot(ray);
+
+  if (t > 0) {
+    var hit = origin.add(ray.multiply(t));
+    var toHit = hit.subtract(a);
+    var dot00 = ac.dot(ac);
+    var dot01 = ac.dot(ab);
+    var dot02 = ac.dot(toHit);
+    var dot11 = ab.dot(ab);
+    var dot12 = ab.dot(toHit);
+    var divide = dot00 * dot11 - dot01 * dot01;
+    var u = (dot11 * dot02 - dot01 * dot12) / divide;
+    var v = (dot00 * dot12 - dot01 * dot02) / divide;
+    if (u >= 0 && v >= 0 && u + v <= 1) return new HitTest(t, hit, normal);
+  }
+
+  return null;
+};
+
+// src/shader.js
+// Provides a convenient wrapper for WebGL shaders. A few uniforms and attributes,
+// prefixed with `gl_`, are automatically added to all shader sources to make
+// simple shaders easier to write.
+// 
+// Example usage:
+// 
+//     var shader = new GL.Shader('\
+//       void main() {\
+//         gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\
+//       }\
+//     ', '\
+//       uniform vec4 color;\
+//       void main() {\
+//         gl_FragColor = color;\
+//       }\
+//     ');
+// 
+//     shader.uniforms({
+//       color: [1, 0, 0, 1]
+//     }).draw(mesh);
+
+function regexMap(regex, text, callback) {
+  while ((result = regex.exec(text)) != null) {
+    callback(result);
+  }
+}
+
+// Non-standard names beginning with `gl_` must be mangled because they will
+// otherwise cause a compiler error.
+var LIGHTGL_PREFIX = 'LIGHTGL';
+
+// ### new GL.Shader(vertexSource, fragmentSource)
+// 
+// Compiles a shader program using the provided vertex and fragment shaders.
+function Shader(vertexSource, fragmentSource) {
+  // Allow passing in the id of an HTML script tag with the source
+  function followScriptTagById(id) {
+    var element = document.getElementById(id);
+    return element ? element.text : id;
+  }
+  vertexSource = followScriptTagById(vertexSource);
+  fragmentSource = followScriptTagById(fragmentSource);
+
+  // Headers are prepended to the sources to provide some automatic functionality.
+  var header = '\
+    uniform mat3 gl_NormalMatrix;\
+    uniform mat4 gl_ModelViewMatrix;\
+    uniform mat4 gl_ProjectionMatrix;\
+    uniform mat4 gl_ModelViewProjectionMatrix;\
+    uniform mat4 gl_ModelViewMatrixInverse;\
+    uniform mat4 gl_ProjectionMatrixInverse;\
+    uniform mat4 gl_ModelViewProjectionMatrixInverse;\
+  ';
+  var vertexHeader = header + '\
+    attribute vec4 gl_Vertex;\
+    attribute vec4 gl_TexCoord;\
+    attribute vec3 gl_Normal;\
+    attribute vec4 gl_Color;\
+    vec4 ftransform() {\
+      return gl_ModelViewProjectionMatrix * gl_Vertex;\
+    }\
+  ';
+  var fragmentHeader = '\
+    precision highp float;\
+  ' + header;
+
+  // Check for the use of built-in matrices that require expensive matrix
+  // multiplications to compute, and record these in `usedMatrices`.
+  var source = vertexSource + fragmentSource;
+  var usedMatrices = {};
+  regexMap(/\b(gl_[^;]*)\b;/g, header, function(groups) {
+    var name = groups[1];
+    if (source.indexOf(name) != -1) {
+      var capitalLetters = name.replace(/[a-z_]/g, '');
+      usedMatrices[capitalLetters] = LIGHTGL_PREFIX + name;
+    }
+  });
+  if (source.indexOf('ftransform') != -1) usedMatrices.MVPM = LIGHTGL_PREFIX + 'gl_ModelViewProjectionMatrix';
+  this.usedMatrices = usedMatrices;
+
+  // The `gl_` prefix must be substituted for something else to avoid compile
+  // errors, since it's a reserved prefix. This prefixes all reserved names with
+  // `_`. The header is inserted after any extensions, since those must come
+  // first.
+  function fix(header, source) {
+    var replaced = {};
+    var match = /^((\s*\/\/.*\n|\s*#extension.*\n)+)[^]*$/.exec(source);
+    source = match ? match[1] + header + source.substr(match[1].length) : header + source;
+    regexMap(/\bgl_\w+\b/g, header, function(result) {
+      if (!(result in replaced)) {
+        source = source.replace(new RegExp('\\b' + result + '\\b', 'g'), LIGHTGL_PREFIX + result);
+        replaced[result] = true;
+      }
+    });
+    return source;
+  }
+  vertexSource = fix(vertexHeader, vertexSource);
+  fragmentSource = fix(fragmentHeader, fragmentSource);
+
+  // Compile and link errors are thrown as strings.
+  function compileSource(type, source) {
+    var shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      throw 'compile error: ' + gl.getShaderInfoLog(shader);
+    }
+    return shader;
+  }
+  this.program = gl.createProgram();
+  gl.attachShader(this.program, compileSource(gl.VERTEX_SHADER, vertexSource));
+  gl.attachShader(this.program, compileSource(gl.FRAGMENT_SHADER, fragmentSource));
+  gl.linkProgram(this.program);
+  if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
+    throw 'link error: ' + gl.getProgramInfoLog(this.program);
+  }
+  this.attributes = {};
+  this.uniformLocations = {};
+
+  // Sampler uniforms need to be uploaded using `gl.uniform1i()` instead of `gl.uniform1f()`.
+  // To do this automatically, we detect and remember all uniform samplers in the source code.
+  var isSampler = {};
+  regexMap(/uniform\s+sampler(1D|2D|3D|Cube)\s+(\w+)\s*;/g, vertexSource + fragmentSource, function(groups) {
+    isSampler[groups[2]] = 1;
+  });
+  this.isSampler = isSampler;
+}
+
+function isArray(obj) {
+  var str = Object.prototype.toString.call(obj);
+  return str == '[object Array]' || str == '[object Float32Array]';
+}
+
+function isNumber(obj) {
+  var str = Object.prototype.toString.call(obj);
+  return str == '[object Number]' || str == '[object Boolean]';
+}
+
+var tempMatrix = new Matrix();
+var resultMatrix = new Matrix();
+
+Shader.prototype = {
+  // ### .uniforms(uniforms)
+  // 
+  // Set a uniform for each property of `uniforms`. The correct `gl.uniform*()` method is
+  // inferred from the value types and from the stored uniform sampler flags.
+  uniforms: function(uniforms) {
+    gl.useProgram(this.program);
+
+    for (var name in uniforms) {
+      var location = this.uniformLocations[name] || gl.getUniformLocation(this.program, name);
+      if (!location) continue;
+      this.uniformLocations[name] = location;
+      var value = uniforms[name];
+      if (value instanceof Vector) {
+        value = [value.x, value.y, value.z];
+      } else if (value instanceof Matrix) {
+        value = value.m;
+      }
+      if (isArray(value)) {
+        switch (value.length) {
+          case 1: gl.uniform1fv(location, new Float32Array(value)); break;
+          case 2: gl.uniform2fv(location, new Float32Array(value)); break;
+          case 3: gl.uniform3fv(location, new Float32Array(value)); break;
+          case 4: gl.uniform4fv(location, new Float32Array(value)); break;
+          // Matrices are automatically transposed, since WebGL uses column-major
+          // indices instead of row-major indices.
+          case 9: gl.uniformMatrix3fv(location, false, new Float32Array([
+            value[0], value[3], value[6],
+            value[1], value[4], value[7],
+            value[2], value[5], value[8]
+          ])); break;
+          case 16: gl.uniformMatrix4fv(location, false, new Float32Array([
+            value[0], value[4], value[8], value[12],
+            value[1], value[5], value[9], value[13],
+            value[2], value[6], value[10], value[14],
+            value[3], value[7], value[11], value[15]
+          ])); break;
+          default: throw 'don\'t know how to load uniform "' + name + '" of length ' + value.length;
+        }
+      } else if (isNumber(value)) {
+        (this.isSampler[name] ? gl.uniform1i : gl.uniform1f).call(gl, location, value);
+      } else {
+        throw 'attempted to set uniform "' + name + '" to invalid value ' + value;
+      }
+    }
+
+    return this;
+  },
+
+  // ### .draw(mesh[, mode])
+  // 
+  // Sets all uniform matrix attributes, binds all relevant buffers, and draws the
+  // mesh geometry as indexed triangles or indexed lines. Set `mode` to `gl.LINES`
+  // (and either add indices to `lines` or call `computeWireframe()`) to draw the
+  // mesh in wireframe.
+  draw: function(mesh, mode) {
+    this.drawBuffers(mesh.vertexBuffers,
+      mesh.indexBuffers[mode == gl.LINES ? 'lines' : 'triangles'],
+      arguments.length < 2 ? gl.TRIANGLES : mode);
+  },
+
+  // ### .drawBuffers(vertexBuffers, indexBuffer, mode)
+  // 
+  // Sets all uniform matrix attributes, binds all relevant buffers, and draws the
+  // indexed mesh geometry. The `vertexBuffers` argument is a map from attribute
+  // names to `Buffer` objects of type `gl.ARRAY_BUFFER`, `indexBuffer` is a `Buffer`
+  // object of type `gl.ELEMENT_ARRAY_BUFFER`, and `mode` is a WebGL primitive mode
+  // like `gl.TRIANGLES` or `gl.LINES`. This method automatically creates and caches
+  // vertex attribute pointers for attributes as needed.
+  drawBuffers: function(vertexBuffers, indexBuffer, mode) {
+    // Only construct up the built-in matrices we need for this shader.
+    var used = this.usedMatrices;
+    var MVM = gl.modelviewMatrix;
+    var PM = gl.projectionMatrix;
+    var MVMI = (used.MVMI || used.NM) ? MVM.inverse() : null;
+    var PMI = (used.PMI) ? PM.inverse() : null;
+    var MVPM = (used.MVPM || used.MVPMI) ? PM.multiply(MVM) : null;
+    var matrices = {};
+    if (used.MVM) matrices[used.MVM] = MVM;
+    if (used.MVMI) matrices[used.MVMI] = MVMI;
+    if (used.PM) matrices[used.PM] = PM;
+    if (used.PMI) matrices[used.PMI] = PMI;
+    if (used.MVPM) matrices[used.MVPM] = MVPM;
+    if (used.MVPMI) matrices[used.MVPMI] = MVPM.inverse();
+    if (used.NM) {
+      var m = MVMI.m;
+      matrices[used.NM] = [m[0], m[4], m[8], m[1], m[5], m[9], m[2], m[6], m[10]];
+    }
+    this.uniforms(matrices);
+
+    // Create and enable attribute pointers as necessary.
+    var length = 0;
+    for (var attribute in vertexBuffers) {
+      var buffer = vertexBuffers[attribute];
+      var location = this.attributes[attribute] ||
+        gl.getAttribLocation(this.program, attribute.replace(/^(gl_.*)$/, LIGHTGL_PREFIX + '$1'));
+      if (location == -1 || !buffer.buffer) continue;
+      this.attributes[attribute] = location;
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer.buffer);
+      gl.enableVertexAttribArray(location);
+      gl.vertexAttribPointer(location, buffer.buffer.spacing, gl.FLOAT, false, 0, 0);
+      length = buffer.buffer.length / buffer.buffer.spacing;
+    }
+
+    // Disable unused attribute pointers.
+    for (var attribute in this.attributes) {
+      if (!(attribute in vertexBuffers)) {
+        gl.disableVertexAttribArray(this.attributes[attribute]);
+      }
+    }
+
+    // Draw the geometry.
+    if (length && (!indexBuffer || indexBuffer.buffer)) {
+      if (indexBuffer) {
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer.buffer);
+
+        gl.cullFace(gl.FRONT);
+        gl.drawElements(mode, indexBuffer.buffer.length, gl.UNSIGNED_SHORT, 0);
+        gl.cullFace(gl.BACK);
+        gl.drawElements(mode, indexBuffer.buffer.length, gl.UNSIGNED_SHORT, 0);
+      } else {
+        gl.drawArrays(mode, 0, length);
+      }
+    }
+
+    return this;
+  }
+};
+
+// src/texture.js
+// Provides a simple wrapper around WebGL textures that supports render-to-texture.
+
+// ### new GL.Texture(width, height[, options])
+//
+// The arguments `width` and `height` give the size of the texture in texels.
+// WebGL texture dimensions must be powers of two unless `filter` is set to
+// either `gl.NEAREST` or `gl.LINEAR` and `wrap` is set to `gl.CLAMP_TO_EDGE`
+// (which they are by default).
+//
+// Texture parameters can be passed in via the `options` argument.
+// Example usage:
+// 
+//     var t = new GL.Texture(256, 256, {
+//       // Defaults to gl.LINEAR, set both at once with "filter"
+//       magFilter: gl.NEAREST,
+//       minFilter: gl.LINEAR,
+// 
+//       // Defaults to gl.CLAMP_TO_EDGE, set both at once with "wrap"
+//       wrapS: gl.REPEAT,
+//       wrapT: gl.REPEAT,
+// 
+//       format: gl.RGB, // Defaults to gl.RGBA
+//       type: gl.FLOAT // Defaults to gl.UNSIGNED_BYTE
+//     });
+function Texture(width, height, options) {
+  options = options || {};
+  this.id = gl.createTexture();
+  this.width = width;
+  this.height = height;
+  this.format = options.format || gl.RGBA;
+  this.type = options.type || gl.UNSIGNED_BYTE;
+  gl.bindTexture(gl.TEXTURE_2D, this.id);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, options.filter || options.magFilter || gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, options.filter || options.minFilter || gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, options.wrap || options.wrapS || gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, options.wrap || options.wrapT || gl.CLAMP_TO_EDGE);
+  gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, null);
+}
+
+var framebuffer;
+var renderbuffer;
+var checkerboardCanvas;
+
+Texture.prototype = {
+  // ### .bind([unit])
+  // 
+  // Bind this texture to the given texture unit (0-7, defaults to 0).
+  bind: function(unit) {
+    gl.activeTexture(gl.TEXTURE0 + (unit || 0));
+    gl.bindTexture(gl.TEXTURE_2D, this.id);
+  },
+
+  // ### .unbind([unit])
+  // 
+  // Clear the given texture unit (0-7, defaults to 0).
+  unbind: function(unit) {
+    gl.activeTexture(gl.TEXTURE0 + (unit || 0));
+    gl.bindTexture(gl.TEXTURE_2D, null);
+  },
+
+  // ### .drawTo(callback)
+  // 
+  // Render all draw calls in `callback` to this texture. This method sets up
+  // a framebuffer with this texture as the color attachment and a renderbuffer
+  // as the depth attachment. It also temporarily changes the viewport to the
+  // size of the texture.
+  // 
+  // Example usage:
+  // 
+  //     texture.drawTo(function() {
+  //       gl.clearColor(1, 0, 0, 1);
+  //       gl.clear(gl.COLOR_BUFFER_BIT);
+  //     });
+  drawTo: function(callback) {
+    var v = gl.getParameter(gl.VIEWPORT);
+    framebuffer = framebuffer || gl.createFramebuffer();
+    renderbuffer = renderbuffer || gl.createRenderbuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+    gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
+    if (this.width != renderbuffer.width || this.height != renderbuffer.height) {
+      renderbuffer.width = this.width;
+      renderbuffer.height = this.height;
+      gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.width, this.height);
+    }
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.id, 0);
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
+    gl.viewport(0, 0, this.width, this.height);
+
+    callback();
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+    gl.viewport(v[0], v[1], v[2], v[3]);
+  },
+
+  // ### .swapWith(other)
+  // 
+  // Switch this texture with `other`, useful for the ping-pong rendering
+  // technique used in multi-stage rendering.
+  swapWith: function(other) {
+    var temp;
+    temp = other.id; other.id = this.id; this.id = temp;
+    temp = other.width; other.width = this.width; this.width = temp;
+    temp = other.height; other.height = this.height; this.height = temp;
+  }
+};
+
+// ### GL.Texture.fromImage(image[, options])
+// 
+// Return a new image created from `image`, an `<img>` tag.
+Texture.fromImage = function(image, options) {
+  options = options || {};
+  var texture = new Texture(image.width, image.height, options);
+  try {
+    gl.texImage2D(gl.TEXTURE_2D, 0, texture.format, texture.format, texture.type, image);
+  } catch (e) {
+    if (location.protocol == 'file:') {
+      throw 'image not loaded for security reasons (serve this page over "http://" instead)';
+    } else {
+      throw 'image not loaded for security reasons (image must originate from the same ' +
+        'domain as this page or use Cross-Origin Resource Sharing)';
+    }
+  }
+  if (options.minFilter && options.minFilter != gl.NEAREST && options.minFilter != gl.LINEAR) {
+    gl.generateMipmap(gl.TEXTURE_2D);
+  }
+  return texture;
+};
+
+// ### GL.Texture.fromURL(url[, options])
+// 
+// Returns a checkerboard texture that will switch to the correct texture when
+// it loads.
+Texture.fromURL = function(url, options) {
+  checkerboardCanvas = checkerboardCanvas || (function() {
+    var c = document.createElement('canvas').getContext('2d');
+    c.canvas.width = c.canvas.height = 128;
+    for (var y = 0; y < c.canvas.height; y += 16) {
+      for (var x = 0; x < c.canvas.width; x += 16) {
+        c.fillStyle = (x ^ y) & 16 ? '#FFF' : '#DDD';
+        c.fillRect(x, y, 16, 16);
+      }
+    }
+    return c.canvas;
+  })();
+  var texture = Texture.fromImage(checkerboardCanvas, options);
+  var image = new Image();
+  var context = gl;
+  image.onload = function() {
+    context.makeCurrent();
+    Texture.fromImage(image, options).swapWith(texture);
+  };
+  image.src = url;
+  return texture;
+};
+
+// src/vector.js
+// Provides a simple 3D vector class. Vector operations can be done using member
+// functions, which return new vectors, or static functions, which reuse
+// existing vectors to avoid generating garbage.
+function Vector(x, y, z) {
+  this.x = x || 0;
+  this.y = y || 0;
+  this.z = z || 0;
+}
+
+// ### Instance Methods
+// The methods `add()`, `subtract()`, `multiply()`, and `divide()` can all
+// take either a vector or a number as an argument.
+Vector.prototype = {
+  negative: function() {
+    return new Vector(-this.x, -this.y, -this.z);
+  },
+  add: function(v) {
+    if (v instanceof Vector) return new Vector(this.x + v.x, this.y + v.y, this.z + v.z);
+    else return new Vector(this.x + v, this.y + v, this.z + v);
+  },
+  subtract: function(v) {
+    if (v instanceof Vector) return new Vector(this.x - v.x, this.y - v.y, this.z - v.z);
+    else return new Vector(this.x - v, this.y - v, this.z - v);
+  },
+  multiply: function(v) {
+    if (v instanceof Vector) return new Vector(this.x * v.x, this.y * v.y, this.z * v.z);
+    else return new Vector(this.x * v, this.y * v, this.z * v);
+  },
+  divide: function(v) {
+    if (v instanceof Vector) return new Vector(this.x / v.x, this.y / v.y, this.z / v.z);
+    else return new Vector(this.x / v, this.y / v, this.z / v);
+  },
+  equals: function(v) {
+    return this.x == v.x && this.y == v.y && this.z == v.z;
+  },
+  dot: function(v) {
+    return this.x * v.x + this.y * v.y + this.z * v.z;
+  },
+  cross: function(v) {
+    return new Vector(
+      this.y * v.z - this.z * v.y,
+      this.z * v.x - this.x * v.z,
+      this.x * v.y - this.y * v.x
+    );
+  },
+  length: function() {
+    return Math.sqrt(this.dot(this));
+  },
+  unit: function() {
+    return this.divide(this.length());
+  },
+  min: function() {
+    return Math.min(Math.min(this.x, this.y), this.z);
+  },
+  max: function() {
+    return Math.max(Math.max(this.x, this.y), this.z);
+  },
+  toAngles: function() {
+    return {
+      theta: Math.atan2(this.z, this.x),
+      phi: Math.asin(this.y / this.length())
+    };
+  },
+  toArray: function(n) {
+    return [this.x, this.y, this.z].slice(0, n || 3);
+  },
+  clone: function() {
+    return new Vector(this.x, this.y, this.z);
+  },
+  init: function(x, y, z) {
+    this.x = x; this.y = y; this.z = z;
+    return this;
+  }
+};
+
+// ### Static Methods
+// `Vector.randomDirection()` returns a vector with a length of 1 and a
+// statistically uniform direction. `Vector.lerp()` performs linear
+// interpolation between two vectors.
+Vector.negative = function(a, b) {
+  b.x = -a.x; b.y = -a.y; b.z = -a.z;
+  return b;
+};
+Vector.add = function(a, b, c) {
+  if (b instanceof Vector) { c.x = a.x + b.x; c.y = a.y + b.y; c.z = a.z + b.z; }
+  else { c.x = a.x + b; c.y = a.y + b; c.z = a.z + b; }
+  return c;
+};
+Vector.subtract = function(a, b, c) {
+  if (b instanceof Vector) { c.x = a.x - b.x; c.y = a.y - b.y; c.z = a.z - b.z; }
+  else { c.x = a.x - b; c.y = a.y - b; c.z = a.z - b; }
+  return c;
+};
+Vector.multiply = function(a, b, c) {
+  if (b instanceof Vector) { c.x = a.x * b.x; c.y = a.y * b.y; c.z = a.z * b.z; }
+  else { c.x = a.x * b; c.y = a.y * b; c.z = a.z * b; }
+  return c;
+};
+Vector.divide = function(a, b, c) {
+  if (b instanceof Vector) { c.x = a.x / b.x; c.y = a.y / b.y; c.z = a.z / b.z; }
+  else { c.x = a.x / b; c.y = a.y / b; c.z = a.z / b; }
+  return c;
+};
+Vector.cross = function(a, b, c) {
+  c.x = a.y * b.z - a.z * b.y;
+  c.y = a.z * b.x - a.x * b.z;
+  c.z = a.x * b.y - a.y * b.x;
+  return c;
+};
+Vector.unit = function(a, b) {
+  var length = a.length();
+  b.x = a.x / length;
+  b.y = a.y / length;
+  b.z = a.z / length;
+  return b;
+};
+Vector.fromAngles = function(theta, phi) {
+  return new Vector(Math.cos(theta) * Math.cos(phi), Math.sin(phi), Math.sin(theta) * Math.cos(phi));
+};
+Vector.randomDirection = function() {
+  return Vector.fromAngles(Math.random() * Math.PI * 2, Math.asin(Math.random() * 2 - 1));
+};
+Vector.min = function(a, b) {
+  return new Vector(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.min(a.z, b.z));
+};
+Vector.max = function(a, b) {
+  return new Vector(Math.max(a.x, b.x), Math.max(a.y, b.y), Math.max(a.z, b.z));
+};
+Vector.lerp = function(a, b, fraction) {
+  return b.subtract(a).multiply(fraction).add(a);
+};
+Vector.fromArray = function(a) {
+  return new Vector(a[0], a[1], a[2]);
+};
+
+return GL;
+})();

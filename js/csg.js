@@ -180,7 +180,23 @@ CSG.fromCompactBinary = function(bin) {
 
 CSG.prototype = {
   toPolygons: function() {
-    return this.polygons;
+
+    var alphas = [];
+    var opaques = [];
+    for (var i = this.polygons.length - 1; i >= 0; i--) {
+      var polygon = this.polygons[i];
+      if (!polygon.shared.color || polygon.shared.color.length != 4 || polygon.shared.color[3] == 1){
+        opaques.push(polygon);
+      } else {
+        alphas.push(polygon);
+      }
+    };
+
+    var planeWSort = function (polygon) {
+      return polygon.plane.w + polygon.plane.normal.z;
+    };
+
+    return opaques.concat(_.sortBy(alphas, planeWSort));
   },
 
   // Return a new CSG solid representing space in either this solid or in the
@@ -895,8 +911,8 @@ CSG.prototype = {
     return result;
   }, 
 
-  setColor: function(red,green,blue) {
-    var newshared = new CSG.Polygon.Shared([red, green, blue]); 
+  setColor: function(red,green,blue,alpha) {
+    var newshared = new CSG.Polygon.Shared([red, green, blue, alpha||1]); 
     return this.setShared(newshared);
   },
 
@@ -2813,7 +2829,7 @@ CSG.Polygon.Shared.prototype = {
   // get a string uniquely identifying this object
   getHash: function() {
     if(!this.color) return "null";
-    return ""+this.color[0]+"/"+this.color[1]+"/"+this.color[2];
+    return ""+this.color[0]+"/"+this.color[1]+"/"+this.color[2]+"/"+this.color[3];
   },
 };
 

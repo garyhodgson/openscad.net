@@ -739,6 +739,7 @@ Module.prototype.evaluate = function(parentContext, inst) {
 
     var evaluatedLines = [];
     _.each(nonControlChildren, function(child, index, list) {
+
         var evaluatedChild = child.evaluate(context)
         if (evaluatedChild == undefined || (_.isArray(evaluatedChild) && _.isEmpty(evaluatedChild))){
             // ignore
@@ -1345,7 +1346,7 @@ ColorTransform.prototype.evaluate = function(parentContext, inst){
 
     var alpha = contextVariableLookup(context, "alpha", undefined);
     if (alpha !== undefined){
-        logMessage("Warning: the alpha parameter of color() is currently not supported.");
+        color[3] = alpha;
     }
 
     return this.transformChildren(inst.children, context, function(){
@@ -1441,7 +1442,6 @@ function TranslateTransform(a){
 };
 
 TranslateTransform.prototype.evaluate = function(parentContext, inst){
-
 
     inst.argvalues = [];
 
@@ -1555,7 +1555,12 @@ Cylinder.prototype.evaluate = function(parentContext, inst) {
     }
     openjscadArgs.resolution = get_fragments_from_r(Math.max(openjscadArgs.radiusStart, openjscadArgs.radiusEnd), context);
     
-    return _.template('CSG.cylinder({start: [<%=start%>], end: [<%=end%>],radiusStart: <%=radiusStart%>, radiusEnd: <%=radiusEnd%>, resolution: <%=resolution%>})', openjscadArgs);    
+    var x = _.template('CSG.cylinder({start: [<%=start%>], end: [<%=end%>],radiusStart: <%=radiusStart%>, radiusEnd: <%=radiusEnd%>, resolution: <%=resolution%>})', openjscadArgs);    
+    if (inst.tag_highlight){
+        x += ".setColor(1,0,0,0.25)";
+    }
+
+    return x;
 };
 
 

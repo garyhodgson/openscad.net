@@ -19,8 +19,6 @@ OpenJsCad.Viewer = function(containerelement, width, height, initialdepth, color
   this.viewpointY = 0;
   this.viewpointZ = initialdepth;
 
-  // Draw triangle lines:
-  this.drawLines = false;
   // Set to true so lines don't use the depth buffer
   this.lineOverlay = false;
 
@@ -34,11 +32,17 @@ OpenJsCad.Viewer = function(containerelement, width, height, initialdepth, color
   gl.matrixMode(gl.MODELVIEW);
 
   // Set up WebGL state
-  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
   gl.clearColor(this.colorScheme.backgroundColor[0], this.colorScheme.backgroundColor[1], this.colorScheme.backgroundColor[2], 1);
+
   gl.enable(gl.DEPTH_TEST);
+  gl.depthFunc(gl.LESS);
+
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
   gl.enable(gl.CULL_FACE);
-  gl.polygonOffset(1, 1);
+  
 
   // Black shader for wireframe
   this.blackShader = new GL.Shader('\
@@ -53,25 +57,26 @@ OpenJsCad.Viewer = function(containerelement, width, height, initialdepth, color
 
   // Shader with diffuse and specular lighting
   this.lightingShader = new GL.Shader('\
-    varying vec3 color;\
+    varying vec4 color;\
     varying vec3 normal;\
     varying vec3 light;\
     void main() {\
       const vec3 lightDir = vec3(1.0, 2.0, 3.0) / 3.741657386773941;\
       light = lightDir;\
-      color = gl_Color.rgb;\
+      color.rgb = gl_Color.rgb;\
+      color.a = gl_Color.a;\
       normal = gl_NormalMatrix * gl_Normal;\
       gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\
     }\
   ', '\
-    varying vec3 color;\
+    varying vec4 color;\
     varying vec3 normal;\
     varying vec3 light;\
     void main() {\
       vec3 n = normalize(normal);\
       float diffuse = max(0.0, dot(light, n));\
       float specular = pow(max(0.0, -reflect(light, n).z), 10.0) * sqrt(diffuse);\
-      gl_FragColor = vec4(mix(color * (0.3 + 0.7 * diffuse), vec3(1.0), specular), 1.0);\
+      gl_FragColor = vec4(mix(color.rgb * (0.3 + 0.7 * diffuse), vec3(1.0), specular), color.a);\
     }\
   ');
 
@@ -177,14 +182,6 @@ OpenJsCad.Viewer.prototype = {
     this.lightingShader.draw(this.mesh, gl.TRIANGLES);
     if (!this.lineOverlay) gl.disable(gl.POLYGON_OFFSET_FILL);
 
-    if(this.drawLines)
-    {
-      if (this.lineOverlay) gl.disable(gl.DEPTH_TEST);
-      gl.enable(gl.BLEND);
-      this.blackShader.draw(this.mesh, gl.LINES);
-      gl.disable(gl.BLEND);
-      if (this.lineOverlay) gl.enable(gl.DEPTH_TEST);
-    }
     var gridMin = -100;
     var gridMax = 100;
 
@@ -265,7 +262,8 @@ OpenJsCad.Viewer.csgToMesh = function(csg) {
   for(var polygonindex = 0; polygonindex < numpolygons; polygonindex++)
   {
     var polygon = polygons[polygonindex];
-    var color = (viewer.colorScheme)? viewer.colorScheme.faceColor : [0.8,0.8,0.8];
+    var color = (viewer.colorScheme)? viewer.colorScheme.faceColor : [0.8,0.8,0.8, 1.0];
+    
     if(polygon.shared && polygon.shared.color)
     {
       color = polygon.shared.color;

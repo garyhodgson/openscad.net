@@ -9,7 +9,8 @@ requirejs.config({
         'jquery.mousewheel': ['jquery-latest.min'],
         'bootstrap/bootstrap.min': ['jquery-latest.min'],
         'garlic.min': ['jquery-latest.min'],
-        'openscad-parser': ['underscore-min', 'jquery-latest.min', 'openscad-parser-support', 'csg']
+        'openscad-parser': ['underscore-min', 'jquery-latest.min', 'openscad-parser-support', 'csg'],
+        'csg' : ['underscore-min']
 
     }
 });
@@ -28,10 +29,10 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
     var connectedToDropbox = false;
     var client;
     var colorSchemes = {
-      "cornfield": { backgroundColor: [255/255, 255/255, 229/255], faceColor: [249/255, 215/255, 44/255] },
-      "metallic": { backgroundColor: [170/255, 170/255, 255/255], faceColor: [221/255, 221/255, 225/255] },
-      "sunset": { backgroundColor: [170/255, 68/255, 68/255], faceColor: [255/255, 170/255, 170/255] },
-      "sunrise": { backgroundColor: [196/255, 207/255, 210/255], faceColor: [255/255, 245/255, 184/255] }
+      "cornfield": { backgroundColor: [255/255, 255/255, 229/255], faceColor: [249/255, 215/255, 44/255, 1.0] },
+      "metallic": { backgroundColor: [170/255, 170/255, 255/255], faceColor: [221/255, 221/255, 225/255, 1.0] },
+      "sunset": { backgroundColor: [170/255, 68/255, 68/255], faceColor: [255/255, 170/255, 170/255, 1.0] },
+      "sunrise": { backgroundColor: [196/255, 207/255, 210/255], faceColor: [255/255, 245/255, 184/255, 1.0] }
     };
 
     $(function() {
@@ -90,6 +91,7 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
 
       if (localStorage.lastEdit !== undefined){
         setEditorContent(localStorage.getItem("lastEdit"));
+        editorIsDirty = true;
       } else {
         setEditorContent("// Example script. Press F4, or choose Reload and Compile from the Design menu, to render.\n\nsize = 50;\nhole = 25;\n\nfunction r_from_dia(d) = d / 2;\n\ncy_r = r_from_dia(hole);\ncy_h = r_from_dia(size * 2.5);\n\nmodule rotcy(rot, r, h) {\n    rotate(90, rot)\n      cylinder(r = r, h = h, center = true);\n}\n\ndifference() {\n    sphere(r = r_from_dia(size));\n    rotcy([0, 0, 0], cy_r, cy_h);\n    rotcy([1, 0, 0], cy_r, cy_h);\n    rotcy([0, 1, 0], cy_r, cy_h);\n}");
       }

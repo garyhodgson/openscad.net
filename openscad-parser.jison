@@ -766,6 +766,7 @@ Module.prototype.evaluate = function(parentContext, inst) {
 
     var evaluatedLines = [];
     _.each(nonControlChildren, function(child, index, list) {
+
         var evaluatedChild = child.evaluate(context)
         if (evaluatedChild == undefined || (_.isArray(evaluatedChild) && _.isEmpty(evaluatedChild))){
             // ignore
@@ -1372,7 +1373,7 @@ ColorTransform.prototype.evaluate = function(parentContext, inst){
 
     var alpha = contextVariableLookup(context, "alpha", undefined);
     if (alpha !== undefined){
-        logMessage("Warning: the alpha parameter of color() is currently not supported.");
+        color[3] = alpha;
     }
 
     return this.transformChildren(inst.children, context, function(){
@@ -1468,7 +1469,6 @@ function TranslateTransform(a){
 };
 
 TranslateTransform.prototype.evaluate = function(parentContext, inst){
-
 
     inst.argvalues = [];
 
