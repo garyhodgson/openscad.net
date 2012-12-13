@@ -23,7 +23,6 @@ Several features are either not yet implemented or can/will not be implemented. 
 * rotate_extrude.
 * minkowski and hull transformations.
 * $fa, $fs global variables.
-* intersection_for and assign statements.
 * Modifier characters: #, !, %).
 
 ## Development

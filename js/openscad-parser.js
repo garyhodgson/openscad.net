@@ -60,6 +60,15 @@ case 8:
            
         
 break;
+case 9:
+            /*  Note: this is repeated for all possible end statements 
+                because jison currently does not allow mid-rule actions.
+            */
+            if (module_stack.length > 0){
+                currmodule = module_stack.pop();
+            }
+        
+break;
 case 10:
             if (module_stack.length > 0){
                 currmodule = module_stack.pop();
@@ -67,11 +76,17 @@ case 10:
         
 break;
 case 11:
-            currmodule.children.push($$[$0]);    
+            currmodule.children.push($$[$0]);
+            if (module_stack.length > 0){
+                currmodule = module_stack.pop();
+            }
         
 break;
 case 12:  
             currmodule.assignments_var[$$[$0-3]] = $$[$0-1]; 
+            if (module_stack.length > 0){
+                currmodule = module_stack.pop();
+            }
         
 break;
 case 13:
@@ -81,6 +96,9 @@ case 13:
             func.expr = $$[$0-1];
             currmodule.functions[$$[$0-7]] = func;
             delete $$[$0-5];
+            if (module_stack.length > 0){
+                currmodule = module_stack.pop();
+            }
         
 break;
 case 15:   
@@ -787,6 +805,7 @@ ModuleInstantiation.prototype.evaluate = function(context) {
         that.context = context;
 
         evaluatedModule = context.evaluateModule(that);
+
         that.context = null;
         that.argvalues = [];
 
@@ -934,8 +953,7 @@ FunctionDef.prototype.evaluate = function(parentContext, call_argnames, call_arg
 };
 
 
-function CoreModule(){
-};
+function CoreModule(){};
 
 function newContext (parentContext, argnames, argexpr, inst) {
     var context = new Context(parentContext);
@@ -956,8 +974,7 @@ function ControlModule(a){
   CoreModule.call(this, a);  
 };
 
-function OpenjscadSolidFactory(){
-};
+function OpenjscadSolidFactory(){};
 
 OpenjscadSolidFactory.prototype.getAdaptor = function(args) {
     switch(args.name){
@@ -1555,12 +1572,7 @@ Cylinder.prototype.evaluate = function(parentContext, inst) {
     }
     openjscadArgs.resolution = get_fragments_from_r(Math.max(openjscadArgs.radiusStart, openjscadArgs.radiusEnd), context);
     
-    var x = _.template('CSG.cylinder({start: [<%=start%>], end: [<%=end%>],radiusStart: <%=radiusStart%>, radiusEnd: <%=radiusEnd%>, resolution: <%=resolution%>})', openjscadArgs);    
-    if (inst.tag_highlight){
-        x += ".setColor(1,0,0,0.25)";
-    }
-
-    return x;
+    return _.template('CSG.cylinder({start: [<%=start%>], end: [<%=end%>],radiusStart: <%=radiusStart%>, radiusEnd: <%=radiusEnd%>, resolution: <%=resolution%>})', openjscadArgs);    
 };
 
 
@@ -2065,29 +2077,29 @@ case 12:return 36
 break;
 case 13:return 37
 break;
-case 14:return 40
+case 14:/* Ignore */
 break;
-case 15:return 40
+case 15:/* Ignore */
 break;
-case 16:return 40
+case 16:/* Ignore */
 break;
-case 17:return 10
+case 17:/* Ignore */
 break;
-case 18:return 39  //"
+case 18:this.begin('cond_comment');
 break;
-case 19:/* Ignore */
+case 19:  this.begin('INITIAL'); 
 break;
 case 20:/* Ignore */
 break;
-case 21:/* Ignore */
+case 21:return 40
 break;
-case 22:/* Ignore */
+case 22:return 40
 break;
-case 23:this.begin('cond_comment');
+case 23:return 40
 break;
-case 24:  this.begin('INITIAL'); 
+case 24:return 10
 break;
-case 25:/* Ignore */
+case 25:return 39  //"
 break;
 case 26:return 49
 break;
@@ -2105,8 +2117,8 @@ case 32:return yy_.yytext;
 break;
 }
 };
-lexer.rules = [/^(?:include[ \t\r\n>]*<)/,/^(?:[^\t\r\n>]*\/)/,/^(?:[^\t\r\n>/]+)/,/^(?:>)/,/^(?:use[ \t\r\n>]*<)/,/^(?:[^\t\r\n>]+)/,/^(?:>)/,/^(?:module\b)/,/^(?:function\b)/,/^(?:if\b)/,/^(?:else\b)/,/^(?:true\b)/,/^(?:false\b)/,/^(?:undef\b)/,/^(?:([0-9])*\.([0-9])+([Ee][+-]?([0-9])+)?)/,/^(?:([0-9])+\.([0-9])*([Ee][+-]?([0-9])+)?)/,/^(?:([0-9])+([Ee][+-]?([0-9])+)?)/,/^(?:\$?[a-zA-Z0-9_]+)/,/^(?:[\"\'][^\"\']*[\"\'])/,/^(?:[\n])/,/^(?:[\r\t ])/,/^(?:\/\/[^\n]*\n?)/,/^(?:\/\*.*\*\/)/,/^(?:\/\*)/,/^(?:\*\/)/,/^(?:.|\n\b)/,/^(?:<=)/,/^(?:>=)/,/^(?:==)/,/^(?:!=)/,/^(?:&&)/,/^(?:\|\|)/,/^(?:.)/];
-lexer.conditions = {"cond_include":{"rules":[0,1,2,3,4,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,26,27,28,29,30,31,32],"inclusive":true},"cond_use":{"rules":[0,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,26,27,28,29,30,31,32],"inclusive":true},"cond_comment":{"rules":[0,4,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32],"inclusive":true},"cond_string":{"rules":[0,4,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,26,27,28,29,30,31,32],"inclusive":true},"INITIAL":{"rules":[0,4,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,26,27,28,29,30,31,32],"inclusive":true}};
+lexer.rules = [/^(?:include[ \t\r\n>]*<)/,/^(?:[^\t\r\n>]*\/)/,/^(?:[^\t\r\n>/]+)/,/^(?:>)/,/^(?:use[ \t\r\n>]*<)/,/^(?:[^\t\r\n>]+)/,/^(?:>)/,/^(?:module\b)/,/^(?:function\b)/,/^(?:if\b)/,/^(?:else\b)/,/^(?:true\b)/,/^(?:false\b)/,/^(?:undef\b)/,/^(?:[\n])/,/^(?:[\r\t ])/,/^(?:\/\/[^\n]*\n?)/,/^(?:\/\*.*\*\/)/,/^(?:\/\*)/,/^(?:\*\/)/,/^(?:.|\n\b)/,/^(?:([0-9])*\.([0-9])+([Ee][+-]?([0-9])+)?)/,/^(?:([0-9])+\.([0-9])*([Ee][+-]?([0-9])+)?)/,/^(?:([0-9])+([Ee][+-]?([0-9])+)?)/,/^(?:\$?[a-zA-Z0-9_]+)/,/^(?:[\"\'][^\"\']*[\"\'])/,/^(?:<=)/,/^(?:>=)/,/^(?:==)/,/^(?:!=)/,/^(?:&&)/,/^(?:\|\|)/,/^(?:.)/];
+lexer.conditions = {"cond_include":{"rules":[0,1,2,3,4,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32],"inclusive":true},"cond_use":{"rules":[0,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32],"inclusive":true},"cond_comment":{"rules":[0,4,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32],"inclusive":true},"cond_string":{"rules":[0,4,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32],"inclusive":true},"INITIAL":{"rules":[0,4,7,8,9,10,11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,29,30,31,32],"inclusive":true}};
 return lexer;})()
 parser.lexer = lexer;
 function Parser () { this.yy = {}; }Parser.prototype = parser;parser.Parser = Parser;

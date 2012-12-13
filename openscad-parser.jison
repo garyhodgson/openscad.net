@@ -31,6 +31,14 @@ use[ \t\r\n>]*"<"           this.begin('cond_use');
 "false"                     return 'TOK_FALSE'
 "undef"                     return 'TOK_UNDEF'
 
+[\n]                        /* Ignore */
+[\r\t ]                     /* Ignore */
+\/\/[^\n]*\n?               /* Ignore */
+\/\*.*\*\/                  /* Ignore */
+"/*"                        this.begin('cond_comment');
+<cond_comment>"*/"          %{  this.begin('INITIAL'); %}
+<cond_comment>.|\n             /* Ignore */
+
 {D}*\.{D}+{E}?              return 'TOK_NUMBER'
 {D}+\.{D}*{E}?              return 'TOK_NUMBER'
 {D}+{E}?                    return 'TOK_NUMBER'
@@ -39,14 +47,6 @@ use[ \t\r\n>]*"<"           this.begin('cond_use');
 [\"\'][^\"\']*[\"\']        return 'TOK_STRING'  //"
 
 
-[\n]                        /* Ignore */
-[\r\t ]                     /* Ignore */
-\/\/[^\n]*\n?               /* Ignore */
-\/\*.*\*\/                  /* Ignore */
-// TODO - the following does not work, for example for multi line comments.
-"/*"                        this.begin('cond_comment');
-<cond_comment>"*/"          %{  this.begin('INITIAL'); %}
-<cond_comment>.|\n             /* Ignore */
 
 
 "<="                        return 'LE'
@@ -152,6 +152,14 @@ statement_begin:
 
 statement_end: 
         ';'
+        {
+            /*  Note: this is repeated for all possible end statements 
+                because jison currently does not allow mid-rule actions.
+            */
+            if (module_stack.length > 0){
+                currmodule = module_stack.pop();
+            }
+        }
     |   '{' inner_input '}'
         {
             if (module_stack.length > 0){
@@ -160,11 +168,17 @@ statement_end:
         } 
     |   module_instantiation 
         {
-            currmodule.children.push($1);    
+            currmodule.children.push($1);
+            if (module_stack.length > 0){
+                currmodule = module_stack.pop();
+            }
         } 
     |   TOK_ID '=' expr ';'
         {  
             currmodule.assignments_var[$1] = $3; 
+            if (module_stack.length > 0){
+                currmodule = module_stack.pop();
+            }
         }
     |   TOK_FUNCTION TOK_ID '(' arguments_decl optional_commas ')' '=' expr ';'
         {
@@ -174,6 +188,9 @@ statement_end:
             func.expr = $8;
             currmodule.functions[$2] = func;
             delete $4;
+            if (module_stack.length > 0){
+                currmodule = module_stack.pop();
+            }
         }
     |   BR
     ;
@@ -814,6 +831,7 @@ ModuleInstantiation.prototype.evaluate = function(context) {
         that.context = context;
 
         evaluatedModule = context.evaluateModule(that);
+
         that.context = null;
         that.argvalues = [];
 
@@ -961,8 +979,7 @@ FunctionDef.prototype.evaluate = function(parentContext, call_argnames, call_arg
 };
 
 
-function CoreModule(){
-};
+function CoreModule(){};
 
 function newContext (parentContext, argnames, argexpr, inst) {
     var context = new Context(parentContext);
@@ -983,8 +1000,7 @@ function ControlModule(a){
   CoreModule.call(this, a);  
 };
 
-function OpenjscadSolidFactory(){
-};
+function OpenjscadSolidFactory(){};
 
 OpenjscadSolidFactory.prototype.getAdaptor = function(args) {
     switch(args.name){
