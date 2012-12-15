@@ -322,6 +322,10 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
       }
       setCurrentFilename(filename);
       setEditorContent(exampleElement.text());
+      setCurrentFilename('');
+      gProcessor.clearViewer();
+      modelIsShown = false;
+      localStorage.setItem("lastEdit", exampleElement.text());
       
     }
 

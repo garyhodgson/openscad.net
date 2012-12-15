@@ -60,13 +60,7 @@ case 8:
            
         
 break;
-case 9:
-            /*  Note: this is repeated for all possible end statements 
-                because jison currently does not allow mid-rule actions.
-            */
-            if (module_stack.length > 0){
-                currmodule = module_stack.pop();
-            }
+case 9:           
         
 break;
 case 10:
@@ -77,16 +71,10 @@ case 10:
 break;
 case 11:
             currmodule.children.push($$[$0]);
-            if (module_stack.length > 0){
-                currmodule = module_stack.pop();
-            }
         
 break;
 case 12:  
             currmodule.assignments_var[$$[$0-3]] = $$[$0-1]; 
-            if (module_stack.length > 0){
-                currmodule = module_stack.pop();
-            }
         
 break;
 case 13:
@@ -96,9 +84,6 @@ case 13:
             func.expr = $$[$0-1];
             currmodule.functions[$$[$0-7]] = func;
             delete $$[$0-5];
-            if (module_stack.length > 0){
-                currmodule = module_stack.pop();
-            }
         
 break;
 case 15:   

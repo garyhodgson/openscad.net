@@ -152,13 +152,7 @@ statement_begin:
 
 statement_end: 
         ';'
-        {
-            /*  Note: this is repeated for all possible end statements 
-                because jison currently does not allow mid-rule actions.
-            */
-            if (module_stack.length > 0){
-                currmodule = module_stack.pop();
-            }
+        {           
         }
     |   '{' inner_input '}'
         {
@@ -169,16 +163,10 @@ statement_end:
     |   module_instantiation 
         {
             currmodule.children.push($1);
-            if (module_stack.length > 0){
-                currmodule = module_stack.pop();
-            }
         } 
     |   TOK_ID '=' expr ';'
         {  
             currmodule.assignments_var[$1] = $3; 
-            if (module_stack.length > 0){
-                currmodule = module_stack.pop();
-            }
         }
     |   TOK_FUNCTION TOK_ID '(' arguments_decl optional_commas ')' '=' expr ';'
         {
@@ -188,9 +176,6 @@ statement_end:
             func.expr = $8;
             currmodule.functions[$2] = func;
             delete $4;
-            if (module_stack.length > 0){
-                currmodule = module_stack.pop();
-            }
         }
     |   BR
     ;
