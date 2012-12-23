@@ -34,6 +34,7 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
       "sunset": { backgroundColor: [170/255, 68/255, 68/255], faceColor: [255/255, 170/255, 170/255, 1.0] },
       "sunrise": { backgroundColor: [196/255, 207/255, 210/255], faceColor: [255/255, 245/255, 184/255, 1.0] }
     };
+    var globalLibs = {};
 
     $(function() {
 
@@ -409,7 +410,7 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
         }
     }
 
-    var globalLibs = {}
+    
 
     function collateLibraries(text, cb){
 
@@ -474,6 +475,8 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
     }
 
     function newParse(lines, libraries, cb) {
+      var singleLineModuleRegex = /(module\s*\w*\([^\)]\)\w*)([^{};]*);/gm;
+      var singleLineModuleReplacement = "$1 {$2;};"; 
 
       if (libraries.length>0){
 
@@ -482,6 +485,9 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
         var filename = library[1];
 
         var libContent = globalLibs[filename];
+
+        // the following hack puts single line module definitions into braces
+        libContent = libContent.replace(singleLineModuleRegex, singleLineModuleReplacement);
 
         if (isUse){
           var usedModuleResult = openscadParser.parse(libContent);
@@ -494,7 +500,12 @@ define("main",["jquery-latest.min", "text!../examples.insert.html", "jquery-ui-l
         newParse(lines, libraries.slice(1), cb);
 
       } else {
-        var result = openscadParser.parse(lines.join('\n'));
+        var joinedLines = lines.join('\n');
+
+        // the following hack puts single line module definitions into braces
+        joinedLines = joinedLines.replace(singleLineModuleRegex, singleLineModuleReplacement);
+
+        var result = openscadParser.parse(joinedLines);
         cb(result);
       }
       

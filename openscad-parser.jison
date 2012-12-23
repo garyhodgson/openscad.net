@@ -41,8 +41,8 @@ use[ \t\r\n>]*"<"           this.begin('cond_use');
 
 {D}*\.{D}+{E}?              return 'TOK_NUMBER'
 {D}+\.{D}*{E}?              return 'TOK_NUMBER'
-{D}+{E}?                    return 'TOK_NUMBER'
 "$"?[a-zA-Z0-9_]+           return 'TOK_ID'
+{D}+{E}?                    return 'TOK_NUMBER'
 
 [\"\'][^\"\']*[\"\']        return 'TOK_STRING'  //"
 
@@ -144,10 +144,8 @@ statement_begin:
             currmodule.argnames = $4.argnames;
             currmodule.argexpr = $4.argexpr;
             
-            delete $4;
-           
+            delete $4;           
         } 
-
     ;
 
 statement_end: 
@@ -727,7 +725,6 @@ function Module(name) {
     this.modules = [];
     this.argnames = [];
     this.argexpr = [];
-    this.currentSubmodule = 0;
 };
 
 Module.prototype.evaluate = function(parentContext, inst) {
