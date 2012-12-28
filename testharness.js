@@ -1,40 +1,61 @@
-var fs = require("fs");
-var _ = require("underscore");
-var CSG = require("./js/csg");
-var parser = require("./js/openscad-parser").parser;
+var requirejs = require('requirejs');
+
+requirejs.config({
+    baseUrl: 'js/app',
+    paths: {
+        lib: '../lib'
+    },
+    nodeRequire: require
+});
+
+requirejs(["fs", "openscad-parser", "openscad-parser-support"], 
+    function(fs, parser, parser_support) {
+
+	if (parser.yy === undefined){
+		parser.yy = {}
+	}
+
+	logMessage = function(msg){
+		console.log("\n"+msg+"\n");
+	}
+
+	var openSCADText = fs.readFileSync("test.scad", "UTF8");
+
+	var lines = openSCADText.split("\n");
+
+	for (var i in lines){
+		var line = lines[i];
 
 
-if (parser.yy === undefined){
-	parser.yy = {}
-}
-
-var openSCADText = fs.readFileSync("test.scad", "UTF8");
-
-var lines = openSCADText.split("\n");
-
-for (var i in lines){
-	var line = lines[i];
+		lines[i] = line.replace(/include <([^>]*)>;/, function(match, p1, offset, string) {
+			var includedModuleText = fs.readFileSync(p1, "UTF8");
+			return includedModuleText;
+		});
 
 
-	lines[i] = line.replace(/include <([^>]*)>;/, function(match, p1, offset, string) {
-		var includedModuleText = fs.readFileSync(p1, "UTF8");
-		return includedModuleText;
-	});
+		lines[i] = line.replace(/use <([^>]*)>;/, function(match, p1, offset, string) {
+			var usedModuleText = fs.readFileSync(p1, "UTF8");
+			
+			var usedModuleResult = parser.parse(usedModuleText);
+
+			parser.yy.context = usedModuleResult.context;
+
+			return match;
+		});
 
 
-	lines[i] = line.replace(/use <([^>]*)>;/, function(match, p1, offset, string) {
-		var usedModuleText = fs.readFileSync(p1, "UTF8");
-		
-		var usedModuleResult = parser.parse(usedModuleText);
+	}
 
-		parser.yy.context = usedModuleResult.context;
+	var joinedLines = lines.join('\n');
 
-		return match;
-	});
+	console.log(joinedLines);
 
 
-}
+	var openJSCADResult = parser.parse(joinedLines);
 
-var openJSCADResult = parser.parse(lines.join('\n'));
+	console.log(openJSCADResult.lines.join('\n'));
 
-console.log(openJSCADResult.lines.join('\n'));
+
+
+
+});

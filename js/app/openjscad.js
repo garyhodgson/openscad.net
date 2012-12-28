@@ -387,9 +387,9 @@ OpenJsCad.parseJsCadScriptSync = function(script, mainParameters, debugging) {
 // callback: should be function(error, csg)
 OpenJsCad.parseJsCadScriptASync = function(script, mainParameters, callback) {
   var baselibraries = [
-    "js/openscad-parser-support.js",
-    "js/csg.js",
-    "js/openjscad.js"
+    "js/app/openscad-parser-support.js",
+    "js/lib/csg.js",
+    "js/app/openjscad.js"
   ];
   var baseurl = document.location + "";
   var workerscript = "";
@@ -646,8 +646,13 @@ OpenJsCad.Processor.prototype = {
   },
     
   setError: function(txt) {
-    this.hasError = (txt != "");
-    logMessage(txt);
+    if (txt != "") {
+      this.hasError = true;
+      logMessage(txt);
+    } else {
+      this.hasError = false;
+    }
+
   },
   
   setDebugging: function(debugging) {

@@ -5,6 +5,9 @@
 
 %lex
 
+%options flex
+
+
 %s cond_include cond_use cond_comment cond_string
 
 D [0-9]
@@ -15,11 +18,11 @@ E [Ee][+-]?{D}+
 include[ \t\r\n>]*"<"        this.begin('cond_include');
 <cond_include>[^\t\r\n>]*"/" yy.filepath = yytext;
 <cond_include>[^\t\r\n>/]+   yy.filename = yytext;
-<cond_include>">"            %{  this.begin('INITIAL'); %}
+<cond_include>">"            %{  this.popState(); %}
 
 use[ \t\r\n>]*"<"           this.begin('cond_use');
 <cond_use>[^\t\r\n>]+       yy.filename = yytext;
-<cond_use>">"               %{  this.begin('INITIAL'); %}
+<cond_use>">"               %{  this.popState(); %}
 
 
 "module"                    return 'TOK_MODULE'
@@ -30,23 +33,44 @@ use[ \t\r\n>]*"<"           this.begin('cond_use');
 "false"                     return 'TOK_FALSE'
 "undef"                     return 'TOK_UNDEF'
 
+
+/*
+[\"][^\"]*[\"]              { yy.stringcontents = yytext; return 'TOK_STRING' } //"
+*/
+
+<cond_string>"\\t"          %{ stringcontents += '    ';  %}
+<cond_string>"\\n"          %{ stringcontents += '\n';  %}
+<cond_string>"\\\""         %{ stringcontents += '\"';  %}
+<cond_string>"\\r"          %{ stringcontents += '\r';  %}
+<cond_string>"\\\\"         %{ stringcontents += '\\';  %}
+<cond_string>[^\\\n\"]+     %{ /*"*/ 
+                                stringcontents += yytext; 
+                            %}
+<cond_string>"\""           %{
+                                //this.begin('INITIAL');
+                                this.popState();
+                                yytext = stringcontents; 
+                                return 'TOK_STRING'; 
+                            %}
+[\"]                        %{ /*"*/ 
+                                this.begin('cond_string');                                 
+                                stringcontents = ""; 
+                            %}
+
+
 [\n]                        /* Ignore */
 [\r\t ]                     /* Ignore */
 \/\/[^\n]*\n?               /* Ignore */
 \/\*.*\*\/                  /* Ignore */
-"/*"                        this.begin('cond_comment');
-<cond_comment>"*/"          %{  this.begin('INITIAL'); %}
-<cond_comment>.|\n             /* Ignore */
+"/*"                        %{ this.begin('cond_comment'); %}
+<cond_comment>[a-zA-Z0-9_]+|\n   /* Ignore */
+<cond_comment>"*/"          %{ this.popState(); %}
+
 
 {D}*\.{D}+{E}?              return 'TOK_NUMBER'
 {D}+\.{D}*{E}?              return 'TOK_NUMBER'
-"$"?[a-zA-Z0-9_]+           return 'TOK_ID'
 {D}+{E}?                    return 'TOK_NUMBER'
-
-[\"\'][^\"\']*[\"\']        return 'TOK_STRING'  //"
-
-
-
+"$"?[a-zA-Z0-9_]+           return 'TOK_ID'
 
 "<="                        return 'LE'
 ">="                        return 'GE'
@@ -78,38 +102,7 @@ use[ \t\r\n>]*"<"           this.begin('cond_use');
 program:
         input
         { 
-
-            var lines = [];
-            lines.push("function main(){");
-            lines.push("\n");
-
-            var context = undefined;
-            if (yy.context !== undefined){
-                context = yy.context;
-            }
-
-            if (yy.logMessage !== undefined){
-                logMessage = yy.logMessage;
-            } else {
-                logMessage = localLog;
-            }
-
-            var res = currmodule.evaluate(context);
-
-            var evaluatedLines = _.flatten(res);
-            if (evaluatedLines.length == 1){
-                lines.push("return "+evaluatedLines[0] + ';');
-            } else if (evaluatedLines.length > 1){
-                lines.push("return "+_.first(evaluatedLines)+".union([");
-                lines.push(_.rest(evaluatedLines));
-                lines.push("]);");
-            }
-            lines.push("};");
-
-            var x = {lines:lines, context:context_stack[context_stack.length-1]};
-            resetModule();
-
-            return x;
+            return ext.processModule(yy);
         }
     ;
 
@@ -132,17 +125,7 @@ statement_begin:
         /*empty*/
     |   TOK_MODULE TOK_ID '(' arguments_decl optional_commas ')'
         {
-
-            var p_currmodule = currmodule;
-            module_stack.push(currmodule);
-            
-            currmodule = new Module($2);
-
-            p_currmodule.modules.push(currmodule);
-
-            currmodule.argnames = $4.argnames;
-            currmodule.argexpr = $4.argexpr;
-            
+            ext.stashModule($2, $4.argnames, $4.argexpr);
             delete $4;           
         } 
     ;
@@ -153,25 +136,19 @@ statement_end:
         }
     |   '{' inner_input '}'
         {
-            if (module_stack.length > 0){
-                currmodule = module_stack.pop();
-            }
+            ext.popModule();
         } 
     |   module_instantiation 
         {
-            currmodule.children.push($1);
+            ext.addModuleChild($1);
         } 
     |   TOK_ID '=' expr ';'
         {  
-            currmodule.assignments_var[$1] = $3; 
+            ext.addModuleAssignmentVar($1, $3);
         }
     |   TOK_FUNCTION TOK_ID '(' arguments_decl optional_commas ')' '=' expr ';'
         {
-            var func = new FunctionDef();
-            func.argnames = $4.argnames;
-            func.argexpr = $4.argexpr;
-            func.expr = $8;
-            currmodule.functions[$2] = func;
+            ext.addModuleFunction($2, $8, $4.argnames, $4.argexpr);
             delete $4;
         }
     |   BR
@@ -311,7 +288,7 @@ single_module_instantiation:
 
 expr:
         TOK_TRUE 
-        {   
+        {
             $$ = new Expression(true); 
         }
     |   TOK_FALSE 
@@ -594,8 +571,3 @@ argument_call:
     ;
 
 %%
-
-// Note: Uncomment the following lines to use the parser with node, e.g. for testing.
-//var _ = require("underscore");
-//require("./csg.js");
-//require("./openscad-parser-support.js");

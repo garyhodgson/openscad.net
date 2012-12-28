@@ -1,22 +1,26 @@
 requirejs.config({
+    baseUrl: 'js/app',
+    paths: {
+        lib: '../lib'
+    },
     shim: {
-        'jquery-ui-latest': ['jquery-latest'],
-        'jquery.layout-latest': ['jquery-latest', 'jquery-ui-latest'],
-        'jquery-ui-latest': ['jquery-latest'],
-        'jquery.fontselector': ['jquery-latest'],
-        'jquery.jstree': ['jquery-latest'],
-        'jquery.textarea': ['jquery-latest'],
-        'jquery.mousewheel': ['jquery-latest'],
-        'bootstrap': ['jquery-latest'],
-        'garlic': ['jquery-latest']
-    }
+        'lib/jquery-ui-latest': ['lib/jquery-latest'],
+        'lib/jquery.layout-latest': ['lib/jquery-latest', 'lib/jquery-ui-latest'],
+        'lib/jquery-ui-latest': ['lib/jquery-latest'],
+        'lib/jquery.fontselector': ['lib/jquery-latest'],
+        'lib/jquery.jstree': ['lib/jquery-latest'],
+        'lib/jquery.textarea': ['lib/jquery-latest'],
+        'lib/jquery.mousewheel': ['lib/jquery-latest'],
+        'lib/bootstrap': ['lib/jquery-latest'],
+        'lib/garlic': ['lib/jquery-latest']
+      }
 });
+
+define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.insert.html", "Context", "lib/jquery-ui-latest", "lib/jquery.layout-latest","lib/jquery.fontselector","lib/modernizr", "lib/dropbox", 
+  "lib/jquery.jstree", "lib/bootstrap", "lib/jquery.textarea", "lib/jquery.mousewheel", "lib/underscore", "lib/garlic", "lib/shortcut", "lib/bootbox",  
+  "lib/lightgl", "openjscad"], function(jQuery, openscadParser, examples_insert, Context) {
+
     var uiLayout, logLayout;
-
-define("main",["jquery-latest", "openscad-parser", "text!../examples.insert.html", "jquery-ui-latest", "jquery.layout-latest","jquery.fontselector","modernizr", "dropbox", 
-  "jquery.jstree", "bootstrap", "jquery.textarea", "jquery.mousewheel", "underscore", "garlic", "shortcut", "bootbox",  
-  "lightgl", "openjscad"], function(jQuery, openscadParser, examples_insert) {
-
     var filetree;
     var gProcessor=null;
     var auto_reload;
@@ -39,8 +43,6 @@ define("main",["jquery-latest", "openscad-parser", "text!../examples.insert.html
         logMessage("This app needs webGL - Google Chrome would be a good choice of browser.")
         return 
       }
-
-      openscadParser.yy.logMessage = logMessage;
 
       client = new Dropbox.Client({
           key: "HXhDdRlFUUA=|ExW13h6tJ+jTCm96w87G1F3wvtvRRKnOdXuYBn3BIg==", sandbox: true
@@ -164,10 +166,6 @@ define("main",["jquery-latest", "openscad-parser", "text!../examples.insert.html
         }
       }
 
-      if (auto_reload){
-        updateSolid();
-      }
-
       $('.loadExample').click(function() {
           loadExample($(this).text());
       })
@@ -248,6 +246,10 @@ define("main",["jquery-latest", "openscad-parser", "text!../examples.insert.html
         }
         
       });
+
+      if (auto_reload){
+        updateSolid();
+      }
 
     });
 
@@ -502,6 +504,8 @@ define("main",["jquery-latest", "openscad-parser", "text!../examples.insert.html
         // the following hack puts single line module definitions into braces
         joinedLines = joinedLines.replace(singleLineModuleRegex, singleLineModuleReplacement);
 
+        console.log(joinedLines);
+
         var result = openscadParser.parse(joinedLines);
         cb(result);
       }
@@ -510,6 +514,8 @@ define("main",["jquery-latest", "openscad-parser", "text!../examples.insert.html
 
     function display(result) {
       var resultText = result.lines.join('\n');
+
+      Context.printContext(result.context);
 
       console.log(resultText);
       
@@ -625,7 +631,6 @@ define("main",["jquery-latest", "openscad-parser", "text!../examples.insert.html
         }
 
         $('#editor').val(content);
-        $('#editor-tabs a[href="#editorTab"]').tab('show');
         editorIsDirty = false;
         setCurrentFilename(stat.path);
         logMessage("Loaded file: " +stat.path);
@@ -712,18 +717,23 @@ define("main",["jquery-latest", "openscad-parser", "text!../examples.insert.html
           ui: {
             select_limit: 1
           },
-          core : { animation: 200 },
-              plugins : [ "themes", "json_data", "ui" ],
-              json_data: {
-                data: [
-                  {
-                    data: "/",
-                    attr: {id:"root"},
-                    metadata: {path:"/"}
-                  }
-                ]
-            }
-          });
+          themes : {
+            url: "css/jstree/themes/default/style.css"
+          },
+          core : { 
+            animation: 200
+          },
+          plugins : [ "themes", "json_data", "ui" ],
+          json_data: {
+            data: [
+              {
+                data: "/",
+                attr: {id:"root"},
+                metadata: {path:"/"}
+              }
+            ]
+          }
+        });
       }
 
       function showGrid(show){
