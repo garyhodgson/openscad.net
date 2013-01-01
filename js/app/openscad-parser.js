@@ -732,64 +732,73 @@ case 17: stringcontents += '\r';
 break;
 case 18: stringcontents += '\\';  
 break;
-case 19: /*"*/ 
+case 19: stringcontents += '\0';  
+break;
+case 20: stringcontents += '\a';  
+break;
+case 21: stringcontents += '\b';  
+break;
+case 22: stringcontents += '\t';  
+break;
+case 23: stringcontents += '\n';  
+break;
+case 24: stringcontents += '\v';  
+break;
+case 25: stringcontents += '\f';  
+break;
+case 26: stringcontents += '\e';  
+break;
+case 27: /*"*/ 
                                 stringcontents += yy_.yytext; 
                             
 break;
-case 20:
-                                //this.begin('INITIAL');
+case 28:
                                 this.popState();
                                 yy_.yytext = stringcontents; 
                                 return 39; 
                             
 break;
-case 21: /*"*/ 
+case 29: /*"*/ 
                                 this.begin('cond_string');                                 
                                 stringcontents = ""; 
                             
 break;
-case 22:/* Ignore */
+case 30:/* Ignore */
 break;
-case 23:/* Ignore */
+case 31:/* Ignore */
 break;
-case 24:/* Ignore */
+case 32:/* Ignore */
 break;
-case 25:/* Ignore */
+case 33:/* Ignore Note: multi-line comments are removed via a preparse regex. */
 break;
-case 26: this.begin('cond_comment'); 
+case 34:return 40
 break;
-case 27:/* Ignore */
+case 35:return 40
 break;
-case 28: this.popState(); 
+case 36:return 40
 break;
-case 29:return 40
+case 37:return 10
 break;
-case 30:return 40
+case 38:return 49
 break;
-case 31:return 40
+case 39:return 52
 break;
-case 32:return 10
+case 40:return 50
 break;
-case 33:return 49
+case 41:return 51
 break;
-case 34:return 52
+case 42:return 54
 break;
-case 35:return 50
+case 43:return 55
 break;
-case 36:return 51
+case 44:return yy_.yytext;
 break;
-case 37:return 54
-break;
-case 38:return 55
-break;
-case 39:return yy_.yytext;
-break;
-case 40:console.log(yy_.yytext);
+case 45:console.log(yy_.yytext);
 break;
 }
 };
-lexer.rules = [/^(?:include[ \t\r\n>]*<)/,/^(?:[^\t\r\n>]*\/)/,/^(?:[^\t\r\n>/]+)/,/^(?:>)/,/^(?:use[ \t\r\n>]*<)/,/^(?:[^\t\r\n>]+)/,/^(?:>)/,/^(?:module)/,/^(?:function)/,/^(?:if)/,/^(?:else)/,/^(?:true)/,/^(?:false)/,/^(?:undef)/,/^(?:\\t)/,/^(?:\\n)/,/^(?:\\")/,/^(?:\\r)/,/^(?:\\\\)/,/^(?:[^\\\n\"]+)/,/^(?:")/,/^(?:[\"])/,/^(?:[\n])/,/^(?:[\r\t ])/,/^(?:\/\/[^\n]*\n?)/,/^(?:\/\*.*\*\/)/,/^(?:\/\*)/,/^(?:[a-zA-Z0-9_]+|\n)/,/^(?:\*\/)/,/^(?:([0-9])*\.([0-9])+([Ee][+-]?([0-9])+)?)/,/^(?:([0-9])+\.([0-9])*([Ee][+-]?([0-9])+)?)/,/^(?:([0-9])+([Ee][+-]?([0-9])+)?)/,/^(?:\$?[a-zA-Z0-9_]+)/,/^(?:<=)/,/^(?:>=)/,/^(?:==)/,/^(?:!=)/,/^(?:&&)/,/^(?:\|\|)/,/^(?:.)/,/^(?:.)/];
-lexer.conditions = {"cond_include":{"rules":[0,1,2,3,4,7,8,9,10,11,12,13,21,22,23,24,25,26,29,30,31,32,33,34,35,36,37,38,39,40],"inclusive":true},"cond_use":{"rules":[0,4,5,6,7,8,9,10,11,12,13,21,22,23,24,25,26,29,30,31,32,33,34,35,36,37,38,39,40],"inclusive":true},"cond_comment":{"rules":[0,4,7,8,9,10,11,12,13,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40],"inclusive":true},"cond_string":{"rules":[0,4,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,29,30,31,32,33,34,35,36,37,38,39,40],"inclusive":true},"INITIAL":{"rules":[0,4,7,8,9,10,11,12,13,21,22,23,24,25,26,29,30,31,32,33,34,35,36,37,38,39,40],"inclusive":true}};
+lexer.rules = [/^(?:include[ \t\r\n>]*<)/,/^(?:[^\t\r\n>]*\/)/,/^(?:[^\t\r\n>/]+)/,/^(?:>)/,/^(?:use[ \t\r\n>]*<)/,/^(?:[^\t\r\n>]+)/,/^(?:>)/,/^(?:module)/,/^(?:function)/,/^(?:if)/,/^(?:else)/,/^(?:true)/,/^(?:false)/,/^(?:undef)/,/^(?:\\t)/,/^(?:\\n)/,/^(?:\\")/,/^(?:\\r)/,/^(?:\\\\)/,/^(?:\\0)/,/^(?:\\a)/,/^(?:\\b)/,/^(?:\\t)/,/^(?:\\n)/,/^(?:\\v)/,/^(?:\\f)/,/^(?:\\e)/,/^(?:[^\\\n\"]+)/,/^(?:")/,/^(?:[\"])/,/^(?:[\n])/,/^(?:[\r\t ])/,/^(?:\/\/[^\n]*\n?)/,/^(?:\/\*.+\*\/)/,/^(?:([0-9])*\.([0-9])+([Ee][+-]?([0-9])+)?)/,/^(?:([0-9])+\.([0-9])*([Ee][+-]?([0-9])+)?)/,/^(?:([0-9])+([Ee][+-]?([0-9])+)?)/,/^(?:\$?[a-zA-Z0-9_]+)/,/^(?:<=)/,/^(?:>=)/,/^(?:==)/,/^(?:!=)/,/^(?:&&)/,/^(?:\|\|)/,/^(?:.)/,/^(?:.)/];
+lexer.conditions = {"cond_include":{"rules":[0,1,2,3,4,7,8,9,10,11,12,13,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45],"inclusive":true},"cond_use":{"rules":[0,4,5,6,7,8,9,10,11,12,13,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45],"inclusive":true},"cond_comment":{"rules":[0,4,7,8,9,10,11,12,13,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45],"inclusive":true},"cond_string":{"rules":[0,4,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45],"inclusive":true},"INITIAL":{"rules":[0,4,7,8,9,10,11,12,13,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45],"inclusive":true}};
 return lexer;})()
 parser.lexer = lexer;
 return parser;

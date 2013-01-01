@@ -1,4 +1,8 @@
 define("Globals", [], function(){
+
+    var singleLineModuleRegex = /(module\s*\w*\([^\)]\)\w*)([^{};]*);/gm;
+    var singleLineModuleReplacement = "$1 {$2;};"; 
+    var multiLineCommentRegex = /((?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:\/\/.*))/gm;  
 	
 	function stripString (s) {
         if (/^\".*\"$/.test(s)){
@@ -24,6 +28,10 @@ define("Globals", [], function(){
         return val;
     }
 
+    function preParse(text){
+        return text.replace(multiLineCommentRegex, '').replace(singleLineModuleRegex, singleLineModuleReplacement);
+    }
+
     return {
         DEFAULT_RESOLUTION: 16,
         DEFAULT_2D_RESOLUTION: 16,
@@ -33,6 +41,7 @@ define("Globals", [], function(){
         module_stack: [],
         context_stack: [],
         stripString: stripString,
-        convertForStrFunction: convertForStrFunction
+        convertForStrFunction: convertForStrFunction,
+        preParse: preParse
     }
 });

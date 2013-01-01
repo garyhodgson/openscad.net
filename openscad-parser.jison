@@ -15,6 +15,7 @@ E [Ee][+-]?{D}+
 
 %%
 
+/* Note: use and include statements here are ignored. Instead they are preprocessed. */
 include[ \t\r\n>]*"<"        this.begin('cond_include');
 <cond_include>[^\t\r\n>]*"/" yy.filepath = yytext;
 <cond_include>[^\t\r\n>/]+   yy.filename = yytext;
@@ -33,21 +34,24 @@ use[ \t\r\n>]*"<"           this.begin('cond_use');
 "false"                     return 'TOK_FALSE'
 "undef"                     return 'TOK_UNDEF'
 
-
-/*
-[\"][^\"]*[\"]              { yy.stringcontents = yytext; return 'TOK_STRING' } //"
-*/
-
 <cond_string>"\\t"          %{ stringcontents += '    ';  %}
 <cond_string>"\\n"          %{ stringcontents += '\n';  %}
 <cond_string>"\\\""         %{ stringcontents += '\"';  %}
 <cond_string>"\\r"          %{ stringcontents += '\r';  %}
 <cond_string>"\\\\"         %{ stringcontents += '\\';  %}
+
+<cond_string>"\\0"          %{ stringcontents += '\0';  %}
+<cond_string>"\\a"          %{ stringcontents += '\a';  %}
+<cond_string>"\\b"          %{ stringcontents += '\b';  %}
+<cond_string>"\\t"          %{ stringcontents += '\t';  %}
+<cond_string>"\\n"          %{ stringcontents += '\n';  %}
+<cond_string>"\\v"          %{ stringcontents += '\v';  %}
+<cond_string>"\\f"          %{ stringcontents += '\f';  %}
+<cond_string>"\\e"          %{ stringcontents += '\e';  %}
 <cond_string>[^\\\n\"]+     %{ /*"*/ 
                                 stringcontents += yytext; 
                             %}
 <cond_string>"\""           %{
-                                //this.begin('INITIAL');
                                 this.popState();
                                 yytext = stringcontents; 
                                 return 'TOK_STRING'; 
@@ -57,15 +61,10 @@ use[ \t\r\n>]*"<"           this.begin('cond_use');
                                 stringcontents = ""; 
                             %}
 
-
 [\n]                        /* Ignore */
 [\r\t ]                     /* Ignore */
 \/\/[^\n]*\n?               /* Ignore */
-\/\*.*\*\/                  /* Ignore */
-"/*"                        %{ this.begin('cond_comment'); %}
-<cond_comment>[a-zA-Z0-9_]+|\n   /* Ignore */
-<cond_comment>"*/"          %{ this.popState(); %}
-
+\/\*.+\*\/                  /* Ignore Note: multi-line comments are removed via a preparse regex. */
 
 {D}*\.{D}+{E}?              return 'TOK_NUMBER'
 {D}+\.{D}*{E}?              return 'TOK_NUMBER'

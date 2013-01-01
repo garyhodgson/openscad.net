@@ -1,4 +1,4 @@
-define("Expression", ["Range"], function(Range){
+define("Expression", ["Range", "lib/sylvester"], function(Range){
 
 	function Expression(value) {
         this.children = [];
@@ -9,6 +9,33 @@ define("Expression", ["Range"], function(Range){
         this.type = "C";
     };
 
+    function isMatrix(x){
+        return _.isArray(x) && _.isArray(x[0]);
+    }
+
+    function isVector(x){
+        return _.isArray(x) && !_.isArray(x[0]);
+    }
+
+    function getValueObject(x){
+        if (isMatrix(x)){
+            return $M(x);
+        } else if (isVector(x)){
+            return $V(x);
+        } else {
+            return x;
+        }
+    }
+
+    Matrix.prototype.toString = function(){
+        var x = _.map(this.elements, function(y){ return "["+y.join(',')+"]"; });
+        return "["+x.join(',')+"]";
+    }
+
+    Vector.prototype.toString = function(){
+        return "["+this.elements.join(',')+"]";
+    }
+
     Expression.prototype.evaluate = function(context) {
             
         switch (this.type){
@@ -17,43 +44,225 @@ define("Expression", ["Range"], function(Range){
                 return ! this.children[0].evaluate(context);
                 break;
             case "&&":
-                return this.children[0].evaluate(context) && this.children[1].evaluate(context);
+                var c1 = this.children[0].evaluate(context);
+                var c2 = this.children[1].evaluate(context);
+                if (_.isArray(c1) || _.isArray(c2)){
+                    return true;
+                }
+                return c1 && c2;
                 break;
             case "||":
-                return this.children[0].evaluate(context) || this.children[1].evaluate(context);
+                var c1 = this.children[0].evaluate(context);
+                var c2 = this.children[1].evaluate(context);
+                if (_.isArray(c1) || _.isArray(c2)){
+                    return true;
+                }
+                return c1 || c2;
                 break;
             case "*":
-                return this.children[0].evaluate(context) * this.children[1].evaluate(context);
+                var c1 = this.children[0].evaluate(context);
+                var c2 = this.children[1].evaluate(context);
+
+                if (_.isArray(c1) || _.isArray(c2)){
+
+                    var v1 = getValueObject(c1);
+                    var v2 = getValueObject(c2);
+
+                    if (isVector(c1) && isVector(c2)){
+                        return v1.dot(v2);
+                    }
+
+                    if (isVector(c1) && isMatrix(c2)){
+                        return [v1.dot(v2.col(1)),
+                                v1.dot(v2.col(2)),
+                                v1.dot(v2.col(3))];
+                    }
+
+                    if (_.isNumber(c1)){
+                        return v2.multiply(v1);
+                    }
+
+                    return (v1.multiply(v2));
+
+                } 
+
+                return c1 * c2;
+                
                 break;
             case "/":
-                return this.children[0].evaluate(context) / this.children[1].evaluate(context);
+                var c1 = this.children[0].evaluate(context);
+                var c2 = this.children[1].evaluate(context);
+
+                if (_.isArray(c1) || _.isArray(c2)){
+
+                    var v1 = getValueObject(c1);
+                    var v2 = getValueObject(c2);
+
+                    if (_.isArray(c1) && _.isArray(c2)){
+                        return undefined;
+                    }
+
+                    if (isMatrix(c1) && _.isNumber(c2)){
+                        return v1.multiply(1/v2);
+                    }
+
+                    if (_.isNumber(c1) && isMatrix(c2)){
+                        var result = [];
+
+                        for (var i = 0; i < c2.length; i++){
+                            var a1 = [];
+                            for (var j = 0; j < c2[i].length; j++){
+                                a1[j] = c1 / c2[i][j];
+                            }
+                            result.push(a1);
+                        }
+                        return result;
+                    }
+
+                    if (isVector(c1) && _.isNumber(c2)) {
+                        return v1.multiply(1/v2);
+                    }
+
+                    if (_.isNumber(c1) && isVector(c2)) {
+                        return v2.multiply(1/v1);   
+                    }
+                } 
+
+                return c1 / c2;
+
                 break;
             case "%":
-                return this.children[0].evaluate(context) % this.children[1].evaluate(context);
+                var c1 = this.children[0].evaluate(context);
+                var c2 = this.children[1].evaluate(context);
+
+                if (_.isArray(c1) || _.isArray(c2)){
+                    return undefined;
+                }
+
+                return c1 % c2;
                 break;
             case "+":
-                return this.children[0].evaluate(context) + this.children[1].evaluate(context);
+                var c1 = this.children[0].evaluate(context);
+                var c2 = this.children[1].evaluate(context);
+
+                if (_.isArray(c1) && _.isArray(c2)){
+                    //matrices
+                    if (isMatrix(c1) && isMatrix(c2)){
+                        var minLength = Math.min(c1.length, c2.length);
+                        var result = [];
+
+                        for (var i = 0; i < minLength; i++){
+                            var a1 = [];
+                            for (var j = 0; j < c1[i].length; j++){
+                                a1[j] = c1[i][j] + c2[i][j];                                
+                            }
+                            result.push(a1);
+                        }
+                        return result; 
+                    } else if (isMatrix(c1) || isMatrix(c2)){
+                        return undefined;
+                    }
+                    return [c1[0] + c2[0], c1[1] + c2[1], c1[2] + c2[2]];
+                } else if (_.isArray(c1) || _.isArray(c2)){
+                    return undefined;
+                } else {
+                    return c1 + c2;
+                }
                 break;
             case "-":
-                return this.children[0].evaluate(context) - this.children[1].evaluate(context);
+                var c1 = this.children[0].evaluate(context);
+                var c2 = this.children[1].evaluate(context);
+
+                if (_.isArray(c1) && _.isArray(c2)){
+
+                    //matrices
+                    if (_.isArray(c1[0]) && _.isArray(c2[0])){
+                        var minLength = Math.min(c1.length, c2.length);
+                        var result = [];
+
+                        for (var i = 0; i < minLength; i++){
+                            var a1 = [];
+                            for (var j = 0; j < c1[i].length; j++){
+                                a1[j] = c1[i][j] - c2[i][j];                                
+                            }
+                            result.push(a1);
+                        }
+                        return result; 
+                    }
+
+                    return [c1[0] - c2[0], c1[1] - c2[1], c1[2] - c2[2]];
+                } else if (_.isArray(c1) || _.isArray(c2)){
+                    return undefined;
+                } else {
+                    return c1 - c2;
+                }
                 break;
             case "<":
-                return this.children[0].evaluate(context) < this.children[1].evaluate(context);
+                var c1 = this.children[0].evaluate(context);
+                var c2 = this.children[1].evaluate(context);
+
+                if (_.isArray(c1) || _.isArray(c2)){
+                    return false;
+                }
+                return c1 < c2;
                 break;
             case "<=":
-                return this.children[0].evaluate(context) <= this.children[1].evaluate(context);
+                var c1 = this.children[0].evaluate(context);
+                var c2 = this.children[1].evaluate(context);
+
+                if (_.isArray(c1) || _.isArray(c2)){
+                    return true;
+                }
+                return c1 <= c2;
                 break;
             case "==":
-                return this.children[0].evaluate(context) == this.children[1].evaluate(context);
+                var c1 = this.children[0].evaluate(context);
+                var c2 = this.children[1].evaluate(context);
+
+                if ((isVector(c1) && isVector(c2))
+                    || (isMatrix(c1) && isMatrix(c2))){
+                    var v1 = getValueObject(c1);
+                    var v2 = getValueObject(c2);
+                    return v1.eql(v2);
+                }
+                if (_.isArray(c1) || _.isArray(c2)){
+                    return false;
+                }
+                return c1 == c2;
                 break;
             case "!=":
-                return this.children[0].evaluate(context) != this.children[1].evaluate(context);
+                var c1 = this.children[0].evaluate(context);
+                var c2 = this.children[1].evaluate(context);
+
+                if ((isVector(c1) && isVector(c2))
+                    || (isMatrix(c1) && isMatrix(c2))){
+                    var v1 = getValueObject(c1);
+                    var v2 = getValueObject(c2);
+                    return !v1.eql(v2);
+                }
+
+                if (_.isArray(c1) || _.isArray(c2)){
+                    return true;
+                }
+                return c1 != c2;
                 break;
             case ">=":
-                return this.children[0].evaluate(context) >= this.children[1].evaluate(context);
+                var c1 = this.children[0].evaluate(context);
+                var c2 = this.children[1].evaluate(context);
+
+                if (_.isArray(c1) || _.isArray(c2)){
+                    return true;
+                }
+                return c1 >= c2;
                 break;
             case ">":
-                return this.children[0].evaluate(context) > this.children[1].evaluate(context);
+                var c1 = this.children[0].evaluate(context);
+                var c2 = this.children[1].evaluate(context);
+
+                if (_.isArray(c1) || _.isArray(c2)){
+                    return false;
+                }
+                return c1 > c2;
                 break;
             case "?:":
                 var v = this.children[0].evaluate(context);

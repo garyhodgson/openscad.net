@@ -31,7 +31,7 @@ define("ControlModules", ["Globals", "Context", "Range"], function(Globals, Cont
                 childInst.argvalues.push(expr.evaluate(context));
             });
 
-            var childAdaptor = factory.getAdaptor(childInst);
+            var childAdaptor = this.factory.getAdaptor(childInst);
 
             childModules.push(childAdaptor.evaluate(context, childInst));
         };

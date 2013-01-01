@@ -16,9 +16,9 @@ requirejs.config({
       }
 });
 
-define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.insert.html", "Context", "lib/jquery-ui-latest", "lib/jquery.layout-latest","lib/jquery.fontselector","lib/modernizr", "lib/dropbox", 
+define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.insert.html", "Globals", "Context", "lib/jquery-ui-latest", "lib/jquery.layout-latest","lib/jquery.fontselector","lib/modernizr", "lib/dropbox", 
   "lib/jquery.jstree", "lib/bootstrap", "lib/jquery.textarea", "lib/jquery.mousewheel", "lib/underscore", "lib/garlic", "lib/shortcut", "lib/bootbox",  
-  "lib/lightgl", "openjscad"], function(jQuery, openscadParser, examples_insert, Context) {
+  "lib/lightgl", "openjscad"], function(jQuery, openscadParser, examples_insert, Globals, Context) {
 
     var uiLayout, logLayout;
     var filetree;
@@ -454,12 +454,12 @@ define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.inse
           for (var i in lines){
             var line = lines[i];
 
-            var includedLibrary = line.match(/include <([^>]*)>;/);
+            var includedLibrary = line.match(/include <([^>]*)>;?/);
             if (includedLibrary != null){
               libraries.push(['include',includedLibrary[1]]);
             }
 
-            var usedLibrary = line.match(/use <([^>]*)>;/);
+            var usedLibrary = line.match(/use <([^>]*)>;?/);
             if (usedLibrary != null){
               libraries.push(['use',usedLibrary[1]]);
             }
@@ -474,8 +474,6 @@ define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.inse
     }
 
     function newParse(lines, libraries, cb) {
-      var singleLineModuleRegex = /(module\s*\w*\([^\)]\)\w*)([^{};]*);/gm;
-      var singleLineModuleReplacement = "$1 {$2;};"; 
 
       if (libraries.length>0){
 
@@ -486,10 +484,11 @@ define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.inse
         var libContent = globalLibs[filename];
 
         // the following hack puts single line module definitions into braces
-        libContent = libContent.replace(singleLineModuleRegex, singleLineModuleReplacement);
+        libContent = Globals.preParse(libContent);
 
         if (isUse){
           var usedModuleResult = openscadParser.parse(libContent);
+          console.log("usedModuleResult = ",usedModuleResult);
           openscadParser.yy.context = usedModuleResult.context;
         } else {
           var fileTextLines = libContent.split("\n");
@@ -502,21 +501,24 @@ define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.inse
         var joinedLines = lines.join('\n');
 
         // the following hack puts single line module definitions into braces
-        joinedLines = joinedLines.replace(singleLineModuleRegex, singleLineModuleReplacement);
+        joinedLines = Globals.preParse(joinedLines);
 
         console.log(joinedLines);
 
-        var result = openscadParser.parse(joinedLines);
-        cb(result);
+        try {
+          var result = openscadParser.parse(joinedLines);
+          cb(result);
+        } catch (e) {
+          onError(e);
+          console.error(e.stack);
+        }
       }
       
     }
 
     function display(result) {
       var resultText = result.lines.join('\n');
-
-      Context.printContext(result.context);
-
+      
       console.log(resultText);
       
       gProcessor.setJsCad(resultText, getOutputFilename());
@@ -536,11 +538,11 @@ define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.inse
 
 
     function onError(e) {
-      logMessage('Error' + e.name);
+      logMessage(_.template("An error occurred: [<%=name%>] <%=message%>", e));
     }
 
     var showError = function(error) {
-      logMessage("Dropbox Error: "+error);
+      onError(error);
       
       switch (error.status) {
       case 401:

@@ -65,7 +65,7 @@ define("Context", ["Globals", "openscad-parser-support"], function(Globals, Open
             return this.parentContext.evaluateFunction(name, argnames, argvalues);
         }
             
-        console.log("WARNING: Ignoring unknown function '"+name+"'.");
+        logMessage("WARNING: Ignoring unknown function '"+name+"'.");
         return undefined;
     };
 
@@ -93,7 +93,7 @@ define("Context", ["Globals", "openscad-parser-support"], function(Globals, Open
             return this.parentContext.evaluateModule(inst, factory);
         }
 
-        console.log("WARNING: Ignoring unknown module: " + inst.name);
+        logMessage("WARNING: Ignoring unknown module: " + inst.name);
         return undefined;
     };
 
@@ -134,9 +134,19 @@ define("Context", ["Globals", "openscad-parser-support"], function(Globals, Open
         return parseInt(Math.ceil(Math.max(Math.min(360.0 / fa, r*2*Math.PI / fs), 5)));
     };
 
-    var functionNameLookup = {"cos":Math.cosdeg,"sin":Math.sindeg, "acos":Math.acosdeg,"asin":Math.asindeg,"atan":Math.atandeg,"atan2":Math.atan2deg,"tan":Math.tandeg,"max":Math.max,"min":Math.min, "ln":Math.log, 
+    var functionNameLookup = {
+        "cos":Math.cosdeg,
+        "sin":Math.sindeg, 
+        "acos":Math.acosdeg,
+        "asin":Math.asindeg,
+        "atan":Math.atandeg,
+        "atan2":Math.atan2deg,
+        "tan":Math.tandeg,
+        "max":Math.max,
+        "min":Math.min, 
+        "ln":Math.log, 
         "len":function(val){
-            var x = _.isString(val[0]) ? Globals.stripString(val[0]) : val[0];
+            var x = _.isString(val) ? Globals.stripString(val) : val;
             return x.length;
         },
         "log":function(){
@@ -150,7 +160,7 @@ define("Context", ["Globals", "openscad-parser-support"], function(Globals, Open
         },
         "str":function(){
             var vals = [];
-            _.each(arguments[0], function(x){
+            _.each(arguments, function(x){
                 vals.push(Globals.convertForStrFunction(x));
             });
 

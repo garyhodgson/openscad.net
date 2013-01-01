@@ -50,7 +50,7 @@ define("OpenjscadSolidFactory", ["Context", "Globals",  "PrimitiveModules", "Tra
             case "intersection_for":
                 return new ControlModules.ForLoopStatement(this, {csgOp:"intersect"});
             case "if":
-                return new ControlModules.IfStatement();
+                return new ControlModules.IfStatement(this);
             case "child":
                 return new ChildModule(this);
             default:
