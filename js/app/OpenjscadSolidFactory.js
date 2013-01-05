@@ -1,10 +1,11 @@
-define("OpenjscadSolidFactory", ["Context", "Globals",  "PrimitiveModules", "TransformModules", "ControlModules", "CSGModule", "ChildModule", "ModuleAdaptor"], 
-		function(Context, Globals,  PrimitiveModules, TransformModules, ControlModules, CSGModule, ChildModule, ModuleAdaptor){
+define("OpenjscadSolidFactory", ["Context", "Globals",  "PrimitiveModules", "TransformModules", "ControlModules", "CSGModule", "ChildModule", "ModuleAdaptor", "ImportModule"], 
+		function(Context, Globals,  PrimitiveModules, TransformModules, ControlModules, CSGModule, ChildModule, ModuleAdaptor, ImportModule){
 	
 	function OpenjscadSolidFactory(){};
 
     OpenjscadSolidFactory.prototype.getAdaptor = function(args) {
         switch(args.name){
+
             case "cube": 
                 return new PrimitiveModules.Cube();
             case "sphere":
@@ -51,6 +52,8 @@ define("OpenjscadSolidFactory", ["Context", "Globals",  "PrimitiveModules", "Tra
                 return new ControlModules.ForLoopStatement(this, {csgOp:"intersect"});
             case "if":
                 return new ControlModules.IfStatement(this);
+            case "import": 
+                return new ImportModule(this);
             case "child":
                 return new ChildModule(this);
             default:

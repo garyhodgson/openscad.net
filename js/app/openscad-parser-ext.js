@@ -17,6 +17,12 @@ define(["Module", "Context", "Globals", "FunctionDef", "openscad-parser-support"
         var context = undefined;
         if (yy.context !== undefined){
             context = yy.context;
+        } else {
+            context = new Context();
+        }
+
+        if (yy.importCache !== undefined){
+            context.setVariable("importCache", yy.importCache);
         }
 
         var res = currmodule.evaluate(context);

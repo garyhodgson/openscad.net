@@ -1,10 +1,26 @@
 <html>
 <head>
 	<title></title>
+	<style type="text/css">
+
+	canvas {
+        border: 1px dashed red;
+		position:relative;
+		left: 50;
+		top: 20;
+    }
+	
+	</style>
 </head>
 <body>
 
-	<script data-main="js/test_recursive_includes" src="js/require.min.js"></script>
+	<canvas id="myCanvas" width="400" height="400">
+		HTML5 canvas failed to load.
+	</canvas>
+
+	<!--<script data-main="js/test_recursive_includes" src="js/require.js"></script>-->
+	<script data-main="js/test_stl_import" src="js/require.js"></script>
+
 
 </body>
 </html>

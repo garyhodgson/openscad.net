@@ -42,6 +42,9 @@ define("Globals", [], function(){
         context_stack: [],
         stripString: stripString,
         convertForStrFunction: convertForStrFunction,
-        preParse: preParse
+        preParse: preParse,
+        importedObjectRegex: /import\([^\"]*\"([^\)]*)\"[,]?.*\);?/,
+        usedLibraryRegex: /use <([^>]*)>;/,
+        includedLibraryRegex: /include <([^>]*)>;/
     }
 });

@@ -79,6 +79,11 @@ define("ControlModules", ["Globals", "Context", "Range"], function(Globals, Cont
                 evaluatedChildren = _.union(evaluatedChildren, inst.evaluateChildren(arg_context));
             }
 
+            if (_.isArray(evaluatedChildren)){
+                // remove empty arrays (e.g. for loops containing only echo statements)
+                evaluatedChildren = _.reject(evaluatedChildren, function(x){ return _.isEmpty(x); });
+            }
+
             // Note: we union here so subsequent actions (e.g. translate) can be performed on the entire result of the for loop.
             if (_.isArray(evaluatedChildren) && evaluatedChildren.length > 1){
                 var unionedEvaluatedChildren = _.first(evaluatedChildren)+"."+this.csgOp+"([" + _.rest(evaluatedChildren) + "])";

@@ -16,14 +16,16 @@ requirejs.config({
       }
 });
 
-define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.insert.html", "Globals", "Context", "lib/jquery-ui-latest", "lib/jquery.layout-latest","lib/jquery.fontselector","lib/modernizr", "lib/dropbox", 
+define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.insert.html", "Globals", "Context", 
+  "text!../../tmp/example016.stl", "StlDecoder",
+  "lib/jquery-ui-latest", "lib/jquery.layout-latest","lib/jquery.fontselector","lib/modernizr", "lib/dropbox", 
   "lib/jquery.jstree", "lib/bootstrap", "lib/jquery.textarea", "lib/jquery.mousewheel", "lib/underscore", "lib/garlic", "lib/shortcut", "lib/bootbox",  
-  "lib/lightgl", "openjscad"], function(jQuery, openscadParser, examples_insert, Globals, Context) {
+  "lib/lightgl", "openjscad"], function(jQuery, openscadParser, examples_insert, Globals, Context, test_stl, StlDecoder) {
 
     var uiLayout, logLayout;
     var filetree;
     var gProcessor=null;
-    var auto_reload;
+    var autoReload;
     var lastEditorContent = '';
     var editorIsDirty = false;
     var modelIsShown = false;
@@ -36,6 +38,7 @@ define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.inse
       "sunrise": { backgroundColor: [196/255, 207/255, 210/255], faceColor: [255/255, 245/255, 184/255, 1.0] }
     };
     var globalLibs = {};
+    var importCache = {};
 
     $(function() {
 
@@ -80,7 +83,7 @@ define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.inse
       $('#settingsForm').garlic({conflictManager: {enabled: false}});
       show_axis = $('input[name=menu_view_show_axis]').attr("checked")=="checked";
       show_grid = $('input[name=menu_view_show_grid]').attr("checked")=="checked";
-      auto_reload = $('input[name=menu_design_auto_reload]').attr("checked")=="checked";
+      autoReload = $('input[name=menu_design_auto_reload]').attr("checked")=="checked";
       hideEditor();
       hideConsole();
       if (!$('#sourcetype_openscad').attr('checked') && !$('#sourcetype_openjscad').attr('checked')){
@@ -215,7 +218,7 @@ define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.inse
       });
 
 	    $('input[name=menu_design_auto_reload]').change(function () {
-      	auto_reload = $(this).attr('checked')=='checked';
+      	autoReload = $(this).attr('checked')=='checked';
       });
 
       $('#menu_view_clear_console').click(clearConsole);
@@ -247,7 +250,7 @@ define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.inse
         
       });
 
-      if (auto_reload){
+      if (autoReload){
         updateSolid();
       }
 
@@ -396,20 +399,23 @@ define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.inse
         for (var i in lines){
           var line = lines[i];
 
-          var includedLibrary = line.match(/include <([^>]*)>;/);
+          var includedLibrary = line.match(Globals.includedLibraryRegex);
           if (includedLibrary != null){
             globalLibs[includedLibrary[1]] = undefined;
           }
 
-          var usedLibrary = line.match(/use <([^>]*)>;/);
+          var usedLibrary = line.match(Globals.usedLibraryRegex);
           if (usedLibrary != null){
             globalLibs[usedLibrary[1]] = undefined;
           }
 
+          var importedObject = line.match(Globals.importedObjectRegex);
+          if (importedObject != null){
+            globalLibs[importedObject[1]] = undefined;
+          }
+
         }
     }
-
-    
 
     function collateLibraries(text, cb){
 
@@ -418,16 +424,33 @@ define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.inse
       _.each(globalLibs, function (value, key, list) {
         if (value == undefined){
 
-          client.readFile(key, null, function(error, content, stat) {
-            if (error) {
-              return showError(error);
-            }
+          if (/.*\.stl$/.test(key)){
+            client.readFile(key, {binary:true}, function(error, content, stat) {
+              if (error) {
+                return showError(error);
+              }
+              console.log(content.length);
 
-            globalLibs[key] = content;
+              globalLibs[key] = btoa(content);
 
-            collateLibraries(content, cb);
+              console.log(globalLibs[key]);
 
-          });
+              collateLibraries("", cb);
+
+            });
+
+          } else if (/.*\.scad$/.test(key)){
+            client.readFile(key, null, function(error, content, stat) {
+              if (error) {
+                return showError(error);
+              }
+
+              globalLibs[key] = content;
+
+              collateLibraries(content, cb);
+
+            });
+          }
         }
       })
 
@@ -442,6 +465,7 @@ define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.inse
 
 
     function updateSolid() {
+
       if ($('#sourcetype_openscad').attr("checked")== "checked"){
 
         var openSCADText = $('#editor').val()
@@ -454,14 +478,19 @@ define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.inse
           for (var i in lines){
             var line = lines[i];
 
-            var includedLibrary = line.match(/include <([^>]*)>;?/);
+            var includedLibrary = line.match(Globals.includedLibraryRegex);
             if (includedLibrary != null){
               libraries.push(['include',includedLibrary[1]]);
             }
 
-            var usedLibrary = line.match(/use <([^>]*)>;?/);
+            var usedLibrary = line.match(Globals.usedLibraryRegex);
             if (usedLibrary != null){
               libraries.push(['use',usedLibrary[1]]);
+            }
+
+            var importedObject = line.match(Globals.importedObjectRegex);
+            if (importedObject != null){
+              libraries.push(['import',importedObject[1]]);
             }
 
           }
@@ -479,20 +508,34 @@ define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.inse
 
         var library = libraries[0];
         var isUse = library[0] == 'use';
+        var isInclude = library[0] == 'include';
+        var isImport = library[0] == 'import';
         var filename = library[1];
 
-        var libContent = globalLibs[filename];
+        var libContent = globalLibs[filename]||"";
 
-        // the following hack puts single line module definitions into braces
-        libContent = Globals.preParse(libContent);
+        switch (library[0]){
+          case 'use':
+            // the following hack puts single line module definitions into braces
+            libContent = Globals.preParse(libContent);
 
-        if (isUse){
-          var usedModuleResult = openscadParser.parse(libContent);
-          console.log("usedModuleResult = ",usedModuleResult);
-          openscadParser.yy.context = usedModuleResult.context;
-        } else {
-          var fileTextLines = libContent.split("\n");
-          lines = _.union(fileTextLines, lines);
+            var usedModuleResult = openscadParser.parse(libContent);
+            console.log("usedModuleResult = ",usedModuleResult);
+            openscadParser.yy.context = usedModuleResult.context;
+            break;
+          case 'include':
+            // the following hack puts single line module definitions into braces
+            libContent = Globals.preParse(libContent);
+
+            var fileTextLines = libContent.split("\n");
+            lines = _.union(fileTextLines, lines);
+            break;
+          case 'import':
+            importCache[filename] = libContent;
+            openscadParser.yy.importCache = importCache;
+            break;
+          default:
+            throw Error("Unknown parse replacement command: " + library[0]);
         }
 
         newParse(lines, libraries.slice(1), cb);
@@ -509,8 +552,7 @@ define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.inse
           var result = openscadParser.parse(joinedLines);
           cb(result);
         } catch (e) {
-          onError(e);
-          console.error(e.stack);
+          logMessage("Error: " + e);
         }
       }
       
@@ -536,13 +578,8 @@ define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.inse
       return y.substring(0,q==-1?y.length:q);
     }
 
-
-    function onError(e) {
-      logMessage(_.template("An error occurred: [<%=name%>] <%=message%>", e));
-    }
-
     var showError = function(error) {
-      onError(error);
+      logMessage(_.template("An error occurred: [<%=name%>] <%=message%>", {name: error.status, message: error.responseText}));
       
       switch (error.status) {
       case 401:

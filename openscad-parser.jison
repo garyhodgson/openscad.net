@@ -8,7 +8,7 @@
 %options flex
 
 
-%s cond_include cond_use cond_comment cond_string
+%s cond_include cond_use cond_comment cond_string cond_import
 
 D [0-9]
 E [Ee][+-]?{D}+
@@ -16,15 +16,14 @@ E [Ee][+-]?{D}+
 %%
 
 /* Note: use and include statements here are ignored. Instead they are preprocessed. */
-include[ \t\r\n>]*"<"        this.begin('cond_include');
-<cond_include>[^\t\r\n>]*"/" yy.filepath = yytext;
-<cond_include>[^\t\r\n>/]+   yy.filename = yytext;
+include[ \t\r\n>]*"<"        %{ this.begin('cond_include'); %}
+<cond_include>[^\t\r\n>]*"/" %{ yy.filepath = yytext; %}
+<cond_include>[^\t\r\n>/]+   %{ yy.filename = yytext; %}
 <cond_include>">"            %{  this.popState(); %}
 
-use[ \t\r\n>]*"<"           this.begin('cond_use');
-<cond_use>[^\t\r\n>]+       yy.filename = yytext;
-<cond_use>">"               %{  this.popState(); %}
-
+use[ \t\r\n>]*"<"           %{ this.begin('cond_use');%}
+<cond_use>[^\t\r\n>]+       %{ yy.filename = yytext; %}
+<cond_use>">"               %{ this.popState(); %}
 
 "module"                    return 'TOK_MODULE'
 "function"                  return 'TOK_FUNCTION'

@@ -694,19 +694,19 @@ lexer.performAction = function anonymous(yy,yy_,$avoiding_name_collisions,YY_STA
 
 var YYSTATE=YY_START
 switch($avoiding_name_collisions) {
-case 0:this.begin('cond_include');
+case 0: this.begin('cond_include'); 
 break;
-case 1:yy.filepath = yy_.yytext;
+case 1: yy.filepath = yy_.yytext; 
 break;
-case 2:yy.filename = yy_.yytext;
+case 2: yy.filename = yy_.yytext; 
 break;
 case 3:  this.popState(); 
 break;
-case 4:this.begin('cond_use');
+case 4: this.begin('cond_use');
 break;
-case 5:yy.filename = yy_.yytext;
+case 5: yy.filename = yy_.yytext; 
 break;
-case 6:  this.popState(); 
+case 6: this.popState(); 
 break;
 case 7:return 9
 break;
@@ -798,7 +798,7 @@ break;
 }
 };
 lexer.rules = [/^(?:include[ \t\r\n>]*<)/,/^(?:[^\t\r\n>]*\/)/,/^(?:[^\t\r\n>/]+)/,/^(?:>)/,/^(?:use[ \t\r\n>]*<)/,/^(?:[^\t\r\n>]+)/,/^(?:>)/,/^(?:module)/,/^(?:function)/,/^(?:if)/,/^(?:else)/,/^(?:true)/,/^(?:false)/,/^(?:undef)/,/^(?:\\t)/,/^(?:\\n)/,/^(?:\\")/,/^(?:\\r)/,/^(?:\\\\)/,/^(?:\\0)/,/^(?:\\a)/,/^(?:\\b)/,/^(?:\\t)/,/^(?:\\n)/,/^(?:\\v)/,/^(?:\\f)/,/^(?:\\e)/,/^(?:[^\\\n\"]+)/,/^(?:")/,/^(?:[\"])/,/^(?:[\n])/,/^(?:[\r\t ])/,/^(?:\/\/[^\n]*\n?)/,/^(?:\/\*.+\*\/)/,/^(?:([0-9])*\.([0-9])+([Ee][+-]?([0-9])+)?)/,/^(?:([0-9])+\.([0-9])*([Ee][+-]?([0-9])+)?)/,/^(?:([0-9])+([Ee][+-]?([0-9])+)?)/,/^(?:\$?[a-zA-Z0-9_]+)/,/^(?:<=)/,/^(?:>=)/,/^(?:==)/,/^(?:!=)/,/^(?:&&)/,/^(?:\|\|)/,/^(?:.)/,/^(?:.)/];
-lexer.conditions = {"cond_include":{"rules":[0,1,2,3,4,7,8,9,10,11,12,13,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45],"inclusive":true},"cond_use":{"rules":[0,4,5,6,7,8,9,10,11,12,13,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45],"inclusive":true},"cond_comment":{"rules":[0,4,7,8,9,10,11,12,13,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45],"inclusive":true},"cond_string":{"rules":[0,4,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45],"inclusive":true},"INITIAL":{"rules":[0,4,7,8,9,10,11,12,13,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45],"inclusive":true}};
+lexer.conditions = {"cond_include":{"rules":[0,1,2,3,4,7,8,9,10,11,12,13,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45],"inclusive":true},"cond_use":{"rules":[0,4,5,6,7,8,9,10,11,12,13,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45],"inclusive":true},"cond_comment":{"rules":[0,4,7,8,9,10,11,12,13,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45],"inclusive":true},"cond_string":{"rules":[0,4,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45],"inclusive":true},"cond_import":{"rules":[0,4,7,8,9,10,11,12,13,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45],"inclusive":true},"INITIAL":{"rules":[0,4,7,8,9,10,11,12,13,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45],"inclusive":true}};
 return lexer;})()
 parser.lexer = lexer;
 return parser;
