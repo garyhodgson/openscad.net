@@ -38,23 +38,28 @@ define("ControlModules", ["Globals", "Context", "Range"], function(Globals, Cont
         if (_.isEmpty(childModules)){
             return undefined;
         } else {
-            return childModules;
+            if (childModules.length > 1){
+                return _.first(childModules)+".union([" + _.rest(childModules) + "])";
+            } else {
+                return childModules[0];
+            }
         }
     };
 
     function ForLoopStatement(factory, args){
         ControlModule.call(this, factory);
         this.csgOp = args.csgOp;
+        this.evaluatedChildren = [];
 
-        this.forEval = function(parentEvaluatedChildren, inst, recurs_length, call_argnames, call_argvalues, arg_context)
-        {
-            evaluatedChildren = parentEvaluatedChildren;
+        this.forEval = function(parentEvaluatedChildren, inst, recurs_length, call_argnames, call_argvalues, arg_context) {
+
+            this.evaluatedChildren = parentEvaluatedChildren;
 
             if (call_argnames.length > recurs_length) {
                 var it_name = call_argnames[recurs_length];
                 var it_values = call_argvalues[recurs_length];
                 var context = new Context(arg_context);
-            
+
                 if (it_values instanceof Range) {
                     var range = it_values;
                     if (range.end < range.begin) {
@@ -65,31 +70,37 @@ define("ControlModules", ["Globals", "Context", "Range"], function(Globals, Cont
                     if (range.step > 0 && (range.begin-range.end)/range.step < 10000) {
                         for (var i = range.begin; i <= range.end; i += range.step) {
                             context.setVariable(it_name, i);
-                            this.forEval(evaluatedChildren, inst, recurs_length+1, call_argnames, call_argvalues, context);
+                            this.forEval(this.evaluatedChildren, inst, recurs_length+1, call_argnames, call_argvalues, context);
                         }
                     }
                 }
                 else if (_.isArray(it_values)) {
                     for (var i = 0; i < it_values.length; i++) {
                         context.setVariable(it_name, it_values[i]);
-                        this.forEval(evaluatedChildren, inst, recurs_length+1, call_argnames, call_argvalues, context);
+                        this.forEval(this.evaluatedChildren, inst, recurs_length+1, call_argnames, call_argvalues, context);
                     }
                 }
             } else if (recurs_length > 0) {
-                evaluatedChildren = _.union(evaluatedChildren, inst.evaluateChildren(arg_context));
+                var evaluatedInstanceChildren = inst.evaluateChildren(arg_context);
+                if (_.isArray(evaluatedInstanceChildren)){
+                    this.evaluatedChildren = this.evaluatedChildren.concat(evaluatedInstanceChildren);
+                } else {
+                    this.evaluatedChildren.push(evaluatedInstanceChildren);
+                }
             }
 
-            if (_.isArray(evaluatedChildren)){
+            if (_.isArray(this.evaluatedChildren)){
                 // remove empty arrays (e.g. for loops containing only echo statements)
-                evaluatedChildren = _.reject(evaluatedChildren, function(x){ return _.isEmpty(x); });
+                this.evaluatedChildren = _.reject(this.evaluatedChildren, function(x){ return _.isEmpty(x); });
             }
 
             // Note: we union here so subsequent actions (e.g. translate) can be performed on the entire result of the for loop.
-            if (_.isArray(evaluatedChildren) && evaluatedChildren.length > 1){
-                var unionedEvaluatedChildren = _.first(evaluatedChildren)+"."+this.csgOp+"([" + _.rest(evaluatedChildren) + "])";
-                evaluatedChildren = unionedEvaluatedChildren;
+            if (_.isArray(this.evaluatedChildren) && this.evaluatedChildren.length > 1){
+                var unionedEvaluatedChildren = _.first(this.evaluatedChildren)+"."+this.csgOp+"([" + _.rest(this.evaluatedChildren) + "])";
+                this.evaluatedChildren = [unionedEvaluatedChildren];
             }
-            return evaluatedChildren;
+            
+            return this.evaluatedChildren;
         };
     };
 
@@ -98,7 +109,6 @@ define("ControlModules", ["Globals", "Context", "Range"], function(Globals, Cont
         if (inst.context === undefined){
             inst.context = context;
         }
-
         return this.forEval([], inst, 0, inst.argnames, inst.argvalues, inst.context);
     };
 

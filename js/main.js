@@ -170,7 +170,7 @@ define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.inse
       }
 
       $('.loadExample').click(function() {
-          loadExample($(this).text());
+          loadExample($(this).attr('data-filename'));
       })
 
       $('#fontSelect').fontSelector({
@@ -552,6 +552,8 @@ define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.inse
           var result = openscadParser.parse(joinedLines);
           cb(result);
         } catch (e) {
+          console.error(e.message);
+          console.error(e.stack);
           logMessage("Error: " + e);
         }
       }

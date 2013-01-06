@@ -96,7 +96,7 @@ define("TransformModules", ["Globals", "Context"], function(Globals, Context){
     };
 
     RotateTransform.prototype.evaluate = function(parentContext, inst){
-        
+
         inst.argvalues = [];
 
         _.each(inst.argexpr, function(expr,index,list) {
@@ -114,7 +114,7 @@ define("TransformModules", ["Globals", "Context"], function(Globals, Context){
         } else {
             var v = Context.contextVariableLookup(context, "v", undefined);
             return this.transformChildren(inst.children, context, function(){
-                if (v.toString() =="0,0,0"){
+                if (v === undefined || v.toString() =="0,0,0"){
                     v = [0,0,1];
                 }
                 return _.template('.transform(CSG.Matrix4x4.rotation([0,0,0], [<%=vector%>], <%=degree%>))', {degree:a, vector:v});
@@ -247,7 +247,7 @@ define("TransformModules", ["Globals", "Context"], function(Globals, Context){
 
         var height = Context.contextVariableLookup(context, "height", 100);
         var center = Context.contextVariableLookup(context, "center", false);
-        var twist = Number(contextVariableLookup(context, "twist", 0))/-1; // note inverse for openjscad
+        var twist = Number(Context.contextVariableLookup(context, "twist", 0))/-1; // note inverse for openjscad
         var slices = Context.contextVariableLookup(context, "slices", undefined);
         var fn = Context.contextVariableLookup(context, "$fn", Globals.FN_DEFAULT);
         var fs = Context.contextVariableLookup(context, "$fs", Globals.FS_DEFAULT);
