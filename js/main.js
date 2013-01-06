@@ -16,11 +16,10 @@ requirejs.config({
       }
 });
 
-define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.insert.html", "Globals", "Context", 
-  "text!../../tmp/example016.stl", "StlDecoder",
+define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.insert.html", "Globals", "Context", "StlDecoder",
   "lib/jquery-ui-latest", "lib/jquery.layout-latest","lib/jquery.fontselector","lib/modernizr", "lib/dropbox", 
   "lib/jquery.jstree", "lib/bootstrap", "lib/jquery.textarea", "lib/jquery.mousewheel", "lib/underscore", "lib/garlic", "lib/shortcut", "lib/bootbox",  
-  "lib/lightgl", "openjscad"], function(jQuery, openscadParser, examples_insert, Globals, Context, test_stl, StlDecoder) {
+  "lib/lightgl", "openjscad"], function(jQuery, openscadParser, examples_insert, Globals, Context, StlDecoder) {
 
     var uiLayout, logLayout;
     var filetree;
