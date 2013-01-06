@@ -246,7 +246,6 @@
 		}
 		
 		if (this.dataType==this.TYPE_BINARY) {
-			console.log("numTriangles = ",numTriangles);
 			for (i=0; i<numTriangles; i++) {
 				
 				var csgVertices = [];

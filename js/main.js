@@ -428,12 +428,7 @@ define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.inse
               if (error) {
                 return showError(error);
               }
-              console.log(content.length);
-
               globalLibs[key] = btoa(content);
-
-              console.log(globalLibs[key]);
-
               collateLibraries("", cb);
 
             });
@@ -519,7 +514,6 @@ define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.inse
             libContent = Globals.preParse(libContent);
 
             var usedModuleResult = openscadParser.parse(libContent);
-            console.log("usedModuleResult = ",usedModuleResult);
             openscadParser.yy.context = usedModuleResult.context;
             break;
           case 'include':
@@ -544,8 +538,6 @@ define("main",["lib/jquery-latest", "openscad-parser", "text!../../examples.inse
 
         // the following hack puts single line module definitions into braces
         joinedLines = Globals.preParse(joinedLines);
-
-        console.log(joinedLines);
 
         try {
           var result = openscadParser.parse(joinedLines);
