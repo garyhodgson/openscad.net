@@ -1,6 +1,6 @@
 define("Globals", [], function(){
 
-    var singleLineModuleRegex = /(module\s*\w*\([^\)]\)\w*)([^{};]*);/gm;
+    var singleLineModuleRegex = /(module\s*\w*\([^\)]*\)[\w\n]*)([^{};]*);/gm;
     var singleLineModuleReplacement = "$1 {$2;};"; 
     var multiLineCommentRegex = /((?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:\/\/.*))/gm;  
 	
@@ -44,7 +44,7 @@ define("Globals", [], function(){
         convertForStrFunction: convertForStrFunction,
         preParse: preParse,
         importedObjectRegex: /import\([^\"]*\"([^\)]*)\"[,]?.*\);?/,
-        usedLibraryRegex: /use <([^>]*)>;/,
+        usedLibraryRegex: /use <([^>]*)>;?/,
         includedLibraryRegex: /include <([^>]*)>;/
     }
 });
