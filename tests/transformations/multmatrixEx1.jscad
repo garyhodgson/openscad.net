@@ -1,4 +1,3 @@
-WARNING: Ignoring unknown variable 'r'.
 function main(){
 
 

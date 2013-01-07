@@ -1,31 +1,49 @@
-var assert = require("assert");
-var parser = require("../openscad-parser").parser;
-var fs = require("fs");
+var requirejs = require('requirejs');
 
-function parse(s) {
-    return parser.parse(s);
-}
+requirejs.config({
+    baseUrl: '../js/app',
+    paths: {
+        lib: '../lib'
+    },
+    nodeRequire: require
+});
 
-function check(testFileName) {
-    var actual = fs.readFileSync("modules/"+testFileName+".scad", "UTF8");
-    var expected = fs.readFileSync("modules/"+testFileName+".jscad", "UTF8");
-    assert.ok(parse(actual).lines.join('\n').indexOf(expected));
-}
+requirejs(["fs", "assert", "openscad-parser", "Globals", "openscad-parser-support"], 
+    function(fs, assert, parser, Globals, parser_support) {
 
-exports["test modules"] = function() {
-    check("modulesEx1");
-}
+    var filedir = "modules/";
 
-exports["test modules child"] = function() {
-    check("modulesChildEx1");
-}
+    logMessage = function(msg){
+        console.log("\n"+msg+"\n");
+    }
 
-exports["test modules children"] = function() {
-    check("modulesChildrenEx1");
-}
+    function parse(s) {
+        return parser.parse(s);
+    }
 
-exports["test modules parameters"] = function() {
-    check("modulesParametersEx1");
-}
+    function check(testFileName) {
+        var test = fs.readFileSync(filedir+testFileName+".scad", "utf8");
+        var expected = fs.readFileSync(filedir+testFileName+".jscad", "utf8").replace(/\n/g,'');
+        var actual = parse(test).lines.join('').replace(/\n/g,'');
+        assert.equal(actual, expected, console.log(testFileName));
+    }
 
-if(module === require.main) require("test").run(exports);
+	exports["test modules"] = function() {
+	    check("modulesEx1");
+	}
+
+	exports["test modules child"] = function() {
+	    check("modulesChildEx1");
+	}
+
+	exports["test modules children"] = function() {
+	    check("modulesChildrenEx1");
+	}
+
+	exports["test modules parameters"] = function() {
+	    check("modulesParametersEx1");
+	}
+
+	if(module === require.main) require("test").run(exports);
+
+});

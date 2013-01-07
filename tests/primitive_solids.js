@@ -1,42 +1,60 @@
-var assert = require("assert");
-var parser = require("../openscad-parser").parser;
-var fs = require("fs");
+var requirejs = require('requirejs');
 
-function parse(s) {
-    return parser.parse(s);
-}
+requirejs.config({
+    baseUrl: '../js/app',
+    paths: {
+        lib: '../lib'
+    },
+    nodeRequire: require
+});
 
-function check(testFileName) {
-    var actual = fs.readFileSync("primitive_solids/"+testFileName+".scad", "UTF8");
-    var expected = fs.readFileSync("primitive_solids/"+testFileName+".jscad", "UTF8");
-    assert.ok(parse(actual).lines.join('\n').indexOf(expected));
-}
+requirejs(["fs", "assert", "openscad-parser", "Globals", "openscad-parser-support"], 
+    function(fs, assert, parser, Globals, parser_support) {
 
-exports["test cube"] = function() {
-    check("cubeEx1");
-    check("cubeEx2");
-}
+    var filedir = "primitive_solids/";
 
-exports["test sphere"] = function() {
-    check("sphereEx1");
-    check("sphereEx2");
-}
+    logMessage = function(msg){
+        console.log("\n"+msg+"\n");
+    }
+
+    function parse(s) {
+        return parser.parse(s);
+    }
+
+    function check(testFileName) {
+        var test = fs.readFileSync(filedir+testFileName+".scad", "utf8");
+        var expected = fs.readFileSync(filedir+testFileName+".jscad", "utf8").replace(/\n/g,'');
+        var actual = parse(test).lines.join('').replace(/\n/g,'');
+        assert.equal(actual, expected, console.log(testFileName));
+    }
+
+    exports["test cube"] = function() {
+        check("cubeEx1");
+        check("cubeEx2");
+    }
+
+    exports["test sphere"] = function() {
+        check("sphereEx1");
+        check("sphereEx2");
+    }
 
 
-exports["test cylinder"] = function() {
-    check("cylinderEx1");
-    check("cylinderEx2");
-    check("cylinderEx3");
-    check("cylinderEx5");
-}
+    exports["test cylinder"] = function() {
+        check("cylinderEx1");
+        check("cylinderEx2");
+        check("cylinderEx3");
+        check("cylinderEx5");
+    }
 
-exports["test cylinder additional parameters"] = function() {
-    check("cylinderEx4"); // fails due to missing fs and fa parameters
-}
+    exports["test cylinder additional parameters"] = function() {
+        check("cylinderEx4");
+    }
 
-exports["test polyhedron"] = function() {
-    check("polyhedronEx1");
-    check("polyhedronEx2");
-}
+    exports["test polyhedron"] = function() {
+        check("polyhedronEx1");
+        check("polyhedronEx2");
+    }
 
-if(module === require.main) require("test").run(exports);
+    if(module === require.main) require("test").run(exports);
+
+});

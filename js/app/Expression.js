@@ -1,4 +1,4 @@
-define("Expression", ["Range", "lib/sylvester"], function(Range){
+define("Expression", ["Range", "lib/sylvester"], function(Range, Sylvester){
 
 	function Expression(value) {
         this.children = [];
@@ -19,25 +19,24 @@ define("Expression", ["Range", "lib/sylvester"], function(Range){
 
     function getValueObject(x){
         if (isMatrix(x)){
-            return $M(x);
+            return Sylvester.$M(x);
         } else if (isVector(x)){
-            return $V(x);
+            return Sylvester.$V(x);
         } else {
             return x;
         }
     }
-
-    Matrix.prototype.toString = function(){
+    
+    Sylvester.Matrix.prototype.toString = function(){
         var x = _.map(this.elements, function(y){ return "["+y.join(',')+"]"; });
         return "["+x.join(',')+"]";
     }
 
-    Vector.prototype.toString = function(){
+    Sylvester.Vector.prototype.toString = function(){
         return "["+this.elements.join(',')+"]";
     }
-
+    
     Expression.prototype.evaluate = function(context) {
-            
         switch (this.type){
 
             case "!":

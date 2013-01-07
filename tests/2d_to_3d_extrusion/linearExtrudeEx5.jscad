@@ -1,4 +1,3 @@
-WARNING: Ignoring unknown variable 'slice'.
 function main(){
 
 

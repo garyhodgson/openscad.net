@@ -1,25 +1,43 @@
-var assert = require("assert");
-var parser = require("../openscad-parser").parser;
-var fs = require("fs");
+var requirejs = require('requirejs');
 
-function parse(s) {
-    return parser.parse(s);
-}
+requirejs.config({
+    baseUrl: '../js/app',
+    paths: {
+        lib: '../lib'
+    },
+    nodeRequire: require
+});
 
-function check(testFileName) {
-    var actual = fs.readFileSync("2d_to_3d_extrusion/"+testFileName+".scad", "UTF8");
-    var expected = fs.readFileSync("2d_to_3d_extrusion/"+testFileName+".jscad", "UTF8");
-    assert.ok(parse(actual).lines.join('\n').indexOf(expected));
-}
+requirejs(["fs", "assert", "openscad-parser", "Globals", "openscad-parser-support"], 
+    function(fs, assert, parser, Globals, parser_support) {
 
-exports["test Linear Extrude"] = function() {
-    check("linearExtrudeEx1");
-    check("linearExtrudeEx2");
-    check("linearExtrudeEx3");
-    check("linearExtrudeEx4");
-    check("linearExtrudeEx5");
-    check("linearExtrudeEx6");
-    check("linearExtrudeEx7");
-}
+    var filedir = "2d_to_3d_extrusion/";
 
-if(module === require.main) require("test").run(exports);
+    logMessage = function(msg){
+        console.log("\n"+msg+"\n");
+    }
+
+    function parse(s) {
+        return parser.parse(s);
+    }
+
+    function check(testFileName) {
+        var test = fs.readFileSync(filedir+testFileName+".scad", "utf8");
+        var expected = fs.readFileSync(filedir+testFileName+".jscad", "utf8").replace(/\n/g,'');
+        var actual = parse(test).lines.join('').replace(/\n/g,'');
+        assert.equal(actual, expected);
+    }
+
+    exports["test Linear Extrude"] = function() {
+        check("linearExtrudeEx1");
+        check("linearExtrudeEx2");
+        check("linearExtrudeEx3");
+        check("linearExtrudeEx4");
+        check("linearExtrudeEx5");
+        check("linearExtrudeEx6");
+        check("linearExtrudeEx7");
+    }
+
+    if(module === require.main) require("test").run(exports);
+
+});
