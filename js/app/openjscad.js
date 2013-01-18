@@ -454,15 +454,6 @@ OpenJsCad.parseJsCadScriptASync = function(script, mainParameters, callback) {
   return worker;
 };
 
-OpenJsCad.getBlobBuilder = function() {
-  var bb;
-  if(window.BlobBuilder) bb = new window.BlobBuilder()
-  else if(window.WebKitBlobBuilder) bb = new window.WebKitBlobBuilder()
-  else if(window.MozBlobBuilder) bb = new window.MozBlobBuilder()
-  else throw new Error("Your browser doesn't support BlobBuilder");
-  return bb;
-};
-
 OpenJsCad.getWindowURL = function() {
   if(window.URL) return window.URL;
   else if(window.webkitURL) return window.webkitURL;
@@ -470,11 +461,9 @@ OpenJsCad.getWindowURL = function() {
 };
 
 OpenJsCad.textToBlobUrl = function(txt) {
-  var bb=OpenJsCad.getBlobBuilder();
   var windowURL=OpenJsCad.getWindowURL();
 
-  bb.append(txt);
-  var blob = bb.getBlob();
+  var blob = new Blob(txt);
   var blobURL = windowURL.createObjectURL(blob)
   if(!blobURL) throw new Error("createObjectURL() failed"); 
   return blobURL;
@@ -822,38 +811,31 @@ OpenJsCad.Processor.prototype = {
       }
       catch(e)
       {
+        console.error(e);
         this.generateOutputFileBlobUrl();
       }
     }
   },
 
   currentObjectToBlob: function() {
-    var bb=OpenJsCad.getBlobBuilder();
-    var mimetype = this.mimeTypeForCurrentObject();
+    var arraybuffers = [];
+    var mimetype;
     if(this.currentObject instanceof CSG)
     {      
-      this.currentObject.fixTJunctions().toStlBinary(bb);
-      mimetype = "application/sla";
+      arraybuffers = this.currentObject.fixTJunctions().toStlBinary();
+      mimetype = "application\/sla";
     }
     else if(this.currentObject instanceof CAG)
     {
-      this.currentObject.toDxf(bb);
-      mimetype = "application/dxf";
+      arraybuffers = this.currentObject.toDxf();
+      mimetype = "application\/dxf";
     }
     else
     {
       throw new Error("Not supported");
     }    
-    var blob = bb.getBlob(mimetype);
-    return blob;
-  },
 
-  mimeTypeForCurrentObject: function() {
-    var ext = this.extensionForCurrentObject();
-    return {
-      stl: "application/sla",
-      dxf: "application/dxf",
-    }[ext];
+    return new Blob(arraybuffers, { "type" : mimetype });
   },
 
   extensionForCurrentObject: function() {

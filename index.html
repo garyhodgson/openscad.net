@@ -20,7 +20,7 @@
       <div class="nav-container container">
         <a class="brand" href="/openscad.net/">OpenSCAD.net</a>
           <ul class="nav pull-right">
-            <li id="notificationbar" title="Not Connected to Dropbox"><img src="img/led-icons/disconnect.png"/>&nbsp;Dropbox</li>
+            <li id="notificationbar" title="Not Connected to Filesystem"><img src="img/led-icons/disconnect.png"/>&nbsp;Filesystem</li>
           </ul>
           <ul class="nav">
             <li class="dropdown">
@@ -60,9 +60,9 @@
                 <li><a href="#" id="menu_file_save">Save</a></li>
                 <li><a href="#" id="menu_file_share_as_link">Share as Link</a></li>
                 <li class="divider"></li>
-                <li class="nav-header">Dropbox</li>
-                <li><a href="#" id="menu_file_dropbox_connect">Connect</a></li>
-                <li><a href="#" id="menu_file_dropbox_signout">Disconnect</a></li>
+                <li class="nav-header">Filesystem</li>
+                <li><a href="#" id="menu_file_connect">Connect</a></li>
+                <li><a href="#" id="menu_file_disconnect">Disconnect</a></li>
               </ul>
             </li>
 
@@ -227,6 +227,7 @@
   </div>
   <div class="modal-body">
     <textarea id="share_link" rows=10></textarea>
+    Add autoload flag: <input type="checkbox" id="share_autoload">
   </div>
   <div class="modal-footer">
     <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
@@ -315,7 +316,7 @@
   <div class="modal-body">
 
     <div id="jstree_container">
-      <button id="connect_to_dropbox" class="btn btn-success" type="button">Connect to Dropbox</button>
+      <button id="connect_to_filesystem" class="btn btn-success" type="button">Connect to Filesystem</button>
     </div>
 
 
