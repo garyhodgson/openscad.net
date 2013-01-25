@@ -144,7 +144,8 @@ define("Context", ["Globals", "openscad-parser-support"], function(Globals, Open
         "tan":Math.tandeg,
         "max":Math.max,
         "min":Math.min, 
-        "ln":Math.log, 
+        "ln":Math.log,
+        "sqrt":Math.sqrt,
         "len":function(val){
             var x = _.isString(val) ? Globals.stripString(val) : val;
             return x.length;
