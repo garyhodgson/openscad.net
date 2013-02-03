@@ -57,10 +57,7 @@ define("OpenjscadSolidFactory", ["Context", "Globals",  "PrimitiveModules", "Tra
             case "child":
                 return new ChildModule(this);
             default:
-                //if (args instanceof ModuleInstantiation){
-                    return new ModuleAdaptor()
-                //}
-                //return undefined;
+                return new ModuleAdaptor()
         }
     };
     

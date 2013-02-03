@@ -80,7 +80,7 @@ define("ControlModules", ["Globals", "Context", "Range"], function(Globals, Cont
                         this.forEval(this.evaluatedChildren, inst, recurs_length+1, call_argnames, call_argvalues, context);
                     }
                 }
-            } else if (recurs_length > 0) {
+            } else if (recurs_length > 0) {     
                 var evaluatedInstanceChildren = inst.evaluateChildren(arg_context);
                 if (_.isArray(evaluatedInstanceChildren)){
                     this.evaluatedChildren = this.evaluatedChildren.concat(evaluatedInstanceChildren);
@@ -88,7 +88,6 @@ define("ControlModules", ["Globals", "Context", "Range"], function(Globals, Cont
                     this.evaluatedChildren.push(evaluatedInstanceChildren);
                 }
             }
-
             if (_.isArray(this.evaluatedChildren)){
                 // remove empty arrays (e.g. for loops containing only echo statements)
                 this.evaluatedChildren = _.reject(this.evaluatedChildren, function(x){ return _.isEmpty(x); });

@@ -19,12 +19,12 @@ define("CSGModule", ["Globals", "Context"], function(Globals, Context){
             });
             
             var childAdaptor = this.factory.getAdaptor(childInst);
-
             var evaluatedChild = childAdaptor.evaluate(parentContext, childInst);
             if (evaluatedChild !== undefined){
                 childModules.push(evaluatedChild);
             }
         };
+
         if (childModules.length <= 1){
             return childModules[0];
         } else {

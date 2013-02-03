@@ -9,8 +9,7 @@ define("TransformModules", ["Globals", "Context"], function(Globals, Context){
 		    for (var i = 0; i < children.length; i++) {
 
 		        var childInst = children[i];
-
-		        childInst.argvalues = [];  // NOTE: not sure if this is the right solution!
+		        childInst.argvalues = [];
 
 		        _.each(childInst.argexpr, function(expr,index,list) {
 		            childInst.argvalues.push(expr.evaluate(context));

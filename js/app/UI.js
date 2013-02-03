@@ -275,12 +275,8 @@ define("UI", [	"lib/jquery-latest",
 		},
 
 		display: function(result) {
-
-			var resultText = result.lines.join('\n');
-			
-			console.log(resultText);
-			
-			this.gProcessor.setJsCad(resultText, getOutputFilename());
+			console.log(result);			
+			this.gProcessor.setJsCad(result, getOutputFilename());
 
 		},
 

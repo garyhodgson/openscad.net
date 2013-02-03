@@ -143,7 +143,8 @@ define("Context", ["Globals", "openscad-parser-support"], function(Globals, Open
         "atan2":Math.atan2deg,
         "tan":Math.tandeg,
         "max":Math.max,
-        "min":Math.min, 
+        "min":Math.min,
+        "pow":Math.pow,
         "ln":Math.log,
         "sqrt":Math.sqrt,
         "len":function(val){

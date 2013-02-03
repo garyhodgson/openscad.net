@@ -1,10 +1,12 @@
 
-define("test",["jquery-latest.min", "dropbox.min",  "underscore-min"], function(jQuery, dropbox, underscore) {
+define("test_recursive_includes",["lib/jquery-latest", "lib/dropbox",  "lib/underscore"], 
+  function(jQuery, dropbox, underscore) {
     var client;
     var globalLibs = {}
     var processed = false;
 
     $(function() {
+
 
 		client = new Dropbox.Client({
 		  key: "HXhDdRlFUUA=|ExW13h6tJ+jTCm96w87G1F3wvtvRRKnOdXuYBn3BIg==", sandbox: true
@@ -26,6 +28,8 @@ define("test",["jquery-latest.min", "dropbox.min",  "underscore-min"], function(
 	function updateSolid() {
     var openSCADText = "include <asd.txt>;\n\nThis is main;";
     var useAndIncludeStatements = [];
+
+    console.log(openSCADText);
 
     collateLibraries(openSCADText, useAndIncludeStatements, function(useAndIncludeStatements){
       newParse2(openSCADText, useAndIncludeStatements, display);
@@ -147,7 +151,7 @@ define("test",["jquery-latest.min", "dropbox.min",  "underscore-min"], function(
 
     }
 
-
+/*
     function newParse(text, useAndIncludeStatements, cb) {
     	console.log("useAndIncludeStatements",useAndIncludeStatements);
 
@@ -193,7 +197,7 @@ define("test",["jquery-latest.min", "dropbox.min",  "underscore-min"], function(
         cb(text);
       }
       
-    }
+    }*/
 
     function display(result) {
 

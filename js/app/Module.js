@@ -48,7 +48,6 @@ define("Module", ["Context", "Globals"], function(Context, Globals){
 
         var evaluatedLines = [];
         _.each(nonControlChildren, function(child, index, list) {
-
             var evaluatedChild = child.evaluate(context)
             if (evaluatedChild == undefined || (_.isArray(evaluatedChild) && _.isEmpty(evaluatedChild))){
                 // ignore

@@ -43,8 +43,8 @@ define("Globals", [], function(){
         stripString: stripString,
         convertForStrFunction: convertForStrFunction,
         preParse: preParse,
-        importedObjectRegex: /import\([^\"]*\"([^\)]*)\"[,]?.*\);?/,
-        usedLibraryRegex: /use <([^>]*)>;?/,
-        includedLibraryRegex: /include <([^>]*)>;/
+        importedObjectRegex: /import\([^\"]*\"([^\)]*)\"[,]?.*\);?/gm,
+        usedLibraryRegex: /use <([^>]*)>;?/gm,
+        includedLibraryRegex: /include <([^>]*)>;?/gm
     }
 });

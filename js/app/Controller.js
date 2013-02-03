@@ -2,6 +2,7 @@ define("Controller", ["Globals", "openscad-parser"], function(Globals, openscadP
 
 	var globalLibs = {};
 	var importCache = {};
+	var processed = false;
 
 	function Controller(persistence){
 		this.persistence = persistence;
@@ -79,9 +80,13 @@ define("Controller", ["Globals", "openscad-parser"], function(Globals, openscadP
 				this.persistence.writeFile(path, content, callback);      
 			},
 
-			updateSolid: function() {
+		    display: function(result){
+		    	this.ui.display(result);
+				this.modelIsShown = true;
+		    },
 
-				var _controller = this;
+		    updateSolid: function() {
+			    var _controller = this;
 
 				var text = $('#editor').val().trim();
 
@@ -89,40 +94,151 @@ define("Controller", ["Globals", "openscad-parser"], function(Globals, openscadP
 					return;
 				}
 
-				if ($('#sourcetype_openscad').attr("checked")== "checked"){
+				processed = false;
 
-					_controller.collateLibraries(text, function(libs){
+			    var useAndIncludeStatements = [];
 
-						var lines = text.split("\n");
-						var libraries = [];
+			    _controller.collateLibraries(text, useAndIncludeStatements, 
+			    	function(useAndIncludeStatements){
+			      		_controller.newParse(text, useAndIncludeStatements, 
+			      			$.proxy(_controller.display, _controller));
+			    });
+			      
+			},
 
-						for (var i in lines){
-							var line = lines[i];
 
-							var includedLibrary = line.match(Globals.includedLibraryRegex);
-							if (includedLibrary != null){
-								libraries.push(['include',includedLibrary[1]]);
-							}
+			collateLibraries: function(text, useAndIncludeStatements, callback){
 
-							var usedLibrary = line.match(Globals.usedLibraryRegex);
-							if (usedLibrary != null){
-								libraries.push(['use',usedLibrary[1]]);
-							}
+				var _controller = this;
 
-							var importedObject = line.match(Globals.importedObjectRegex);
-							if (importedObject != null){
-								libraries.push(['import',importedObject[1]]);
-							}
+				_controller.extractLibraryNames(text,useAndIncludeStatements);
 
-						}
-						_controller.newParse(lines, libraries, function(result){
-							_controller.ui.display(result);
-							_controller.modelIsShown = true;
+				_.each(globalLibs, function (value, key, list) {
+
+					if (value == undefined){
+
+						var isBinary = /.*\.stl$/.test(key); // default to reading all stl files as binary
+
+						_controller.persistence.readFile(key, isBinary, function(content) {
+
+							globalLibs[key] = {raw:content};
+
+							_controller.collateLibraries(isBinary?"":content, useAndIncludeStatements, callback);
+
 						});
-					});
-				} else {
-					gProcessor.setJsCad(text, getOutputFilename());
-					_controller.modelIsShown = true;
+					}
+				})
+
+				if (callback){
+					var currentGlobalLibContents = _.values(globalLibs);
+
+					if (_.indexOf(currentGlobalLibContents, undefined) == -1 && !processed){
+						processed = true;
+						callback(useAndIncludeStatements);
+					}
+				}
+			},
+
+			newParse: function(text, useAndIncludeStatements, callback) {
+
+				var _controller = this;
+
+				for (var i = useAndIncludeStatements.length - 1; i >= 0; i--) {
+					var useAndIncludeStatement = useAndIncludeStatements[i];
+					var filename = useAndIncludeStatement[1];
+					var libReplaceKey = useAndIncludeStatement[2];
+
+					var libContent = globalLibs[filename].cached ? globalLibs[filename].cached : globalLibs[filename].raw;
+
+					_.each(useAndIncludeStatements, function(val){
+						var replacementFilename = val[1];
+
+						var replacementContent = globalLibs[replacementFilename].cached ? globalLibs[replacementFilename].cached : globalLibs[replacementFilename].raw;
+
+						libContent = libContent.replace(val[2], replacementContent)
+
+						if (libContent.indexOf(libReplaceKey) !== -1 ){
+							throw Error(_.template("Recursion detected. <%=a%> <- <%=b%> <- <%=a%>", {a:filename, b:replacementFilename}));
+						}
+
+						globalLibs[filename].cached = libContent
+
+					})
+
+				}
+
+				_.each(useAndIncludeStatements, function(useAndIncludeStatement){
+					var libReplaceKey = useAndIncludeStatement[2];
+
+					var libContent = globalLibs[useAndIncludeStatement[1]].cached ? 
+										globalLibs[useAndIncludeStatement[1]].cached : 
+										globalLibs[useAndIncludeStatement[1]].raw;
+
+					switch (useAndIncludeStatement[0]) {
+						case 'use':
+							var usedModuleResult = openscadParser.parse(libContent);
+							openscadParser.yy.context = usedModuleResult.context;
+							break
+						case 'import':
+							importCache[filename] = libContent;
+							openscadParser.yy.importCache = importCache;
+							break
+						case 'include':
+							text = text.replace(libReplaceKey, libContent);
+							break
+						default:
+							throw Error("Unknown parse replacement command: " + library[0]);
+					}
+
+				});
+
+		      	// the following hack puts single line module definitions into braces
+		      	text = Globals.preParse(text);
+
+		      	try {
+		      		var result = openscadParser.parse(text);
+		      		callback(result.lines.join('\n'));
+		      	} catch (e) {
+		      		console.error(e.message);
+		      		console.error(e.stack);
+		      		logMessage("Error: " + e);
+		      	}
+		    },
+			
+			extractLibraryNames: function(text, useAndIncludeStatements) {
+
+				var match;
+				var re = Globals.includedLibraryRegex;
+				while (match = re.exec(text)){
+					var filename = match[1];
+					var replaceString = match[0];
+
+					if (!_.has(globalLibs,filename)){
+						globalLibs[filename] = undefined;
+					}
+					useAndIncludeStatements.push(["include", filename, replaceString]);
+
+				}
+				re = Globals.usedLibraryRegex;
+				while (match = re.exec(text)){
+					var filename = match[1];
+					var replaceString = match[0];
+
+					if (!_.has(globalLibs,filename)){
+						globalLibs[filename] = undefined;
+					}
+					useAndIncludeStatements.push(["use", filename, replaceString]);
+				}
+
+				re = Globals.importedObjectRegex;
+				while (match = re.exec(text)){
+					var filename = match[1];
+					var replaceString = match[0];
+
+					if (!_.has(globalLibs,filename)){
+						globalLibs[filename] = undefined;
+					}
+					useAndIncludeStatements.push(["import", filename, replaceString]);
 				}
 			},
 
@@ -131,114 +247,6 @@ define("Controller", ["Globals", "openscad-parser"], function(Globals, openscadP
 					this.connect(this.ui.whenConnectedToFilesystem);
 				}
 			},
-
-			collateLibraries: function(text, callback){
-
-				var _controller = this;
-
-				_controller.extractLibraryNames(text);
-
-				_.each(globalLibs, function (value, key, list) {
-					if (value == undefined){
-
-					  var isBinary = /.*\.stl$/.test(key); // default to reading all stl files as binary
-
-					  _controller.persistence.readFile(key, isBinary, function(content) {
-						globalLibs[key] = content;
-						_controller.collateLibraries(isBinary?"":content, callback);
-					  });
-					}
-				})
-
-				if (callback){
-					var currentGlobalLibContents = _.values(globalLibs);
-
-					if (_.indexOf(currentGlobalLibContents, undefined) == -1){
-						callback();
-					}
-				}
-			},
-
-
-
-			extractLibraryNames: function(text) {
-				var lines = text.split("\n");
-				for (var i in lines){
-					var line = lines[i];
-
-					var includedLibrary = line.match(Globals.includedLibraryRegex);
-					if (includedLibrary != null){
-						globalLibs[includedLibrary[1]] = undefined;
-					}
-
-					var usedLibrary = line.match(Globals.usedLibraryRegex);
-					if (usedLibrary != null){
-						globalLibs[usedLibrary[1]] = undefined;
-					}
-
-					var importedObject = line.match(Globals.importedObjectRegex);
-					if (importedObject != null){
-						globalLibs[importedObject[1]] = undefined;
-					}
-
-				}
-			},
-
-			newParse: function(lines, libraries, callback) {
-
-				if (libraries.length>0){
-
-					var library = libraries[0];
-					var isUse = library[0] == 'use';
-					var isInclude = library[0] == 'include';
-					var isImport = library[0] == 'import';
-					var filename = library[1];
-
-					var libContent = globalLibs[filename]||"";
-
-					switch (library[0]){
-						case 'use':
-							// the following hack puts single line module definitions into braces
-							libContent = Globals.preParse(libContent);
-
-							var usedModuleResult = openscadParser.parse(libContent);
-							openscadParser.yy.context = usedModuleResult.context;
-							break;
-							case 'include':
-							// the following hack puts single line module definitions into braces
-							libContent = Globals.preParse(libContent);
-
-							var fileTextLines = libContent.split("\n");
-							lines = _.union(fileTextLines, lines);
-							break;
-							case 'import':
-							importCache[filename] = libContent;
-							openscadParser.yy.importCache = importCache;
-							break;
-							default:
-							throw Error("Unknown parse replacement command: " + library[0]);
-						}
-
-					newParse(lines, libraries.slice(1), callback);
-
-				} else {
-					var joinedLines = lines.join('\n');
-
-					// the following hack puts single line module definitions into braces
-					joinedLines = Globals.preParse(joinedLines);
-
-					try {
-						var result = openscadParser.parse(joinedLines);
-						callback(result);
-					} catch (e) {
-						console.error(e.message);
-						console.error(e.stack);
-						logMessage("Error: " + e);
-					}
-				}
-
-			}
-
 		}
 
 
