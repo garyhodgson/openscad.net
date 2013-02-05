@@ -209,6 +209,10 @@ define("UI", [	"lib/jquery-latest",
 			}
 		},
 
+		confirm: function(msg, callback) {
+			return bootbox.confirm(msg, callback);
+		},
+
 		setCurrentFilename: function(filename) {
 			$('#currentFilename').val(filename);
 		},
