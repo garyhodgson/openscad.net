@@ -1,4 +1,4 @@
-define("DropboxPersistence", ["lib/dropbox"], function(){
+define("DropBoxPersistence", ["lib/dropbox"], function(){
 
 	var showError = function(error) {
       logMessage(_.template("An error occurred: [<%=name%>] <%=message%>", {name: error.status, message: error.responseText}));
