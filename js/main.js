@@ -17,7 +17,7 @@ requirejs.config({
 			}
 });
 
-define("main",["Globals", "Context", "StlDecoder", "DropboxPersistence", "UI", "Controller",
+define("main",["Globals", "Context", "StlDecoder", "DropBoxPersistence", "UI", "Controller",
 		"lib/underscore", "lib/lightgl", "openjscad"], function(Globals, Context, StlDecoder, Persistence, UI, Controller) {
 		
 		$(function() {
