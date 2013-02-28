@@ -35,18 +35,21 @@ define("UI", [	"lib/jquery-latest",
 
 	UI.prototype = {
 
+		updateSolid: function(){
+			this.controller.updateSolid($('#editor').val().trim(), $('#sourcetype_openscad').attr('checked'));
+		},
+
 		toggleGrid: function(show){
-			console.log(show);
 			show_grid = show;
 			if (this.controller.modelIsShown){
-				this.controller.updateSolid();
+				this.updateSolid();
 			}
 		},
 
 		toggleAxis: function(show){
 			show_axis = show;
 			if (this.controller.modelIsShown){
-				this.controller.updateSolid();
+				this.updateSolid();
 			}
 		},
 
@@ -111,8 +114,6 @@ define("UI", [	"lib/jquery-latest",
 
 			_ui.gProcessor = new OpenJsCad.Processor(viewerWidth, viewerHeight, document.getElementById("viewer-container"), null, logMessage,  colorScheme);
 
-
-			
 			_ui.resizeEditor(); // needed to take into account any scrollbars
 
 			var font = (localStorage.getItem("preferencesFontFamily") != undefined)? localStorage.getItem("preferencesFontFamily") : "Courier New,Courier New,Courier,monospace";
@@ -135,12 +136,12 @@ define("UI", [	"lib/jquery-latest",
 
 			$("#editor").keypress(function(e) {
 				if (e.keyCode == 10 && e.ctrlKey == true){
-					_ui.controller.updateSolid();
+					_ui.updateSolid();
 				}
 			});
 
 			shortcut.add("Ctrl+s",function() {_ui.saveEditor();});
-			shortcut.add("F4", function() {_ui.controller.updateSolid();});
+			shortcut.add("F4", function() {_ui.updateSolid();});
 
 			
 			var resizeTimeout;
@@ -200,12 +201,12 @@ define("UI", [	"lib/jquery-latest",
 					_ui.setCurrentFilename('');
 				}
 				if (getUrlParam('r') && confirm("Compile and display?")){
-					$.proxy(_ui.controller.updateSolid, _ui.controller)();
+					$.proxy(_ui.updateSolid, _ui.controller)();
 				}
 			}
 
 			if (autoReload){
-				this.controller.updateSolid();
+				_ui.updateSolid();
 			}
 		},
 
@@ -234,7 +235,7 @@ define("UI", [	"lib/jquery-latest",
 			$('#colorScheme option').attr('selected','');
 			$('#colorScheme option[value='+schemeName+']').attr('selected','selected');
 			if (this.controller.modelIsShown){
-				this.controller.updateSolid();
+				this.updateSolid();
 			}
 		},
 

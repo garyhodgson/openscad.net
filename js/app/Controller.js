@@ -85,10 +85,8 @@ define("Controller", ["Globals", "openscad-parser"], function(Globals, openscadP
 				this.modelIsShown = true;
 		    },
 
-		    updateSolid: function() {
+		    updateSolid: function(text, isOpenSCAD) {
 			    var _controller = this;
-
-				var text = $('#editor').val().trim();
 
 				if (_.isEmpty(text)){
 					return;
@@ -96,13 +94,17 @@ define("Controller", ["Globals", "openscad-parser"], function(Globals, openscadP
 
 				processed = false;
 
-			    var useAndIncludeStatements = [];
+				if (isOpenSCAD){
+				    var useAndIncludeStatements = [];
 
-			    _controller.collateLibraries(text, useAndIncludeStatements, 
-			    	function(useAndIncludeStatements){
-			      		_controller.newParse(text, useAndIncludeStatements, 
-			      			$.proxy(_controller.display, _controller));
-			    });
+				    _controller.collateLibraries(text, useAndIncludeStatements, 
+				    	function(useAndIncludeStatements){
+				      		_controller.newParse(text, useAndIncludeStatements, 
+				      			$.proxy(_controller.display, _controller));
+				    });
+				} else {
+					this.display(text);
+				}
 			      
 			},
 
