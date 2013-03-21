@@ -1,334 +1,333 @@
 <!DOCTYPE html>
-<head>
-  <title>OpenSCAD.net</title>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<html>
+  <head>
+    <title>OpenSCAD.net</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-  <link rel="icon" href="img/favicon.ico" type="image/x-icon" />
+    <link rel="icon" href="img/favicon.ico" type="image/x-icon" />
 
-  <link rel="stylesheet" href="css/layout-default-latest.css">
-  <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css">
-  <link rel="stylesheet" href="css/bootstrap/bootstrap-responsive.min.css">
-  <link rel="stylesheet" href="css/openscad.net.css">
+    <link rel="stylesheet" href="css/layout-default-latest.css">
+    <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css">
+    <link rel="stylesheet" href="css/bootstrap/bootstrap-responsive.min.css">
+    <link rel="stylesheet" href="css/openscad.net.css">
 
-</head>
-<body>
+  </head>
+  <body>
 
-
-<div id="navbar" class="navbar">
-  <form id="settingsForm">
-    <div class="navbar-inner">
-      <div class="nav-container container">
-        <a class="brand" href="/openscad.net/">OpenSCAD.net</a>
-          <ul class="nav pull-right">
-            <li id="notificationbar" title="Not Connected to Filesystem"><img src="img/led-icons/disconnect.png"/>&nbsp;Filesystem</li>
-          </ul>
-          <ul class="nav">
-            <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown">File <b class="caret"></b></a>
-              <ul class="dropdown-menu">
-                <li><a href="#" id="menu_file_new">New</a></li>
-                <li><a href="#" id="menu_file_open" data-toggle="modal" data-target="#fileOpenModal">Open&hellip;</a></li>
-                <li class="dropdown-submenu">
-                  <a class="menu_option" href="#">Examples</a>
+    <div id="navbar" class="navbar">
+      <form id="settingsForm">
+        <div class="navbar-inner">
+          <div class="nav-container container">
+            <a class="brand" href="/openscad.net/">OpenSCAD.net</a>
+              <ul class="nav pull-right">
+                <li id="notificationbar" title="Not Connected to Filesystem"><img src="img/led-icons/disconnect.png"/>&nbsp;Filesystem</li>
+              </ul>
+              <ul class="nav">
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">File <b class="caret"></b></a>
                   <ul class="dropdown-menu">
-                    <li><a href="#" class="loadExample" data-filename="example001.scad" title="Modules and functions">example001 (Modules and functions)</a></li>
-                    <li><a href="#" class="loadExample" data-filename="example002.scad" title="CSG operations">example002 (CSG operations)</a></li>
-                    <li><a href="#" class="loadExample" data-filename="example003.scad" title="CSG difference">example003 (CSG difference)</a></li>
-                    <li><a href="#" class="loadExample" data-filename="example004.scad" title="CSG intersection">example004 (CSG intersection)</a></li>
-                    <li><a href="#" class="loadExample" data-filename="example005.scad" title="For loop (pavillion)">example005 (For loop (pavillion))</a></li>
-                    <li><a href="#" class="loadExample" data-filename="example006.scad" title="For loop over array (dice)">example006 (For loop over array (dice))</a></li>
-                    <li><a href="#" class="loadExample" data-filename="example007.scad" title="Rotate_extrude with DXF import"><strike>example007 (Rotate_extrude with DXF import)</strike></a></li>
-                    <li><a href="#" class="loadExample" data-filename="example008.scad" title="DXF import"><strike>example008 (DXF import)</strike></a></li>
-                    <li><a href="#" class="loadExample" data-filename="example009.scad" title="DXF dimensions"><strike>example009 (DXF dimensions)</strike></a></li>
-                    <li><a href="#" class="loadExample" data-filename="example010.scad" title="Surface function with data file"><strike>example010 (Surface function with data file)</strike></a></li>
-                    <li><a href="#" class="loadExample" data-filename="example011.scad" title="Polyhedron">example011 (Polyhedron)</a></li>
-                    <li><a href="#" class="loadExample" data-filename="example012.scad" title="STL import">example012 (STL import)</a></li>
-                    <li><a href="#" class="loadExample" data-filename="example013.scad" title="DXF import with linear extrude"><strike>example013 (DXF import with linear extrude)</strike></a></li>
-                    <li><a href="#" class="loadExample" data-filename="example014.scad" title="intersection_for">example014 (intersection_for)</a></li>
-                    <li><a href="#" class="loadExample" data-filename="example015.scad" title="DXF import"><strike>example015 (DXF import)</strike></a></li>
-                    <li><a href="#" class="loadExample" data-filename="example016.scad" title="STL import">example016 (STL import)</a></li>
-                    <li><a href="#" class="loadExample" data-filename="example017.scad" title="Render DXF"><strike>example017 (Render DXF)</strike></a></li>
-                    <li><a href="#" class="loadExample" data-filename="example018.scad" title="For loop with submodule calling child function">example018 (For loop and child call)</a></li>
-                    <li><a href="#" class="loadExample" data-filename="example019.scad" title="lookup function">example019 (lookup function)</a></li>
-                    <li><a href="#" class="loadExample" data-filename="example020.scad" title="Screw, nut and spring">example020 (Screw, nut and spring)</a></li>
-                    <li><a href="#" class="loadExample" data-filename="example021.scad" title="projection function"><strike>example021 (projection function)</strike></a></li>
-                    <li><a href="#" class="loadExample" data-filename="example022.scad" title="Rounded boxes">example022 (Rounded boxes)</a></li>
-                    <li><a href="#" class="loadExample" data-filename="example023.scad" title="Example combining MCAD/fonts with search() function."><strike>example023 (MCAD/fonts.scad and search() function.)</strike></a></li>
+                    <li><a href="#" id="menu_file_new">New</a></li>
+                    <li><a href="#" id="menu_file_open" data-toggle="modal" data-target="#fileOpenModal">Open&hellip;</a></li>
+                    <li class="dropdown-submenu">
+                      <a class="menu_option" href="#">Examples</a>
+                      <ul class="dropdown-menu">
+                        <li><a href="#" class="loadExample" data-filename="example001.scad" title="Modules and functions">example001 (Modules and functions)</a></li>
+                        <li><a href="#" class="loadExample" data-filename="example002.scad" title="CSG operations">example002 (CSG operations)</a></li>
+                        <li><a href="#" class="loadExample" data-filename="example003.scad" title="CSG difference">example003 (CSG difference)</a></li>
+                        <li><a href="#" class="loadExample" data-filename="example004.scad" title="CSG intersection">example004 (CSG intersection)</a></li>
+                        <li><a href="#" class="loadExample" data-filename="example005.scad" title="For loop (pavillion)">example005 (For loop (pavillion))</a></li>
+                        <li><a href="#" class="loadExample" data-filename="example006.scad" title="For loop over array (dice)">example006 (For loop over array (dice))</a></li>
+                        <li><a href="#" class="loadExample" data-filename="example007.scad" title="Rotate_extrude with DXF import"><strike>example007 (Rotate_extrude with DXF import)</strike></a></li>
+                        <li><a href="#" class="loadExample" data-filename="example008.scad" title="DXF import"><strike>example008 (DXF import)</strike></a></li>
+                        <li><a href="#" class="loadExample" data-filename="example009.scad" title="DXF dimensions"><strike>example009 (DXF dimensions)</strike></a></li>
+                        <li><a href="#" class="loadExample" data-filename="example010.scad" title="Surface function with data file"><strike>example010 (Surface function with data file)</strike></a></li>
+                        <li><a href="#" class="loadExample" data-filename="example011.scad" title="Polyhedron">example011 (Polyhedron)</a></li>
+                        <li><a href="#" class="loadExample" data-filename="example012.scad" title="STL import">example012 (STL import)</a></li>
+                        <li><a href="#" class="loadExample" data-filename="example013.scad" title="DXF import with linear extrude"><strike>example013 (DXF import with linear extrude)</strike></a></li>
+                        <li><a href="#" class="loadExample" data-filename="example014.scad" title="intersection_for">example014 (intersection_for)</a></li>
+                        <li><a href="#" class="loadExample" data-filename="example015.scad" title="DXF import"><strike>example015 (DXF import)</strike></a></li>
+                        <li><a href="#" class="loadExample" data-filename="example016.scad" title="STL import">example016 (STL import)</a></li>
+                        <li><a href="#" class="loadExample" data-filename="example017.scad" title="Render DXF"><strike>example017 (Render DXF)</strike></a></li>
+                        <li><a href="#" class="loadExample" data-filename="example018.scad" title="For loop with submodule calling child function">example018 (For loop and child call)</a></li>
+                        <li><a href="#" class="loadExample" data-filename="example019.scad" title="lookup function">example019 (lookup function)</a></li>
+                        <li><a href="#" class="loadExample" data-filename="example020.scad" title="Screw, nut and spring">example020 (Screw, nut and spring)</a></li>
+                        <li><a href="#" class="loadExample" data-filename="example021.scad" title="projection function"><strike>example021 (projection function)</strike></a></li>
+                        <li><a href="#" class="loadExample" data-filename="example022.scad" title="Rounded boxes">example022 (Rounded boxes)</a></li>
+                        <li><a href="#" class="loadExample" data-filename="example023.scad" title="Example combining MCAD/fonts with search() function."><strike>example023 (MCAD/fonts.scad and search() function.)</strike></a></li>
+                      </ul>
+                    </li>
+                    <li class="divider"></li>
+                    <li><a href="#" id="menu_file_save">Save</a></li>
+                    <li><a href="#" id="menu_file_share_as_link">Share as Link</a></li>
+                    <li class="divider"></li>
+                    <li class="nav-header">Filesystem</li>
+                    <li><a href="#" id="menu_file_connect">Connect</a></li>
+                    <li><a href="#" id="menu_file_disconnect">Disconnect</a></li>
                   </ul>
                 </li>
-                <li class="divider"></li>
-                <li><a href="#" id="menu_file_save">Save</a></li>
-                <li><a href="#" id="menu_file_share_as_link">Share as Link</a></li>
-                <li class="divider"></li>
-                <li class="nav-header">Filesystem</li>
-                <li><a href="#" id="menu_file_connect">Connect</a></li>
-                <li><a href="#" id="menu_file_disconnect">Disconnect</a></li>
+
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Edit <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li class="nav-header">Input Syntax</li>
+                    
+                    <li>&nbsp;<input type="radio" class="menu_option" name="sourcetype" id="sourcetype_openscad" value="openscad">&nbsp;OpenSCAD</li>
+                    <li>&nbsp;<input type="radio" class="menu_option" name="sourcetype" id="sourcetype_openjscad" value="openjscad">&nbsp;OpenJsCad</li>
+                  
+                    <li class="divider"></li>
+                    <li><a href="#" data-toggle="modal" data-target="#preferencesModal" id="menu_edit_preferences">Preferences</a></li>
+                  </ul>
+                </li>
+
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Design <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li>&nbsp;<input type="checkbox" class="menu_option" name="menu_design_auto_reload" value="auto_reload">&nbsp;Automatic Reload</li>
+                    <li><a href="#" id="menu_design_reload_compile">Reload and Compile [F4]</a></li>
+                    <li><a href="#" id="menu_design_export_stl">Export as STL / DXF</a></li>
+                  </ul>
+                </li>
+
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">View <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li>&nbsp;<input type="checkbox" class="menu_option" name="menu_view_show_axis" value="show_axis" >&nbsp;Show Axis</li>
+                    <li>&nbsp;<input type="checkbox" class="menu_option" name="menu_view_show_grid" value="show_grid" >&nbsp;Show Grid</li>
+                    <li class="divider"></li>
+                    <li><a href="#" id="menu_view_top" onclick="viewer.cameraAngle(0,0,0);">Top</a></li>
+                    <li><a href="#" id="menu_view_bottom" onclick="viewer.cameraAngle(180,0,0);">Bottom</a></li>
+                    <li><a href="#" id="menu_view_left" onclick="viewer.cameraAngle(270,0,90);">Left</a></li>
+                    <li><a href="#" id="menu_view_right" onclick="viewer.cameraAngle(270,0,270);">Right</a></li>
+                    <li><a href="#" id="menu_view_front" onclick="viewer.cameraAngle(270,0,0);">Front</a></li>
+                    <li><a href="#" id="menu_view_back" onclick="viewer.cameraAngle(270,0,180);">Back</a></li>
+                    <li><a href="#" id="menu_view_back" onclick="viewer.cameraAngle(325,0,325);">Diagonal</a></li>
+                    <li><a href="#" id="menu_view_back" onclick="viewer.cameraPosition(0,0);">Center</a></li>
+                    <li class="divider"></li>
+                    <li>&nbsp;<input type="checkbox" class="menu_option" name="menu_view_hide_editor" value="hide_editor">&nbsp;Hide Editor</li>
+                    <li>&nbsp;<input type="checkbox" class="menu_option" name="menu_view_hide_console" value="hide_console">&nbsp;Hide Console</li>
+                    <li class="divider"></li>
+                    <li><a href="#" id="menu_view_clear_console">Clear Console</a></li>
+                  </ul>
+                </li>
+
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Help <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li><a href="#" data-toggle="modal" data-target="#helpModal">Help</a></li>
+                    <li class="divider"></li>
+                    <li><a href="http://www.openscad.org/" target="_blank">OpenSCAD Homepage</a></li>
+                    <li><a href="http://en.wikibooks.org/wiki/OpenSCAD_User_Manual" target="_blank">OpenSCAD Manual</a></li>
+                    <li><a href="http://joostn.github.com/OpenJsCad/" target="_blank">OpenJsCad Homepage</a></li>
+                    <li class="divider"></li>
+                    <li><a href="https://github.com/garyhodgson/openscad.net" target="_blank">OpenSCAD.net @ Github</a></li>
+                    <li class="divider"></li>
+                    <li><a href="#" data-toggle="modal" data-target="#aboutModal">About</a></li>
+                  </ul>
+                </li>
               </ul>
-            </li>
-
-            <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Edit <b class="caret"></b></a>
-              <ul class="dropdown-menu">
-                <li class="nav-header">Input Syntax</li>
-                
-                <li>&nbsp;<input type="radio" class="menu_option" name="sourcetype" id="sourcetype_openscad" value="openscad">&nbsp;OpenSCAD</li>
-                <li>&nbsp;<input type="radio" class="menu_option" name="sourcetype" id="sourcetype_openjscad" value="openjscad">&nbsp;OpenJsCad</li>
-              
-                <li class="divider"></li>
-                <li><a href="#" data-toggle="modal" data-target="#preferencesModal" id="menu_edit_preferences">Preferences</a></li>
-              </ul>
-            </li>
-
-            <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Design <b class="caret"></b></a>
-              <ul class="dropdown-menu">
-                <li>&nbsp;<input type="checkbox" class="menu_option" name="menu_design_auto_reload" value="auto_reload">&nbsp;Automatic Reload</li>
-                <li><a href="#" id="menu_design_reload_compile">Reload and Compile [F4]</a></li>
-                <li><a href="#" id="menu_design_export_stl">Export as STL / DXF</a></li>
-              </ul>
-            </li>
-
-            <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown">View <b class="caret"></b></a>
-              <ul class="dropdown-menu">
-                <li>&nbsp;<input type="checkbox" class="menu_option" name="menu_view_show_axis" value="show_axis" >&nbsp;Show Axis</li>
-                <li>&nbsp;<input type="checkbox" class="menu_option" name="menu_view_show_grid" value="show_grid" >&nbsp;Show Grid</li>
-                <li class="divider"></li>
-                <li><a href="#" id="menu_view_top" onclick="viewer.cameraAngle(0,0,0);">Top</a></li>
-                <li><a href="#" id="menu_view_bottom" onclick="viewer.cameraAngle(180,0,0);">Bottom</a></li>
-                <li><a href="#" id="menu_view_left" onclick="viewer.cameraAngle(270,0,90);">Left</a></li>
-                <li><a href="#" id="menu_view_right" onclick="viewer.cameraAngle(270,0,270);">Right</a></li>
-                <li><a href="#" id="menu_view_front" onclick="viewer.cameraAngle(270,0,0);">Front</a></li>
-                <li><a href="#" id="menu_view_back" onclick="viewer.cameraAngle(270,0,180);">Back</a></li>
-                <li><a href="#" id="menu_view_back" onclick="viewer.cameraAngle(325,0,325);">Diagonal</a></li>
-                <li><a href="#" id="menu_view_back" onclick="viewer.cameraPosition(0,0);">Center</a></li>
-                <li class="divider"></li>
-                <li>&nbsp;<input type="checkbox" class="menu_option" name="menu_view_hide_editor" value="hide_editor">&nbsp;Hide Editor</li>
-                <li>&nbsp;<input type="checkbox" class="menu_option" name="menu_view_hide_console" value="hide_console">&nbsp;Hide Console</li>
-                <li class="divider"></li>
-                <li><a href="#" id="menu_view_clear_console">Clear Console</a></li>
-              </ul>
-            </li>
-
-            <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Help <b class="caret"></b></a>
-              <ul class="dropdown-menu">
-                <li><a href="#" data-toggle="modal" data-target="#helpModal">Help</a></li>
-                <li class="divider"></li>
-                <li><a href="http://www.openscad.org/" target="_blank">OpenSCAD Homepage</a></li>
-                <li><a href="http://en.wikibooks.org/wiki/OpenSCAD_User_Manual" target="_blank">OpenSCAD Manual</a></li>
-                <li><a href="http://joostn.github.com/OpenJsCad/" target="_blank">OpenJsCad Homepage</a></li>
-                <li class="divider"></li>
-                <li><a href="https://github.com/garyhodgson/openscad.net" target="_blank">OpenSCAD.net @ Github</a></li>
-                <li class="divider"></li>
-                <li><a href="#" data-toggle="modal" data-target="#aboutModal">About</a></li>
-              </ul>
-            </li>
-          </ul>
-      </div>
-    </div>
-    <input type="hidden" id="currentFilename" name="currentFilename" />
-    </form>
-  </div>
-
-
-<div id="container">
-
-  <div class="outer-center" id="center-container">
-    <div class="ui-layout-center" id="viewer-container" oncontextmenu="return false;"></div>
-
-    <div class="ui-layout-south" id="log-container">
-      <textarea id="log" name="log" readonly></textarea>
-    </div>
-  </div>
-
-  <div class="ui-layout-west editor-layout">
-    <textarea id="editor" name="editor" spellcheck="false"></textarea>
-  </div>
-
-</div>
-
-<!--Note: the example content is loaded via requireJS text plugin after startup. -->
-<div id="examples"></div>
-
-
-<div id="aboutModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="aboutModalLabel" aria-hidden="true">
-  <div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-    <h3 id="aboutModalLabel">About</h3>
-  </div>
-  <div class="modal-body">
-    <h4>Overview</h4>
-    <p>OpenSCAD.net is a partial port of OpenSCAD for the web.  Powered by OpenJsCad, it uses the familiar OpenSCAD syntax to allow many OpenSCAD models to be rendered, and saved as STL, via the browser.</p>
-    <hr>
-    <h4>Credits &amp; Libraries Used</h4>
-    <p>
-        <ul>
-          <li><a href="http://www.openscad.org/" target="_blank">OpenSCAD</a></li>
-          <li><a href="http://joostn.github.com/OpenJsCad/" target="_blank">OpenJsCad</a></li>
-          <li><a href="http://zaach.github.com/jison/" target="_blank">Jison</a></li>
-          <li><a href="https://github.com/dropbox/dropbox-js" target="_blank">Dropbox.js</a></li>
-          <li><a href="http://twitter.github.com/bootstrap" target="_blank">Bootstrap</a></li>
-          <li><a href="http://jquery.com/" target="_blank">jQuery</a></li>
-          <li><a href="http://layout.jquery-dev.net/" target="_blank">jQuery UI Layout Plug-in</a></li>
-          <li><a href="http://underscorejs.org/" target="_blank">underscore.js</a></li>
-          <li><a href="http://garlicjs.org" target="_blank">garlic.js</a></li>
-          <li><a href="http://www.jstree.com/" target="_blank">jstree</a></li>
-          <li><a href="https://github.com/alanhogan/Tabby" target="_blank">Tabby</a></li>
-          <li><a href="https://github.com/CD1212/jQuery-Font-Chooser" target="_blank">jQuery-Font-Chooser</a></li>
-          <li><a href="http://led24.de/iconset/" target="_blank">LED Icon Set</a></li>
-        </ul>
-    </p>
-  </div>
-  <div class="modal-footer">
-    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-  </div>
-</div>
-  
-<div id="helpModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="helpModalLabel" aria-hidden="true">
-  <div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-    <h3 id="helpModalLabel">Help</h3>
-  </div>
-  <div class="modal-body">
-    <p>The layout and menu options have been made as similar to the desktop version of OpenSCAD to aid quick adoption.</p>
-    <hr>
-    <h4>Basics</h4>
-    <p>Paste or type an OpenSCAD script into the editor and hit F4 (or select "Reload and Compile" from the Design menu).  The model should render in the panel to the right.  Any error messages should appear in the log panel at the bottom, or in the browser console.</p>
-    <hr>
-    <h4>Imported Libraries via Dropbox</h4>
-    <p>So that scripts can utilise the "use" and "include" directives, the application can connect to a Dropbox account in order to import library files stored there.  Authorising access for the app will create a dedicated, sandboxed, folder in your Dropbox space.  Folders and files stored here can be referenced via "use" and "include" statements.  Scripts can also be saved to the Dropbox space, via the Save option.</p>
-    <hr>
-    <h4>Missing Features</h4>
-    <p>Several features are either not yet implemented or can/will not be implemented.  For this reason many of the original OpenSCAD examples, which are available through the File/Examples menu, will not work. These are marked as such with a strikethrough.
-        <ul>
-          <li>DXF import and manipulation (e.g. import_dxf, dxf-cross, dxf_dim functions).</li>
-          <li>STL import.</li>
-          <li>rotate_extrude.</li>
-          <li>search and surface functions.</li>
-          <li>Animation.</li>
-          <li>minkowski and hull transformations.</li>
-          <li>$fa, $fs global variables.</li>
-          <li>Modifier characters: #, !, and %).</li>
-          <li>Nested include calls.</li>
-        </ul>
-        Also check the <a target="_blank" href="https://github.com/garyhodgson/openscad.net/issues">issue list</a> in the github project for bugs.
-    </p>
-  </div>
-  <div class="modal-footer">
-    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-  </div>
-</div>
-
-<div id="shareLinkModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="shareLinkModalLabel" aria-hidden="true">
-  <div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-    <h3 id="shareLinkModalLabel">Share as Link</h3>
-  </div>
-  <div class="modal-body">
-    <textarea id="share_link" rows=10></textarea>
-    Add autoload flag: <input type="checkbox" id="share_autoload">
-  </div>
-  <div class="modal-footer">
-    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-  </div>
-</div>
-  
-<div id="preferencesModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="preferencesModalLabel" aria-hidden="true">
-  <div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-    <h3 id="preferencesModalLabel">Preferences</h3>
-  </div>
-  <div class="modal-body">
-
-    <ul class="nav nav-tabs">
-      <li><a href="#preferences3dView" data-toggle="tab">3D View</a></li>
-      <li><a href="#preferencesEditor" data-toggle="tab">Editor</a></li>
-    </ul>
-
-    <div class="tab-content">
-      <div class="tab-pane active" id="preferences3dView">
-        <label>Color Schemes</label>
-        <select id="colorScheme">
-          <option value="cornfield">Cornfield</option>
-          <option value="metallic">Metallic</option>
-          <option value="sunset">Sunset</option>
-          <option value="sunrise">Sunrise</option>
-        </select>
-      </div>
-      <div class="tab-pane" id="preferencesEditor">
-        <label>Font</label>
-        <div id="fontSelect">
-          <span>Arial</span>
-          <div class="arrow-down"></div>
-          <ul>
-              <li>Arial,Arial,Helvetica,sans-serif</li>
-              <li>Arial Black,Arial Black,Gadget,sans-serif</li>
-              <li>Comic Sans MS,Comic Sans MS,cursive</li>
-              <li>Courier New,Courier New,Courier,monospace</li>
-              <li>Georgia,Georgia,serif</li>
-              <li>Impact,Charcoal,sans-serif</li>
-              <li>Lucida Console,Monaco,monospace</li>
-              <li>Lucida Sans Unicode,Lucida Grande,sans-serif</li>
-              <li>Palatino Linotype,Book Antiqua,Palatino,serif</li>
-              <li>Tahoma,Geneva,sans-serif</li>
-              <li>Times New Roman,Times,serif</li>
-              <li>Trebuchet MS,Helvetica,sans-serif</li>
-              <li>Verdana,Geneva,sans-serif</li>
-              <li>Gill Sans,Geneva,sans-serif</li>
-          </ul>
+          </div>
         </div>
-        <select id="preferencesFontSize">
-          <option value="6">6</option>
-          <option value="7">7</option>
-          <option value="8">8</option>
-          <option value="9">9</option>
-          <option value="10">10</option>
-          <option value="11">11</option>
-          <option value="12">12</option>
-          <option value="14">14</option>
-          <option value="16">16</option>
-          <option value="18">18</option>
-          <option value="20">20</option>
-          <option value="22">22</option>
-          <option value="24">24</option>
-          <option value="26">26</option>
-          <option value="28">28</option>
-          <option value="36">36</option>
-          <option value="48">48</option>
-          <option value="72">72</option>
-        </select>
+        <input type="hidden" id="currentFilename" name="currentFilename" />
+        </form>
+      </div>
+
+
+    <div id="container">
+
+      <div class="outer-center" id="center-container">
+        <div class="ui-layout-center" id="viewer-container" oncontextmenu="return false;"></div>
+
+        <div class="ui-layout-south" id="log-container">
+          <textarea id="log" name="log" readonly></textarea>
+        </div>
+      </div>
+
+      <div class="ui-layout-west editor-layout">
+        <textarea id="editor" name="editor" spellcheck="false"></textarea>
+      </div>
+
+    </div>
+
+    <!--Note: the example content is loaded via requireJS text plugin after startup. -->
+    <div id="examples"></div>
+
+
+    <div id="aboutModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="aboutModalLabel" aria-hidden="true">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="aboutModalLabel">About</h3>
+      </div>
+      <div class="modal-body">
+        <h4>Overview</h4>
+        <p>OpenSCAD.net is a partial port of OpenSCAD for the web.  Powered by OpenJsCad, it uses the familiar OpenSCAD syntax to allow many OpenSCAD models to be rendered, and saved as STL, via the browser.</p>
+        <hr>
+        <h4>Credits &amp; Libraries Used</h4>
+        <p>
+            <ul>
+              <li><a href="http://www.openscad.org/" target="_blank">OpenSCAD</a></li>
+              <li><a href="http://joostn.github.com/OpenJsCad/" target="_blank">OpenJsCad</a></li>
+              <li><a href="http://zaach.github.com/jison/" target="_blank">Jison</a></li>
+              <li><a href="https://github.com/dropbox/dropbox-js" target="_blank">Dropbox.js</a></li>
+              <li><a href="http://twitter.github.com/bootstrap" target="_blank">Bootstrap</a></li>
+              <li><a href="http://jquery.com/" target="_blank">jQuery</a></li>
+              <li><a href="http://layout.jquery-dev.net/" target="_blank">jQuery UI Layout Plug-in</a></li>
+              <li><a href="http://underscorejs.org/" target="_blank">underscore.js</a></li>
+              <li><a href="http://garlicjs.org" target="_blank">garlic.js</a></li>
+              <li><a href="http://www.jstree.com/" target="_blank">jstree</a></li>
+              <li><a href="https://github.com/alanhogan/Tabby" target="_blank">Tabby</a></li>
+              <li><a href="https://github.com/CD1212/jQuery-Font-Chooser" target="_blank">jQuery-Font-Chooser</a></li>
+              <li><a href="http://led24.de/iconset/" target="_blank">LED Icon Set</a></li>
+            </ul>
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+      </div>
+    </div>
+      
+    <div id="helpModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="helpModalLabel" aria-hidden="true">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="helpModalLabel">Help</h3>
+      </div>
+      <div class="modal-body">
+        <p>The layout and menu options have been made as similar to the desktop version of OpenSCAD to aid quick adoption.</p>
+        <hr>
+        <h4>Basics</h4>
+        <p>Paste or type an OpenSCAD script into the editor and hit F4 (or select "Reload and Compile" from the Design menu).  The model should render in the panel to the right.  Any error messages should appear in the log panel at the bottom, or in the browser console.</p>
+        <hr>
+        <h4>Imported Libraries via Dropbox</h4>
+        <p>So that scripts can utilise the "use" and "include" directives, the application can connect to a Dropbox account in order to import library files stored there.  Authorising access for the app will create a dedicated, sandboxed, folder in your Dropbox space.  Folders and files stored here can be referenced via "use" and "include" statements.  Scripts can also be saved to the Dropbox space, via the Save option.</p>
+        <hr>
+        <h4>Missing Features</h4>
+        <p>Several features are either not yet implemented or can/will not be implemented.  For this reason many of the original OpenSCAD examples, which are available through the File/Examples menu, will not work. These are marked as such with a strikethrough.
+            <ul>
+              <li>DXF import and manipulation (e.g. import_dxf, dxf-cross, dxf_dim functions).</li>
+              <li>STL import.</li>
+              <li>rotate_extrude.</li>
+              <li>search and surface functions.</li>
+              <li>Animation.</li>
+              <li>minkowski and hull transformations.</li>
+              <li>$fa, $fs global variables.</li>
+              <li>Modifier characters: #, !, and %).</li>
+              <li>Nested include calls.</li>
+            </ul>
+            Also check the <a target="_blank" href="https://github.com/garyhodgson/openscad.net/issues">issue list</a> in the github project for bugs.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
       </div>
     </div>
 
-  </div>
-  <div class="modal-footer">
-    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-  </div>
-</div>
-  
+    <div id="shareLinkModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="shareLinkModalLabel" aria-hidden="true">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="shareLinkModalLabel">Share as Link</h3>
+      </div>
+      <div class="modal-body">
+        <textarea id="share_link" rows=10></textarea>
+        Add autoload flag: <input type="checkbox" id="share_autoload">
+      </div>
+      <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+      </div>
+    </div>
+      
+    <div id="preferencesModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="preferencesModalLabel" aria-hidden="true">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="preferencesModalLabel">Preferences</h3>
+      </div>
+      <div class="modal-body">
 
-<div id="fileOpenModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="fileOpenModalLabel" aria-hidden="true">
-  <div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-    <h3 id="fileOpenModalLabel">Open File</h3>
-  </div>
-  <div class="modal-body">
+        <ul class="nav nav-tabs">
+          <li><a href="#preferences3dView" data-toggle="tab">3D View</a></li>
+          <li><a href="#preferencesEditor" data-toggle="tab">Editor</a></li>
+        </ul>
 
-    <div id="jstree_container">
-      <button id="connect_to_filesystem" class="btn btn-success" type="button">Connect to Filesystem</button>
+        <div class="tab-content">
+          <div class="tab-pane active" id="preferences3dView">
+            <label>Color Schemes</label>
+            <select id="colorScheme">
+              <option value="cornfield">Cornfield</option>
+              <option value="metallic">Metallic</option>
+              <option value="sunset">Sunset</option>
+              <option value="sunrise">Sunrise</option>
+            </select>
+          </div>
+          <div class="tab-pane" id="preferencesEditor">
+            <label>Font</label>
+            <div id="fontSelect">
+              <span>Arial</span>
+              <div class="arrow-down"></div>
+              <ul>
+                  <li>Arial,Arial,Helvetica,sans-serif</li>
+                  <li>Arial Black,Arial Black,Gadget,sans-serif</li>
+                  <li>Comic Sans MS,Comic Sans MS,cursive</li>
+                  <li>Courier New,Courier New,Courier,monospace</li>
+                  <li>Georgia,Georgia,serif</li>
+                  <li>Impact,Charcoal,sans-serif</li>
+                  <li>Lucida Console,Monaco,monospace</li>
+                  <li>Lucida Sans Unicode,Lucida Grande,sans-serif</li>
+                  <li>Palatino Linotype,Book Antiqua,Palatino,serif</li>
+                  <li>Tahoma,Geneva,sans-serif</li>
+                  <li>Times New Roman,Times,serif</li>
+                  <li>Trebuchet MS,Helvetica,sans-serif</li>
+                  <li>Verdana,Geneva,sans-serif</li>
+                  <li>Gill Sans,Geneva,sans-serif</li>
+              </ul>
+            </div>
+            <select id="preferencesFontSize">
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
+              <option value="10">10</option>
+              <option value="11">11</option>
+              <option value="12">12</option>
+              <option value="14">14</option>
+              <option value="16">16</option>
+              <option value="18">18</option>
+              <option value="20">20</option>
+              <option value="22">22</option>
+              <option value="24">24</option>
+              <option value="26">26</option>
+              <option value="28">28</option>
+              <option value="36">36</option>
+              <option value="48">48</option>
+              <option value="72">72</option>
+            </select>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+      </div>
     </div>
 
+    <div id="fileOpenModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="fileOpenModalLabel" aria-hidden="true">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="fileOpenModalLabel">Open File</h3>
+      </div>
+      <div class="modal-body">
 
-  </div>
-  <div class="modal-footer">
-    <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
-    <button id="openFile" class="btn btn-primary">Open</button>
-  </div>
-</div>
+        <div id="jstree_container">
+          <button id="connect_to_filesystem" class="btn btn-success" type="button">Connect to Filesystem</button>
+        </div>
 
+      </div>
+      <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+        <button id="openFile" class="btn btn-primary">Open</button>
+      </div>
+    </div>
 
-<script data-main="js/main" src="js/require.js"></script>
+    <script src="js/lib/underscore.js"></script>
+    <script src="js/lib/openscadOpenjscadTranslator.js"></script>
+    <script data-main="js/main" src="js/require.js"></script>
 
-</body>
+  </body>
 </html>

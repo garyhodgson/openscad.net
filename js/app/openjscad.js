@@ -388,7 +388,6 @@ OpenJsCad.parseJsCadScriptSync = function(script, mainParameters, debugging) {
 // callback: should be function(error, csg)
 OpenJsCad.parseJsCadScriptASync = function(script, mainParameters, callback) {
   var baselibraries = [
-    "js/app/openscad-parser-support.js",
     "js/lib/csg.js",
     "js/app/openjscad.js"
   ];
@@ -557,8 +556,10 @@ OpenJsCad.Processor = function(width, height, containerdiv, onchange, logMessage
   this.script = null;
   this.hasError = false;
   this.debugging = false;
-  this.createElements();
   this.logMessage = logMessageFunction;
+  
+
+  this.createElements();
 };
 
 OpenJsCad.Processor.convertToSolid = function(obj) {
@@ -589,7 +590,7 @@ OpenJsCad.Processor.prototype = {
     }
     if(!OpenJsCad.isChrome() )
     {
-      logMessage("Please note: OpenJsCad currently only runs reliably on Google Chrome!");
+      this.logMessage("Please note: OpenJsCad currently only runs reliably on Google Chrome!");
     }
 
     var viewerdiv = document.createElement("div");
@@ -603,7 +604,7 @@ OpenJsCad.Processor.prototype = {
     {
       this.viewer = new OpenJsCad.Viewer(this.viewerdiv, this.viewerwidth, this.viewerheight, this.initialViewerDistance, this.colorScheme);
     } catch (e) {
-      logMessage("Error: " + e.toString() + ".  OpenJsCad currently requires Google Chrome with WebGL enabled")
+      this.logMessage("Error: " + e.toString() + ".  OpenJsCad currently requires Google Chrome with WebGL enabled")
     } 
     this.clearViewer();
   },
@@ -638,7 +639,7 @@ OpenJsCad.Processor.prototype = {
   setError: function(txt) {
     if (txt != "") {
       this.hasError = true;
-      logMessage(txt);
+      this.logMessage(txt);
     } else {
       this.hasError = false;
     }

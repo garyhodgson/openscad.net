@@ -1,4 +1,4 @@
-define("Controller", ["Globals", "openscad-parser"], function(Globals, openscadParser){
+define("Controller", [], function(){
 
 	var globalLibs = {};
 	var importCache = {};
@@ -194,12 +194,8 @@ define("Controller", ["Globals", "openscad-parser"], function(Globals, openscadP
 
 				});
 
-		      	// the following hack puts single line module definitions into braces
-		      	text = Globals.preParse(text);
-
 		      	try {
-		      		var result = openscadParser.parse(text);
-		      		callback(result.lines.join('\n'));
+		      		callback(openscadOpenJscadParser.parse(text));
 		      	} catch (e) {
 		      		console.error(e.message);
 		      		console.error(e.stack);
@@ -209,8 +205,12 @@ define("Controller", ["Globals", "openscad-parser"], function(Globals, openscadP
 			
 			extractLibraryNames: function(text, useAndIncludeStatements) {
 
+				var importedObjectRegex = /import\([^\"]*\"([^\)]*)\"[,]?.*\);?/gm;
+        		var usedLibraryRegex = /use <([^>]*)>;?/gm;
+        		var includedLibraryRegex = /include <([^>]*)>;?/gm;
+
 				var match;
-				var re = Globals.includedLibraryRegex;
+				var re = includedLibraryRegex;
 				while (match = re.exec(text)){
 					var filename = match[1];
 					var replaceString = match[0];
@@ -221,7 +221,7 @@ define("Controller", ["Globals", "openscad-parser"], function(Globals, openscadP
 					useAndIncludeStatements.push(["include", filename, replaceString]);
 
 				}
-				re = Globals.usedLibraryRegex;
+				re = usedLibraryRegex;
 				while (match = re.exec(text)){
 					var filename = match[1];
 					var replaceString = match[0];
@@ -232,7 +232,7 @@ define("Controller", ["Globals", "openscad-parser"], function(Globals, openscadP
 					useAndIncludeStatements.push(["use", filename, replaceString]);
 				}
 
-				re = Globals.importedObjectRegex;
+				re = importedObjectRegex;
 				while (match = re.exec(text)){
 					var filename = match[1];
 					var replaceString = match[0];

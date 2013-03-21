@@ -1,6 +1,5 @@
 define("UI", [	"lib/jquery-latest",
-				"text!../../examples.insert.html",
-				"Globals",
+				"lib/text!../../examples.insert.html",
 				"lib/jquery-ui-latest", 
 				"lib/jquery.layout-latest",
 				"lib/jquery.fontselector",
@@ -11,7 +10,7 @@ define("UI", [	"lib/jquery-latest",
 				"lib/jquery.mousewheel", 
 				"lib/garlic", 
 				"lib/shortcut", 
-				"lib/bootbox"], function(jQuery, examples_insert, Globals){ 
+				"lib/bootbox"], function(jQuery, examples_insert){ 
 
 	var uiLayout, logLayout;
 	var colorSchemes = {
@@ -560,7 +559,20 @@ define("UI", [	"lib/jquery-latest",
 		});
 	  }
 
+	  function logMessage(msg) {
+		  if (msg == ""){
+		    return;
+		  }
+		  var val = $('#log').val();
+		  if (val == ""){
+		    $('#log').val(msg);
+		  } else {
+		    $('#log').val($('#log').val()+"\n"+msg)
+		  }
+		  $('#log').scrollTop($('#log')[0].scrollHeight);
 
+		  console.log(msg);
+		}
 
 	return UI;
 	
