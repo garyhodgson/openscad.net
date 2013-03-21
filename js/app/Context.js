@@ -1,7 +1,11 @@
 define("Context", ["Globals", "openscad-parser-support"], function(Globals, OpenscadParserSupport){
     
     function Context(parentContext) {
-        this.vars = {};
+        this.vars = (parentContext)? {} : {
+            "$fn": Globals.FN_DEFAULT,
+            "$fs": Globals.FS_DEFAULT,
+            "$fa": Globals.FA_DEFAULT
+        };
         this.parentContext = parentContext;
         this.inst_p;
         this.functions_p = {};
@@ -134,28 +138,69 @@ define("Context", ["Globals", "openscad-parser-support"], function(Globals, Open
         return parseInt(Math.ceil(Math.max(Math.min(360.0 / fa, r*2*Math.PI / fs), 5)));
     };
 
+    function rad2deg(rad){
+        return rad * (180/Math.PI);
+    };
+
+    function deg2rad(deg){
+        return deg * Math.PI/180.0;
+    };
+
     var functionNameLookup = {
-        "cos":Math.cosdeg,
-        "sin":Math.sindeg, 
-        "acos":Math.acosdeg,
-        "asin":Math.asindeg,
-        "atan":Math.atandeg,
-        "atan2":Math.atan2deg,
-        "tan":Math.tandeg,
+        "cos":function(degree) {
+            return Math.cos(deg2rad(degree));
+        },
+        "sin":function(degree) {
+            return Math.sin(deg2rad(degree));
+        },
+        "acos":function(degree) {
+            return rad2deg(Math.acos(degree));
+        },
+        "asin":function(degree) {
+            return rad2deg(Math.asin(degree));
+        },
+        "atan":function(degree) {
+            return rad2deg(Math.atan(degree));
+        },
+        "atan2":function(x,y) {
+            return rad2deg(Math.atan2(x,y));
+        },
+        "tan":function(degree) {
+            return Math.tan(deg2rad(degree));
+        },
+        "rands":function(min_value,max_value,value_count, seed_value){
+            var values = [];
+            if (seed_value !== undefined){
+                Math.seedrandom(seed_value);
+            }
+            for (var i=0;i<value_count;i++){
+                var random_value = min_value+(Math.random()*(max_value-min_value));
+                values[i] = random_value;
+            }
+            return values; 
+        },
+        "round":function(x){
+            // This is because Javascript rounds negative numbers up, whereas c++ rounds down
+            return (x<0)? -(Math.round(Math.abs(x))) : Math.round(x);
+        },
+        "exp":Math.exp,
+        "abs":Math.abs,
         "max":Math.max,
         "min":Math.min,
         "pow":Math.pow,
         "ln":Math.log,
+        "ceil":Math.ceil,
+        "floor":Math.floor,
         "sqrt":Math.sqrt,
         "len":function(val){
             var x = _.isString(val) ? Globals.stripString(val) : val;
             return x.length;
         },
         "log":function(){
-            if (arguments[0].length == 2){
-                return Math.log(arguments[0][1])/Math.log(arguments[0][0]);
-            } else if (arguments[0].length == 1){
-                return Math.log(arguments[0][0]);
+            if (arguments.length == 2){
+                return Math.log(arguments[1])/Math.log(arguments[0]);
+            } else if (arguments.length == 1){
+                return Math.log(arguments[0]) / Math.log(10.0);
             } else {
                 return undefined;
             }

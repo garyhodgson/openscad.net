@@ -30,12 +30,7 @@ define("main",["Globals", "Context", "StlDecoder", "DropBoxPersistence", "UI", "
 			
 			ui.setFilesystemName(persistence.getFilesystemName())
 			ui.initialise();
-			
-			
+
 		});
-
-
-		
-
 
 });
