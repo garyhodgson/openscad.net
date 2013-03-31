@@ -19,7 +19,6 @@ So that scripts can utilise the "use" and "include" directives, the application 
 Several features are either not yet implemented or can/will not be implemented. For this reason many of the original OpenSCAD examples, which are available through the File/Examples menu, will not work. These are marked as such with a strikethrough.
 
 * DXF import and manipulation (e.g. import_dxf, dxf-cross, dxf_dim functions).
-* STL import.
 * rotate_extrude.
 * minkowski and hull transformations.
 * $fa, $fs global variables.
