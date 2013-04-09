@@ -1,258 +1,268 @@
 define("Controller", [], function(){
 
-	var globalLibs = {};
-	var importCache = {};
-	var processed = false;
-
-	function Controller(persistence){
-		this.persistence = persistence;
-		this.connectedToFilesystem = false;
-		this.modelIsShown = false;
-	};
-
-	Controller.prototype = {
-
-		setUI: function(ui){
-			this.ui = ui;
-		},
+  var globalLibs = {};
+  var importCache = {};
+  var processed = false;
+
+  function Controller(persistence){
+    this.persistence = persistence;
+    this.connectedToFilesystem = false;
+    this.modelIsShown = false;
+  };
+
+  Controller.prototype = {
+
+    setUI: function(ui){
+      this.ui = ui;
+    },
+
+    connect: function(callback){
+      var _controller = this;
+      this.persistence.connect(function(){
+          callback(_controller);
+      })
+    },
+
+    disconnect: function(callback){
+      if (this.connectedToFilesystem){
+        var _controller = this;
+        this.ui.confirm("Disconnect from "+this.ui.filesystemName+"?", function(confirmed) {
+          if (!confirmed) return;
 
-		connect: function(callback){
-			var _controller = this;
-			this.persistence.connect(function(){
-				callback(_controller);
-			})
-		},
+          _controller.persistence.disconnect(function(){
+              callback(_controller);
+          });
 
-		disconnect: function(callback){
-			if (this.connectedToFilesystem){
-				var _controller = this;
-				this.ui.confirm("Disconnect from "+this.ui.filesystemName+"?", function(confirmed) {
-					if (!confirmed) return;
+        });
+      }
+    },
 
-					_controller.persistence.disconnect(function(){
-						callback(_controller);
-					});
+    readDir:  function(path, root) {
+      var _controller = this;
 
-				});
-			}
-		},
+      //todo - stats leaks from dropbox - refactor to generic structure
+      this.persistence.readDir(path, function(stats){
 
-		readDir:  function(path, root) {
+        _.each(stats, function (stat) {
 
-			var _controller = this;
+          var id = stat.path.replace(/\//g, '_').replace(/\./g, '_')
 
-				//todo - stats leaks from dropbox - refactor to generic structure
-				this.persistence.readDir(path, function(stats){
+          if (stat.isFile){
+            _controller.ui.filetree.create_node(
+              root, 'inside', 
+              { attr: {id:id, class:"dbFile"}, metadata: {stat: stat}, data: {title:stat.name, icon: "img/led-icons/page_white_text.png"} }
+              );
+          } else {
+            _controller.ui.filetree.create_node(root, 'inside', 
+              { attr: {id:id},  state: "closed", metadata: {stat: stat}, data: stat.name }
+            );
+          }
 
-					_.each(stats, function (stat) {
+        });
 
-						var id = stat.path.replace(/\//g, '_').replace(/\./g, '_')
+        _controller.ui.filetree.open_node(root);
+        root.data("isloaded", true);
 
-						if (stat.isFile){
-							_controller.ui.filetree.create_node(
-								root, 'inside', 
-								{ attr: {id:id, class:"dbFile"}, metadata: {stat: stat}, data: {title:stat.name, icon: "img/led-icons/page_white_text.png"} }
-								);
-						} else {
-							_controller.ui.filetree.create_node(
-								root, 'inside', 
-								{ attr: {id:id},  state: "closed", metadata: {stat: stat}, data: stat.name }
-								);
-						}
+      });
+    },
 
-					});
+    readFile: function(path, callback) {
+        var _controller = this;
+        this.persistence.openFile(path, function(content, stat){
+            callback(content, stat.path);
+        });
+    },
 
-					_controller.ui.filetree.open_node(root);
-					root.data("isloaded", true);
+    writeFile: function(path, content, callback) {
+        var _controller = this;
+        this.persistence.writeFile(path, content, callback);      
+    },
 
-				});
-			},
+    display: function(result){
+        this.ui.display(result);
+        this.modelIsShown = true;
+    },
 
-			readFile: function(path, callback) {
-				var _controller = this;
-				this.persistence.openFile(path, function(content, stat){
-					callback(content, stat.path);
-				});
-			},
+    updateSolid: function(text, isOpenSCADSyntax, rootFilePath) {
+      var _controller = this;
 
-			writeFile: function(path, content, callback) {
-				var _controller = this;
-				this.persistence.writeFile(path, content, callback);      
-			},
+      if (_.isEmpty(text)){
+        return;
+      }
 
-		    display: function(result){
-		    	this.ui.display(result);
-				this.modelIsShown = true;
-		    },
+      processed = false;
 
-		    updateSolid: function(text, isOpenSCAD) {
-			    var _controller = this;
+      if (isOpenSCADSyntax){
+        var useAndIncludeStatements = [];
 
-				if (_.isEmpty(text)){
-					return;
-				}
+        _controller.collateLibraries(text, useAndIncludeStatements, rootFilePath,
+          function(useAndIncludeStatements){
+              _controller.newParse(text, useAndIncludeStatements, 
+                $.proxy(_controller.display, _controller));
+        });
+      } else {
+        this.display(text);
+      }
+          
+    },
 
-				processed = false;
+    collateLibraries: function(text, useAndIncludeStatements, rootFilePath, callback){
 
-				if (isOpenSCAD){
-				    var useAndIncludeStatements = [];
+//console.log("collateLibraries rootFilePath = ", rootFilePath);
 
-				    _controller.collateLibraries(text, useAndIncludeStatements, 
-				    	function(useAndIncludeStatements){
-				      		_controller.newParse(text, useAndIncludeStatements, 
-				      			$.proxy(_controller.display, _controller));
-				    });
-				} else {
-					this.display(text);
-				}
-			      
-			},
+      var _controller = this;
 
+      _controller.extractLibraryNames(text, rootFilePath, useAndIncludeStatements);
+      _.each(globalLibs, function (value, key, list) {
+        if (value.loading == false){
+          globalLibs[key].loading = true;
 
-			collateLibraries: function(text, useAndIncludeStatements, callback){
+          var isBinary = /.*\.stl$/.test(key); // default to reading all stl files as binary
 
-				var _controller = this;
+//console.log("Persistence fullPath", key);
 
-				_controller.extractLibraryNames(text,useAndIncludeStatements);
+          _controller.persistence.readFile(key, isBinary, function(content) {
 
-				_.each(globalLibs, function (value, key, list) {
+            globalLibs[key].raw = content;
 
-					if (value == undefined){
+            filePath = key.replace(/[^\/]*$/, "");
 
-						var isBinary = /.*\.stl$/.test(key); // default to reading all stl files as binary
+            _controller.collateLibraries(isBinary?"":content, useAndIncludeStatements, filePath, callback);
 
-						_controller.persistence.readFile(key, isBinary, function(content) {
+          });
+        }
+      })
 
-							globalLibs[key] = {raw:content};
+      if (callback){
+        var globalLibIndexes = _.countBy(globalLibs, function(lib){
+          return lib.raw == undefined ? 'unprocessed' : 'processed';
+        });
 
-							_controller.collateLibraries(isBinary?"":content, useAndIncludeStatements, callback);
+        console.log("globalLibIndexes = ",globalLibIndexes);
 
-						});
-					}
-				})
+        if (globalLibIndexes.unprocessed == undefined && !processed){
+          processed = true;
+          callback(useAndIncludeStatements);
+        }
+      }
+    },
 
-				if (callback){
-					var currentGlobalLibContents = _.values(globalLibs);
+    newParse: function(text, useAndIncludeStatements, callback) {
 
-					if (_.indexOf(currentGlobalLibContents, undefined) == -1 && !processed){
-						processed = true;
-						callback(useAndIncludeStatements);
-					}
-				}
-			},
+      var _controller = this;
 
-			newParse: function(text, useAndIncludeStatements, callback) {
+      var parser = openscadOpenJscadParser.parser;
 
-				var _controller = this;
+      for (var i = useAndIncludeStatements.length - 1; i >= 0; i--) {
+        var useAndIncludeStatement = useAndIncludeStatements[i];
+        var filename = useAndIncludeStatement[1];
+        var libReplaceKey = useAndIncludeStatement[2];
 
-				for (var i = useAndIncludeStatements.length - 1; i >= 0; i--) {
-					var useAndIncludeStatement = useAndIncludeStatements[i];
-					var filename = useAndIncludeStatement[1];
-					var libReplaceKey = useAndIncludeStatement[2];
-
-					var libContent = globalLibs[filename].cached ? globalLibs[filename].cached : globalLibs[filename].raw;
+        var libContent = globalLibs[filename].cached ? globalLibs[filename].cached : globalLibs[filename].raw;
 
-					_.each(useAndIncludeStatements, function(val){
-						var replacementFilename = val[1];
+        _.each(useAndIncludeStatements, function(val){
+            var replacementFilename = val[1];
 
-						var replacementContent = globalLibs[replacementFilename].cached ? globalLibs[replacementFilename].cached : globalLibs[replacementFilename].raw;
+            var replacementContent = globalLibs[replacementFilename].cached ? globalLibs[replacementFilename].cached : globalLibs[replacementFilename].raw;
 
-						libContent = libContent.replace(val[2], replacementContent)
+            libContent = libContent.replace(val[2], replacementContent)
 
-						if (libContent.indexOf(libReplaceKey) !== -1 ){
-							throw Error(_.template("Recursion detected. <%=a%> <- <%=b%> <- <%=a%>", {a:filename, b:replacementFilename}));
-						}
+            if (libContent.indexOf(libReplaceKey) !== -1 ){
+                throw Error(_.template("Recursion detected. <%=a%> <- <%=b%> <- <%=a%>", {a:filename, b:replacementFilename}));
+            }
 
-						globalLibs[filename].cached = libContent
+            globalLibs[filename].cached = libContent
 
-					})
+        })
 
-				}
+      }
 
-				_.each(useAndIncludeStatements, function(useAndIncludeStatement){
-					var libReplaceKey = useAndIncludeStatement[2];
+      _.each(useAndIncludeStatements, function(useAndIncludeStatement){
+        var libReplaceKey = useAndIncludeStatement[2];
 
-					var libContent = globalLibs[useAndIncludeStatement[1]].cached ? 
-										globalLibs[useAndIncludeStatement[1]].cached : 
-										globalLibs[useAndIncludeStatement[1]].raw;
+        var libContent = globalLibs[useAndIncludeStatement[1]].cached ? 
+                            globalLibs[useAndIncludeStatement[1]].cached : 
+                            globalLibs[useAndIncludeStatement[1]].raw;
 
-					switch (useAndIncludeStatement[0]) {
-						case 'use':
-							var usedModuleResult = openscadParser.parse(libContent);
-							openscadParser.yy.context = usedModuleResult.context;
-							break
-						case 'import':
-							importCache[filename] = libContent;
-							openscadParser.yy.importCache = importCache;
-							break
-						case 'include':
-							text = text.replace(libReplaceKey, libContent);
-							break
-						default:
-							throw Error("Unknown parse replacement command: " + library[0]);
-					}
+        switch (useAndIncludeStatement[0]) {
+            case 'use':
+                var usedModuleResult = parser.parse(libContent);
+                parser.yy.context = usedModuleResult.context;
+                break
+            case 'import':
+                importCache[filename] = libContent;
+                parser.yy.importCache = importCache;
+                break
+            case 'include':
+                text = text.replace(libReplaceKey, libContent);
+                break
+            default:
+                throw Error("Unknown parse replacement command: " + library[0]);
+        }
 
-				});
+      });
 
-		      	try {
-		      		callback(openscadOpenJscadParser.parse(text));
-		      	} catch (e) {
-		      		console.error(e.message);
-		      		console.error(e.stack);
-		      		logMessage("Error: " + e);
-		      	}
-		    },
-			
-			extractLibraryNames: function(text, useAndIncludeStatements) {
+      try {
 
-				var importedObjectRegex = /import\([^\"]*\"([^\)]*)\"[,]?.*\);?/gm;
-        		var usedLibraryRegex = /use <([^>]*)>;?/gm;
-        		var includedLibraryRegex = /include <([^>]*)>;?/gm;
+          console.log(text);
 
-				var match;
-				var re = includedLibraryRegex;
-				while (match = re.exec(text)){
-					var filename = match[1];
-					var replaceString = match[0];
+          var result = parser.parse(text);
+          callback(result.lines.join('\n'));
+      } catch (e) {
+          console.error(e.message);
+          console.error(e.stack);
+          logMessage("Error: " + e);
+      }
+    },
+    
+    extractLibraryNames: function(text, rootFilePath, useAndIncludeStatements) {
 
-					if (!_.has(globalLibs,filename)){
-						globalLibs[filename] = undefined;
-					}
-					useAndIncludeStatements.push(["include", filename, replaceString]);
+      var importedObjectRegex = /import\([^\"]*\"([^\)]*)\"[,]?.*\);?/gm;
+      var usedLibraryRegex = /use <([^>]*)>;?/gm;
+      var includedLibraryRegex = /include <([^>]*)>;?/gm;
 
-				}
-				re = usedLibraryRegex;
-				while (match = re.exec(text)){
-					var filename = match[1];
-					var replaceString = match[0];
+      var match;
+      var re = includedLibraryRegex;
+      while (match = re.exec(text)){
+        var filename = rootFilePath+match[1];
+        var replaceString = match[0];
 
-					if (!_.has(globalLibs,filename)){
-						globalLibs[filename] = undefined;
-					}
-					useAndIncludeStatements.push(["use", filename, replaceString]);
-				}
+        if (!_.has(globalLibs,filename)){
+            globalLibs[filename] = {loading:false};
+        }
+        useAndIncludeStatements.push(["include", filename, replaceString]);
 
-				re = importedObjectRegex;
-				while (match = re.exec(text)){
-					var filename = match[1];
-					var replaceString = match[0];
+      }
+      re = usedLibraryRegex;
+      while (match = re.exec(text)){
+        var filename = rootFilePath+match[1];
+        var replaceString = match[0];
 
-					if (!_.has(globalLibs,filename)){
-						globalLibs[filename] = undefined;
-					}
-					useAndIncludeStatements.push(["import", filename, replaceString]);
-				}
-			},
+        if (!_.has(globalLibs,filename)){
+            globalLibs[filename] = {loading:false};
+        }
+        useAndIncludeStatements.push(["use", filename, replaceString]);
+      }
 
-			attemptFilesystemConnection: function(){
-				if (this.persistence.shouldConnect()){
-					this.connect(this.ui.whenConnectedToFilesystem);
-				}
-			},
-		}
+      re = importedObjectRegex;
+      while (match = re.exec(text)){
+        var filename = rootFilePath+match[1];
+        var replaceString = match[0];
 
+        if (!_.has(globalLibs,filename)){
+            globalLibs[filename] = {loading:false};
+        }
+        useAndIncludeStatements.push(["import", filename, replaceString]);
+      }
+    },
 
-	return Controller;
+    attemptFilesystemConnection: function(){
+      if (this.persistence.shouldConnect()){
+        this.connect(this.ui.whenConnectedToFilesystem);
+      }
+    },
+  }
 
+  return Controller;
 
 })

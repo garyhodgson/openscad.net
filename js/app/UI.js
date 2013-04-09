@@ -35,7 +35,18 @@ define("UI", [	"lib/jquery-latest",
 	UI.prototype = {
 
 		updateSolid: function(){
-			this.controller.updateSolid($('#editor').val().trim(), $('#sourcetype_openscad').attr('checked'));
+			var text = $('#editor').val().trim();
+			var isOpenscadSyntax = $('#sourcetype_openscad').attr('checked');
+			var filePath = $('#currentFilename').val();
+			if (filePath){
+				filePath = filePath.replace(/[^\/]*$/, "");
+			}
+
+			this.controller.updateSolid(
+				text,
+				isOpenscadSyntax,
+				filePath			
+			);
 		},
 
 		toggleGrid: function(show){
@@ -106,6 +117,10 @@ define("UI", [	"lib/jquery-latest",
 				_ui.editorIsDirty = true;
 			} else {
 				_ui.setEditorContent("// Example script. Press F4, or choose Reload and Compile from the Design menu, to render.\n\nsize = 50;\nhole = 25;\n\nfunction r_from_dia(d) = d / 2;\n\ncy_r = r_from_dia(hole);\ncy_h = r_from_dia(size * 2.5);\n\nmodule rotcy(rot, r, h) {\n    rotate(90, rot)\n      cylinder(r = r, h = h, center = true);\n}\n\ndifference() {\n    sphere(r = r_from_dia(size));\n    rotcy([0, 0, 0], cy_r, cy_h);\n    rotcy([1, 0, 0], cy_r, cy_h);\n    rotcy([0, 1, 0], cy_r, cy_h);\n}");
+			}
+
+			if (localStorage.currentFilename !== undefined){
+				_ui.setCurrentFilename(localStorage.getItem("currentFilename"));
 			}
 
 			var viewerWidth = $('#viewer-container').width();
@@ -215,6 +230,7 @@ define("UI", [	"lib/jquery-latest",
 
 		setCurrentFilename: function(filename) {
 			$('#currentFilename').val(filename);
+			localStorage.setItem("currentFilename", filename);
 		},
 
 		setFilesystemName: function(name) {
@@ -440,7 +456,7 @@ define("UI", [	"lib/jquery-latest",
 			localStorage.setItem("preferencesColorScheme", schemeName);
 		});
 
-		$('#menu_design_reload_compile').click(function(e) { controller.updateSolid(); });
+		$('#menu_design_reload_compile').click(function(e) { ui.updateSolid(); });
 
 		$('#menu_design_export_stl').click(function(){
 			if (controller.modelIsShown){
