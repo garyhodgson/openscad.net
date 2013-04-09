@@ -41,7 +41,7 @@ define("UI", [	"lib/jquery-latest",
 			if (filePath){
 				filePath = filePath.replace(/[^\/]*$/, "");
 			}
-
+			
 			this.controller.updateSolid(
 				text,
 				isOpenscadSyntax,
@@ -156,14 +156,12 @@ define("UI", [	"lib/jquery-latest",
 
 			shortcut.add("Ctrl+s",function() {_ui.saveEditor();});
 			shortcut.add("F4", function() {_ui.updateSolid();});
-
 			
 			var resizeTimeout;
 			window.onresize = function() {
 				clearTimeout(resizeTimeout);
 				resizeTimeout = setTimeout(_ui.resizeViewer, 250); // set for 1/4 second.  May need to be adjusted.
 			};
-		
 
 			$('#menu_file_disconnect').parent().addClass("disabled");
 
@@ -215,7 +213,7 @@ define("UI", [	"lib/jquery-latest",
 					_ui.setCurrentFilename('');
 				}
 				if (getUrlParam('r') && confirm("Compile and display?")){
-					$.proxy(_ui.updateSolid, _ui.controller)();
+					_ui.updateSolid();
 				}
 			}
 
