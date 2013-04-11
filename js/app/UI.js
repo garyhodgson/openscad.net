@@ -425,7 +425,9 @@ define("UI", [	"lib/jquery-latest",
 			$('#jstree_container').html("<button class='btn btn-success' type='button' onclick='connect();'>Connect to " + controller.ui.filesystemName + "</button>");
 			$('#menu_file_disconnect').parent().addClass("disabled");
 			controller.connectedToFilesystem = false;
-		}
+		},
+
+		logMessage: logMessage
 	};
 
 	function setupEventHandlers(ui, controller){

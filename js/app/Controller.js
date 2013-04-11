@@ -211,7 +211,7 @@ define("Controller", [], function(){
       } catch (e) {
           console.error(e.message);
           console.error(e.stack);
-          logMessage("Error: " + e);
+          this.ui.logMessage("Error: " + e);
       }
     },
     
