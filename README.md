@@ -22,10 +22,8 @@ Several features are either not yet implemented or can/will not be implemented. 
 * rotate_extrude.
 * minkowski and hull transformations.
 * $fa, $fs global variables.
-* Modifier characters: #, !, %).
+* Modifier characters: #, !, %.
 
 ## Development
 
-Lexing and Parsing is done via the node module: [jison](http://zaach.github.com/jison/).  Modify *openscad-parser.jison* and compile it to javascript with `jison openscad-parser.jison`.  
-
-To run the parser from node you have to uncomment the three require statements around line 595 (I have yet to work out how to make it happy in the browser and node).  This allows you to use *testharness.js* which will parse the contents of *test.scad*.
+Lexing and Parsing is done via the node module: [openscad-openjscad-translator](https://github.com/garyhodgson/openscad-openjscad-translator).

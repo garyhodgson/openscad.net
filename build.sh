@@ -1,1 +1,0 @@
-jison openscad-parser.jison -o js/app/openscad-parser.js -m amd && sed -i '1s/define(\[\], function(){/define(["openscad-parser-ext", "ArgContainer", "ArgsContainer", "Expression", "ModuleInstantiation", "IfElseModuleInstantiation"], function(ext, ArgContainer, ArgsContainer, Expression, ModuleInstantiation, IfElseModuleInstantiation){/' js/app/openscad-parser.js
