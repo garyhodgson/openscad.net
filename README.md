@@ -1,7 +1,9 @@
 OpenSCAD.net
 ============
 
-**This project is a work in progress!** Check the list of missing features and the github issues page to see what will not work.
+**This project is no longer actively maintained, and was written against an older version of OpenSCAD (v 2011.06) which has now been superseded.**
+
+Check the list of missing features and the github issues page to see what will not work.
 
 ## Introduction
 OpenSCAD.net is a partial port of [OpenSCAD](http://www.openscad.org/) for the web. Powered by [OpenJsCad](http://joostn.github.com/OpenJsCad/), it uses the familiar OpenSCAD syntax to allow many OpenSCAD models to be rendered, and saved as STL, via the browser.
@@ -27,3 +29,7 @@ Several features are either not yet implemented or can/will not be implemented. 
 ## Development
 
 Lexing and Parsing is done via the node module: [openscad-openjscad-translator](https://github.com/garyhodgson/openscad-openjscad-translator).
+
+## License
+
+As this work is predominantly a port of the OpenSCAD it is therefore also released under the General Public License version 2.
