@@ -165,7 +165,7 @@ define("UI", [	"lib/jquery-latest",
 
 			$('#menu_file_disconnect').parent().addClass("disabled");
 
-      if (window.location.host == "localhost" || window.location.protocol == "https") {
+      if (window.location.host == "localhost" || window.location.protocol == "https:") {
         this.controller.attemptFilesystemConnection();
       } else {
         $('#menu_file_connect').parent().addClass("disabled");
