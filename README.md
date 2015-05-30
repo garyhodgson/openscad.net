@@ -14,6 +14,8 @@ Paste or type an OpenSCAD script into the editor and hit F4 (or select "Reload a
 
 ### Imported Libraries via Dropbox
 
+**This functionality is now limited to applications running over https due to the Dropbox Oauth2 API only allowing callbacks over this protocol.  This means that the Dropbox functionality is not available via http://openscad.net, but it is available when accessed via https://garyhodgson.github.io/openscad.net**
+
 So that scripts can utilise the "use" and "include" directives, the application can connect to a Dropbox account in order to import library files stored there. Authorising access for the app will create a dedicated, sandboxed, folder in your Dropbox space. Folders and files stored here can be referenced via "use" and "include" statements. Scripts can also be saved to the Dropbox space, via the Save option.
 
 ## Missing Features

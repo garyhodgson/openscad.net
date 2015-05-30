@@ -49,11 +49,11 @@ define("Controller", [], function(){
 
           if (stat.isFile){
             _controller.ui.filetree.create_node(
-              root, 'inside', 
+              root, 'inside',
               { attr: {id:id, class:"dbFile"}, metadata: {stat: stat}, data: {title:stat.name, icon: "img/led-icons/page_white_text.png"} }
               );
           } else {
-            _controller.ui.filetree.create_node(root, 'inside', 
+            _controller.ui.filetree.create_node(root, 'inside',
               { attr: {id:id},  state: "closed", metadata: {stat: stat}, data: stat.name }
             );
           }
@@ -75,7 +75,7 @@ define("Controller", [], function(){
 
     writeFile: function(path, content, callback) {
         var _controller = this;
-        this.persistence.writeFile(path, content, callback);      
+        this.persistence.writeFile(path, content, callback);
     },
 
     display: function(result){
@@ -97,13 +97,13 @@ define("Controller", [], function(){
 
         _controller.collateLibraries(text, useAndIncludeStatements, rootFilePath,
           function(useAndIncludeStatements){
-              _controller.newParse(text, useAndIncludeStatements, 
+              _controller.newParse(text, useAndIncludeStatements,
                 $.proxy(_controller.display, _controller));
         });
       } else {
         this.display(text);
       }
-          
+
     },
 
     collateLibraries: function(text, useAndIncludeStatements, rootFilePath, callback){
@@ -180,8 +180,8 @@ define("Controller", [], function(){
       _.each(useAndIncludeStatements, function(useAndIncludeStatement){
         var libReplaceKey = useAndIncludeStatement[2];
 
-        var libContent = globalLibs[useAndIncludeStatement[1]].cached ? 
-                            globalLibs[useAndIncludeStatement[1]].cached : 
+        var libContent = globalLibs[useAndIncludeStatement[1]].cached ?
+                            globalLibs[useAndIncludeStatement[1]].cached :
                             globalLibs[useAndIncludeStatement[1]].raw;
 
         switch (useAndIncludeStatement[0]) {
@@ -214,7 +214,7 @@ define("Controller", [], function(){
           this.ui.logMessage("Error: " + e);
       }
     },
-    
+
     extractLibraryNames: function(text, rootFilePath, useAndIncludeStatements) {
 
       var importedObjectRegex = /import\([^\"]*\"([^\)]*)\"[,]?.*\);?/gm;

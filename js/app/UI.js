@@ -1,16 +1,16 @@
 define("UI", [	"lib/jquery-latest",
 				"lib/text!../../examples.insert.html",
-				"lib/jquery-ui-latest", 
+				"lib/jquery-ui-latest",
 				"lib/jquery.layout-latest",
 				"lib/jquery.fontselector",
-				"lib/modernizr", 
-				"lib/jquery.jstree", 
-				"lib/bootstrap", 
-				"lib/jquery.textarea", 
-				"lib/jquery.mousewheel", 
-				"lib/garlic", 
-				"lib/shortcut", 
-				"lib/bootbox"], function(jQuery, examples_insert){ 
+				"lib/modernizr",
+				"lib/jquery.jstree",
+				"lib/bootstrap",
+				"lib/jquery.textarea",
+				"lib/jquery.mousewheel",
+				"lib/garlic",
+				"lib/shortcut",
+				"lib/bootbox"], function(jQuery, examples_insert){
 
 	var uiLayout, logLayout;
 	var colorSchemes = {
@@ -19,7 +19,7 @@ define("UI", [	"lib/jquery-latest",
 		"sunset": { backgroundColor: [170/255, 68/255, 68/255], faceColor: [255/255, 170/255, 170/255, 1.0] },
 		"sunrise": { backgroundColor: [196/255, 207/255, 210/255], faceColor: [255/255, 245/255, 184/255, 1.0] }
 	};
-	
+
 	var lastEditorContent = '';
 
 	var autoReload;
@@ -41,11 +41,11 @@ define("UI", [	"lib/jquery-latest",
 			if (filePath){
 				filePath = filePath.replace(/[^\/]*$/, "");
 			}
-			
+
 			this.controller.updateSolid(
 				text,
 				isOpenscadSyntax,
-				filePath			
+				filePath
 			);
 		},
 
@@ -69,11 +69,11 @@ define("UI", [	"lib/jquery-latest",
 
 			if (!Modernizr.webgl){
 				this.log("This app needs webGL - Google Chrome would be a good choice of browser.");
-				return 
+				return
 			}
 
 			uiLayout = $('#container').layout({
-				minSize: 100, 
+				minSize: 100,
 				center__paneSelector: ".outer-center",
 				west__onresize_end: $.proxy(_ui.resizeEditor, _ui),
 				stateManagement: {
@@ -81,12 +81,12 @@ define("UI", [	"lib/jquery-latest",
 					cookie: {
 						name: "uiLayout"
 					}
-				}, 
-				enableCursorHotkey: false, 
+				},
+				enableCursorHotkey: false,
 				center__children: {
-					minSize: 10, 
-					center__onresize_end: $.proxy(_ui.resizeViewer, _ui), 
-					south__size: 50, 
+					minSize: 10,
+					center__onresize_end: $.proxy(_ui.resizeViewer, _ui),
+					south__size: 50,
 					stateManagement: {
 						enabled: true,
 						cookie: {
@@ -156,7 +156,7 @@ define("UI", [	"lib/jquery-latest",
 
 			shortcut.add("Ctrl+s",function() {_ui.saveEditor();});
 			shortcut.add("F4", function() {_ui.updateSolid();});
-			
+
 			var resizeTimeout;
 			window.onresize = function() {
 				clearTimeout(resizeTimeout);
@@ -165,7 +165,12 @@ define("UI", [	"lib/jquery-latest",
 
 			$('#menu_file_disconnect').parent().addClass("disabled");
 
-			this.controller.attemptFilesystemConnection()
+      if (window.location.host == "localhost" || window.location.protocol == "https") {
+        this.controller.attemptFilesystemConnection();
+      } else {
+        $('#menu_file_connect').parent().addClass("disabled");
+        $('#menu_file_connect').parent().attr('title', "Unavailable as Dropbox api not available over http");
+      }
 
 			setupEventHandlers(this, this.controller);
 
@@ -173,8 +178,8 @@ define("UI", [	"lib/jquery-latest",
 				'hide_fallbacks' : true,
 				'initial' : font,
 				'selected' : function(font) {
-					_ui.setEditorFontFamily(font);      
-					localStorage.setItem("preferencesFontFamily", font);    
+					_ui.setEditorFontFamily(font);
+					localStorage.setItem("preferencesFontFamily", font);
 				}
 			});
 
@@ -241,7 +246,7 @@ define("UI", [	"lib/jquery-latest",
 				logMessage("Unknown color scheme.");
 				return;
 			}
-			
+
 			if (viewer) {
 				viewer.setColorScheme(scheme);
 			}
@@ -293,12 +298,12 @@ define("UI", [	"lib/jquery-latest",
 		},
 
 		display: function(result) {
-			console.log(result);			
+			console.log(result);
 			this.gProcessor.setJsCad(result, getOutputFilename());
 
 		},
 
-		
+
 
 		closeFileOpenModal: function() {
 			$('#fileOpenModal').modal('hide');
@@ -319,15 +324,15 @@ define("UI", [	"lib/jquery-latest",
 				logMessage("Unable to find example: " + filename);
 				return;
 			}
-			
+
 			this.setEditorContent(exampleElement.text());
 			this.setCurrentFilename('');
 			this.gProcessor.clearViewer();
 			this.controller.modelIsShown = false;
 			localStorage.setItem("lastEdit", exampleElement.text());
-			
+
 		},
-		
+
 		notify: function(msg){
 			if (msg == ""){
 				return;
@@ -366,8 +371,8 @@ define("UI", [	"lib/jquery-latest",
 			}
 			var currentFilename = getCurrentFilename();
 
-			var filename = currentFilename != '' ? currentFilename : 'newfile.scad'; 
-			
+			var filename = currentFilename != '' ? currentFilename : 'newfile.scad';
+
 
 			bootbox.prompt("File path and name?", "Cancel", "OK", function(filepath) {
 
@@ -405,9 +410,9 @@ define("UI", [	"lib/jquery-latest",
 
 		hideEditor: function() {
 			if ($('input[name=menu_view_hide_editor]').attr('checked')=='checked'){
-				uiLayout.close("west");  
+				uiLayout.close("west");
 			} else {
-				uiLayout.open("west");  
+				uiLayout.open("west");
 			}
 		},
 
@@ -435,7 +440,7 @@ define("UI", [	"lib/jquery-latest",
 		$('.menu_option').on('click', function(e){ e.stopPropagation(); });
 
 		$('#menu_file_new').click(function(e) { ui.newEditor(); });
-		
+
 		$('#menu_file_save').click(function(e) { ui.saveEditor(); });
 
 		$('#menu_file_connect').click(function(e) { controller.connect(ui.whenConnectedToFilesystem); });
@@ -475,7 +480,7 @@ define("UI", [	"lib/jquery-latest",
 
 		$('input[name=menu_design_auto_reload]').change(function() { autoReload = $(this).attr('checked')=='checked'; });
 
-		$('#share_autoload').change(function() { 
+		$('#share_autoload').change(function() {
 			if ($(this).attr('checked')=='checked'){
 				$('#share_link').val(location.href + "?r=true&c=" + escape(btoa($('#editor').val())));
 			} else {
@@ -513,15 +518,15 @@ define("UI", [	"lib/jquery-latest",
 			return "output";
 		}
 
-		var y = currentFilename.substring(currentFilename.lastIndexOf("/") + 1); 
-		var q = y.lastIndexOf("."); 
+		var y = currentFilename.substring(currentFilename.lastIndexOf("/") + 1);
+		var q = y.lastIndexOf(".");
 		return y.substring(0,q==-1?y.length:q);
 	};
 
 	function getUrlParam( param ){
 			param = param.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
 			var exp = "[\\?&]"+param+"=([^&#]*)";
-			var regexp = new RegExp( exp ); 
+			var regexp = new RegExp( exp );
 			var results = regexp.exec( window.location.href );
 			if( results == null ){
 				return undefined;
@@ -530,7 +535,7 @@ define("UI", [	"lib/jquery-latest",
 			}
 		}
 
-	
+
 	function initFilelist(controller){
 
 	  $("#jstree_container").bind("loaded.jstree", function (event, data) {
@@ -559,7 +564,7 @@ define("UI", [	"lib/jquery-latest",
 		  themes : {
 			url: "css/jstree/themes/default/style.css"
 		  },
-		  core : { 
+		  core : {
 			animation: 200
 		  },
 		  plugins : [ "themes", "json_data", "ui" ],
@@ -591,5 +596,5 @@ define("UI", [	"lib/jquery-latest",
 		}
 
 	return UI;
-	
+
 })

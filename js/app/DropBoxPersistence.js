@@ -6,16 +6,14 @@ define("DropBoxPersistence", ["lib/dropbox"], function(){
   };
 
   function Persistence(){
-    this.client = new Dropbox.Client({
-     key: "HXhDdRlFUUA=|ExW13h6tJ+jTCm96w87G1F3wvtvRRKnOdXuYBn3BIg==", sandbox: true
-   });
-    this.client.authDriver(new Dropbox.Drivers.Redirect({rememberUser: true}));
+    this.client = new Dropbox.Client({ key: "1m7xd37519455ad", sandbox: true   });
+    this.client.authDriver(new Dropbox.AuthDriver.Redirect({rememberUser: true}));
+
   };
 
   Persistence.prototype.connect = function(callback){
-
     this.client.authenticate(function(error, client) {
-      if (error) {
+     if (error) {
         return showError(error);
       }
 
@@ -32,7 +30,7 @@ define("DropBoxPersistence", ["lib/dropbox"], function(){
         return showError(error);
       }
 
-      callback();          
+      callback();
     });
 
   };
@@ -87,9 +85,13 @@ Persistence.prototype.getFilesystemName = function(){
 }
 
 Persistence.prototype.shouldConnect = function(){
+  if (getUrlParam("not_approved") !== undefined
+    && getUrlParam("not_approved") == 'true'){
+    return false;
+  }
   if (getUrlParam("oauth_token") !== undefined){
     return true;
-  } 
+  }
   for (var key in localStorage){
     if (key.match(/^dropbox-auth.*/)) {
       return true;
@@ -101,7 +103,7 @@ Persistence.prototype.shouldConnect = function(){
 function getUrlParam( param ){
   param = param.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
   var exp = "[\\?&]"+param+"=([^&#]*)";
-  var regexp = new RegExp( exp ); 
+  var regexp = new RegExp( exp );
   var results = regexp.exec( window.location.href );
   if( results == null ){
     return undefined;
